@@ -1,0 +1,229 @@
+import { useEffect, useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { blockDef } from "@/lib/blocks";
+import type { LessonBlock } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+
+export interface BlockDraft {
+  title: string;
+  duration_minutes: number;
+  student_instructions: string;
+  teacher_notes: string;
+  content: Record<string, unknown>;
+}
+
+export function BlockEditor({
+  block,
+  onClose,
+  onSave,
+  saving,
+}: {
+  block: LessonBlock | null;
+  onClose: () => void;
+  onSave: (patch: BlockDraft) => void;
+  saving: boolean;
+}) {
+  const [draft, setDraft] = useState<BlockDraft | null>(null);
+
+  useEffect(() => {
+    if (!block) {
+      setDraft(null);
+      return;
+    }
+    setDraft({
+      title: block.title,
+      duration_minutes: block.duration_minutes,
+      student_instructions: block.student_instructions ?? "",
+      teacher_notes: block.teacher_notes ?? "",
+      content: { ...(block.content ?? {}) },
+    });
+  }, [block]);
+
+  const def = block ? blockDef(block.type) : null;
+
+  const setContent = (key: string, value: unknown) =>
+    setDraft((d) => (d ? { ...d, content: { ...d.content, [key]: value } } : d));
+
+  return (
+    <Sheet open={!!block} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        {block && def && draft && (
+          <>
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                <span>{def.icon}</span> {def.label}
+              </SheetTitle>
+              <SheetDescription>{def.description}</SheetDescription>
+            </SheetHeader>
+
+            <div className="space-y-6 px-4 pb-8">
+              <div className="space-y-2">
+                <Label htmlFor="b-title">Titel</Label>
+                <Input
+                  id="b-title"
+                  value={draft.title}
+                  onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="b-duration">Varighed (min)</Label>
+                <Input
+                  id="b-duration"
+                  type="number"
+                  min={1}
+                  max={180}
+                  value={draft.duration_minutes}
+                  onChange={(e) =>
+                    setDraft({ ...draft, duration_minutes: Number(e.target.value) })
+                  }
+                />
+              </div>
+
+              {def.fields.map((f) => {
+                const value = draft.content[f.key];
+                if (f.kind === "textarea") {
+                  return (
+                    <div key={f.key} className="space-y-2">
+                      <Label htmlFor={`f-${f.key}`}>{f.label}</Label>
+                      <Textarea
+                        id={`f-${f.key}`}
+                        rows={5}
+                        placeholder={f.placeholder ?? ""}
+                        value={typeof value === "string" ? value : ""}
+                        onChange={(e) => setContent(f.key, e.target.value)}
+                      />
+                    </div>
+                  );
+                }
+                if (f.kind === "number") {
+                  return (
+                    <div key={f.key} className="space-y-2">
+                      <Label htmlFor={`f-${f.key}`}>{f.label}</Label>
+                      <Input
+                        id={`f-${f.key}`}
+                        type="number"
+                        value={typeof value === "number" ? value : 0}
+                        onChange={(e) => setContent(f.key, Number(e.target.value))}
+                      />
+                    </div>
+                  );
+                }
+                if (f.kind === "switch") {
+                  return (
+                    <div key={f.key} className="flex items-center justify-between gap-4">
+                      <Label htmlFor={`f-${f.key}`}>{f.label}</Label>
+                      <Switch
+                        id={`f-${f.key}`}
+                        checked={value === true}
+                        onCheckedChange={(v) => setContent(f.key, v)}
+                      />
+                    </div>
+                  );
+                }
+                if (f.kind === "list") {
+                  const items = Array.isArray(value) ? (value as string[]) : [];
+                  return (
+                    <div key={f.key} className="space-y-2">
+                      <Label>{f.label}</Label>
+                      <div className="space-y-2">
+                        {items.map((item, i) => (
+                          <div key={i} className="flex gap-2">
+                            <Input
+                              value={item}
+                              placeholder={`${f.itemLabel ?? "Element"} ${i + 1}`}
+                              onChange={(e) => {
+                                const next = [...items];
+                                next[i] = e.target.value;
+                                setContent(f.key, next);
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label="Fjern"
+                              onClick={() =>
+                                setContent(
+                                  f.key,
+                                  items.filter((_, idx) => idx !== i),
+                                )
+                              }
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-full"
+                        onClick={() => setContent(f.key, [...items, ""])}
+                      >
+                        <Plus className="size-4" /> Tilføj {f.itemLabel?.toLowerCase() ?? "element"}
+                      </Button>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={f.key} className="space-y-2">
+                    <Label htmlFor={`f-${f.key}`}>{f.label}</Label>
+                    <Input
+                      id={`f-${f.key}`}
+                      placeholder={f.placeholder ?? ""}
+                      value={typeof value === "string" ? value : ""}
+                      onChange={(e) => setContent(f.key, e.target.value)}
+                    />
+                  </div>
+                );
+              })}
+
+              <div className="space-y-2">
+                <Label htmlFor="b-instructions">Elevinstruktion</Label>
+                <Textarea
+                  id="b-instructions"
+                  value={draft.student_instructions}
+                  onChange={(e) => setDraft({ ...draft, student_instructions: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="b-notes">Lærernoter</Label>
+                <Textarea
+                  id="b-notes"
+                  value={draft.teacher_notes}
+                  onChange={(e) => setDraft({ ...draft, teacher_notes: e.target.value })}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  className="rounded-full"
+                  disabled={saving}
+                  onClick={() => onSave(draft)}
+                >
+                  Gem aktivitet
+                </Button>
+                <Button variant="outline" className="rounded-full" onClick={onClose}>
+                  Annullér
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
