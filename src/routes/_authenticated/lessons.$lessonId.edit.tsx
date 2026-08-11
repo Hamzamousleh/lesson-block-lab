@@ -17,6 +17,7 @@ import {
   updateLesson,
 } from "@/lib/data";
 import { blockDef } from "@/lib/blocks";
+import { lessonToText } from "@/lib/prompt";
 import { LESSON_STATUS_LABEL, type LessonBlock, type LessonStatus } from "@/lib/types";
 import { ActivityPicker } from "@/components/editor/ActivityPicker";
 import { BlockEditor, type BlockDraft } from "@/components/editor/BlockEditor";
@@ -182,7 +183,27 @@ function LessonEditor() {
             </>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Link to="/import" search={{ lessonId }}>
+            <Button variant="outline" className="rounded-full">
+              <Plus className="size-4" /> Importér aktiviteter
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            className="rounded-full"
+            onClick={async () => {
+              const text = lessonToText(lesson.data!, list);
+              try {
+                await navigator.clipboard.writeText(text);
+                toast.success("Lektionen er kopieret ✓");
+              } catch {
+                toast.error("Lektionen kunne ikke kopieres. Markér teksten og kopiér manuelt.");
+              }
+            }}
+          >
+            <Copy className="size-4" /> Kopiér lektion til ChatGPT
+          </Button>
           <Button
             variant="ghost"
             className="rounded-full"
