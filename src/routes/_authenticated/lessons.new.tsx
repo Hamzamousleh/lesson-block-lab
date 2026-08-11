@@ -17,9 +17,8 @@ import {
 } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/lessons/new")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    classId: typeof search['classId'] === "string" ? (search['classId'] as string) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { classId?: string } =>
+    typeof search['classId'] === "string" ? { classId: search['classId'] } : {},
   head: () => ({
     meta: [
       { title: "Ny lektion — CaseLab" },
