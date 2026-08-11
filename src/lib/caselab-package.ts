@@ -101,7 +101,7 @@ function validateBlock(raw: unknown, index: number, errors: string[]): PackageBl
     errors.push(`Aktivitet ${nr} har et ugyldigt format.`);
     return null;
   }
-  const type = raw.type;
+  const type = raw["type"];
   if (typeof type !== "string" || !type.trim()) {
     errors.push(`Aktivitet ${nr} mangler en type.`);
     return null;
@@ -111,16 +111,16 @@ function validateBlock(raw: unknown, index: number, errors: string[]): PackageBl
     return null;
   }
   const def = blockDef(type);
-  const title = typeof raw.title === "string" ? raw.title.trim() : "";
+  const title = typeof raw["title"] === "string" ? raw["title"].trim() : "";
   if (!title) errors.push(`Aktivitet ${nr} (${def.label}) mangler en titel.`);
 
-  const duration = raw.duration_minutes;
+  const duration = raw["duration_minutes"];
   if (typeof duration !== "number" || !Number.isFinite(duration) || duration <= 0) {
     errors.push(`Aktivitet ${nr} har en ugyldig varighed.`);
   }
 
   const label = title ? `'${title}'` : `nr. ${nr}`;
-  const content = isRecord(raw.content) ? raw.content : null;
+  const content = isRecord(raw["content"]) ? raw["content"] : null;
   if (!content) {
     errors.push(`${def.label}-aktiviteten ${label} mangler indhold.`);
   } else {
@@ -144,8 +144,8 @@ function validateBlock(raw: unknown, index: number, errors: string[]): PackageBl
     title,
     duration_minutes: duration as number,
     student_instructions:
-      typeof raw.student_instructions === "string" ? raw.student_instructions : null,
-    teacher_notes: typeof raw.teacher_notes === "string" ? raw.teacher_notes : null,
+      typeof raw["student_instructions"] === "string" ? raw["student_instructions"] : null,
+    teacher_notes: typeof raw["teacher_notes"] === "string" ? raw["teacher_notes"] : null,
     content: content as Record<string, unknown>,
   };
 }
@@ -167,17 +167,17 @@ export function validatePackage(input: string): ValidationResult {
   const errors: string[] = [];
   if (!isRecord(raw)) return { ok: false, errors: ["Pakken skal være et JSON-objekt."] };
 
-  if (raw.caselab_version !== "2.0") {
+  if (raw["caselab_version"] !== "2.0") {
     errors.push("Pakken mangler 'caselab_version': \"2.0\".");
   }
-  const type = raw.package_type;
+  const type = raw["package_type"];
   if (type !== "lesson" && type !== "blocks") {
     errors.push("Pakken skal have 'package_type' sat til enten \"lesson\" eller \"blocks\".");
     return { ok: false, errors };
   }
 
   if (type === "blocks") {
-    const blocks = raw.blocks;
+    const blocks = raw["blocks"];
     if (!Array.isArray(blocks) || blocks.length === 0) {
       errors.push("Pakken indeholder ingen aktiviteter.");
       return { ok: false, errors };
@@ -195,19 +195,19 @@ export function validatePackage(input: string): ValidationResult {
     };
   }
 
-  const mode = raw.mode === "rescue" ? "rescue" : "standard";
-  const lesson = raw.lesson;
+  const mode = raw["mode"] === "rescue" ? "rescue" : "standard";
+  const lesson = raw["lesson"];
   if (!isRecord(lesson)) {
     errors.push("Pakken mangler et 'lesson'-objekt.");
     return { ok: false, errors };
   }
-  const title = typeof lesson.title === "string" ? lesson.title.trim() : "";
+  const title = typeof lesson["title"] === "string" ? lesson["title"].trim() : "";
   if (!title) errors.push("Lektionen mangler en titel.");
-  const duration = lesson.duration_minutes;
+  const duration = lesson["duration_minutes"];
   if (typeof duration !== "number" || !Number.isFinite(duration) || duration <= 0) {
     errors.push("Lektionen har en ugyldig varighed.");
   }
-  const blocks = lesson.blocks;
+  const blocks = lesson["blocks"];
   if (!Array.isArray(blocks) || blocks.length === 0) {
     errors.push("Lektionen indeholder ingen aktiviteter.");
     return { ok: false, errors };
@@ -224,12 +224,12 @@ export function validatePackage(input: string): ValidationResult {
       mode,
       lesson: {
         title,
-        subject: typeof lesson.subject === "string" ? lesson.subject : null,
+        subject: typeof lesson["subject"] === "string" ? lesson["subject"] : null,
         duration_minutes: duration as number,
-        learning_goal: typeof lesson.learning_goal === "string" ? lesson.learning_goal : null,
-        teacher_note: typeof lesson.teacher_note === "string" ? lesson.teacher_note : null,
-        tags: Array.isArray(lesson.tags)
-          ? lesson.tags.filter((t): t is string => typeof t === "string")
+        learning_goal: typeof lesson["learning_goal"] === "string" ? lesson["learning_goal"] : null,
+        teacher_note: typeof lesson["teacher_note"] === "string" ? lesson["teacher_note"] : null,
+        tags: Array.isArray(lesson["tags"])
+          ? lesson["tags"].filter((t): t is string => typeof t === "string")
           : [],
         blocks: parsedBlocks as PackageBlock[],
       },
