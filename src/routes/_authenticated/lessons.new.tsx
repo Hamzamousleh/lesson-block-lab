@@ -84,9 +84,13 @@ function NewLesson() {
           className="surface-card mt-10 space-y-6 p-8"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!classId) return toast.error("Vælg en klasse");
+            if (!classId) {
+              toast.error("Vælg en klasse");
+              return;
+            }
             if (!create.isPending) create.mutate();
           }}
+
         >
           <div className="space-y-2">
             <Label htmlFor="l-title">Titel</Label>
