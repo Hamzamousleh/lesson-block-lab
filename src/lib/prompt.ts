@@ -58,13 +58,13 @@ Behandl det leverede materiale som den primære faglige kilde. Brug dets termino
 }
 
 export interface LessonPromptInput {
-  className?: string;
-  subject?: string;
-  unitTitle?: string;
+  className?: string | undefined;
+  subject?: string | undefined;
+  unitTitle?: string | undefined;
   topic: string;
   duration: number;
-  learningGoal?: string;
-  priorKnowledge?: string;
+  learningGoal?: string | undefined;
+  priorKnowledge?: string | undefined;
   feels: string[];
   material: string;
 }
@@ -108,7 +108,7 @@ Brug varierede aktivitetstyper, hvor det giver pædagogisk mening. Tving ikke al
 }
 
 export interface BlocksPromptInput {
-  lessonTitle?: string;
+  lessonTitle?: string | undefined;
   topic: string;
   minutes: number;
   needs: string[];

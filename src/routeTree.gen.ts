@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedCreateWithChatgptRouteImport } from './routes/_authenticated/create-with-chatgpt'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedUnitsRouteImport } from './routes/_authenticated/units'
@@ -35,6 +36,12 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedCreateWithChatgptRoute =
+  AuthenticatedCreateWithChatgptRouteImport.update({
+    id: '/create-with-chatgpt',
+    path: '/create-with-chatgpt',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -83,6 +90,7 @@ const AuthenticatedLessonsLessonIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
   '/units': typeof AuthenticatedUnitsRoute
@@ -95,6 +103,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
   '/units': typeof AuthenticatedUnitsRoute
@@ -109,6 +118,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/units': typeof AuthenticatedUnitsRoute
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/create-with-chatgpt'
     | '/home'
     | '/import'
     | '/units'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/create-with-chatgpt'
     | '/home'
     | '/import'
     | '/units'
@@ -148,6 +160,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/create-with-chatgpt'
     | '/_authenticated/home'
     | '/_authenticated/import'
     | '/_authenticated/units'
@@ -186,6 +199,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/create-with-chatgpt': {
+      id: '/_authenticated/create-with-chatgpt'
+      path: '/create-with-chatgpt'
+      fullPath: '/create-with-chatgpt'
+      preLoaderRoute: typeof AuthenticatedCreateWithChatgptRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/home': {
       id: '/_authenticated/home'
@@ -247,6 +267,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCreateWithChatgptRoute: typeof AuthenticatedCreateWithChatgptRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedUnitsRoute: typeof AuthenticatedUnitsRoute
@@ -258,6 +279,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCreateWithChatgptRoute: AuthenticatedCreateWithChatgptRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedUnitsRoute: AuthenticatedUnitsRoute,

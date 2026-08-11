@@ -214,7 +214,10 @@ function ImportPage() {
             setJson(e.target.value);
             setResult(null);
           }}
-          onPaste={() => setTimeout(() => setResult(validatePackage((event as never) ? json : json)), 0)}
+          onPaste={(e) => {
+            const text = e.clipboardData.getData("text");
+            if (text) setTimeout(() => setResult(validatePackage(text)), 0);
+          }}
           placeholder="Indsæt CaseLab JSON fra ChatGPT her…"
           className="min-h-56 rounded-xl font-mono text-xs"
         />
