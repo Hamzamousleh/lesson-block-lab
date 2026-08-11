@@ -18,8 +18,10 @@ import type { ReactNode } from "react";
 const navLinks = [
   { to: "/home", label: "Hjem" },
   { to: "/classes", label: "Klasser" },
+  { to: "/units", label: "Forløb" },
   { to: "/lessons", label: "Lektioner" },
 ] as const;
+
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useSession();
