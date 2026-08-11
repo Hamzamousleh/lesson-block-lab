@@ -74,7 +74,7 @@ function Home() {
           a.ready ? (
             <Link
               key={a.title}
-              to="/lessons/new"
+              to="/create-with-chatgpt"
               className="surface-card group flex flex-col gap-3 p-8 text-left transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]"
             >
               <span className="text-3xl">{a.icon}</span>
