@@ -20,6 +20,15 @@ import type { LessonBlock } from "@/lib/types";
 import { BlockRenderer, revealSteps } from "@/components/run/BlockRenderer";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  participantsQuery,
+  responsesQuery,
+  sessionsQuery,
+  updateSession,
+} from "@/lib/sessions";
+import { summarize } from "@/lib/results";
+import { ResultBars } from "@/components/student/StudentBlock";
+
 
 export const Route = createFileRoute("/lessons/$lessonId/run")({
   ssr: false,
@@ -88,6 +97,39 @@ function RunMode() {
   const plannedStart = active.slice(0, index).reduce((s, b) => s + b.duration_minutes, 0);
   const plannedEnd = plannedStart + (current?.duration_minutes ?? 0);
   const drift = elapsed - plannedStart;
+
+  /* ---------- live student session (optional) ---------- */
+  const sessions = useQuery({ ...sessionsQuery({ lessonId }), refetchInterval: 15000 });
+  const liveSession =
+    (sessions.data ?? []).find((s) => s.mode === "live" && s.status !== "ended") ?? null;
+  const liveId = liveSession?.id ?? "";
+  const participants = useQuery({ ...participantsQuery(liveId, true), enabled: !!liveId });
+  const responses = useQuery({ ...responsesQuery(liveId, true), enabled: !!liveId });
+
+  useEffect(() => {
+    if (!liveSession || !current) return;
+    if (liveSession.current_block_id === current.id) return;
+    void updateSession(liveSession.id, {
+      current_block_id: current.id,
+      status: "active",
+      reveal_results: false,
+    }).then(() => queryClient.invalidateQueries({ queryKey: ["sessions"] }));
+  }, [liveSession, current, queryClient]);
+
+  const liveAnswers = current ? (responses.data ?? []).filter((a) => a.block_id === current.id) : [];
+  const liveNames = new Map((participants.data ?? []).map((p) => [p.id, p.display_name]));
+  const liveSummary =
+    current && liveSession
+      ? summarize(
+          current.type,
+          (current.content ?? {}) as Record<string, unknown>,
+          liveAnswers.map((a) => ({
+            display_name: liveNames.get(a.participant_id) ?? "",
+            response_data: a.response_data,
+          })),
+        )
+      : null;
+
 
   const complete = useMutation({
     mutationFn: () => updateLesson(lessonId, { status: "completed" }),
