@@ -388,6 +388,7 @@ export type Database = {
           status: Database["public"]["Enums"]["session_status"]
           teacher_id: string
           updated_at: string
+          variant_label: string | null
         }
         Insert: {
           allow_anonymous?: boolean
@@ -404,6 +405,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["session_status"]
           teacher_id: string
           updated_at?: string
+          variant_label?: string | null
         }
         Update: {
           allow_anonymous?: boolean
@@ -420,6 +422,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["session_status"]
           teacher_id?: string
           updated_at?: string
+          variant_label?: string | null
         }
         Relationships: [
           {
