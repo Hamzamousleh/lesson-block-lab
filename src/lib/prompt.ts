@@ -326,7 +326,7 @@ export interface MaterialPromptInput {
   materialKind: string;
   purpose: string;
   duration: number;
-  outputType: "lesson" | "blocks";
+  outputType: "lesson" | "blocks" | "quiz";
   feels: string[];
 }
 
@@ -344,17 +344,17 @@ export function buildMaterialPrompt(i: MaterialPromptInput): string {
 
   const pkg =
     i.outputType === "lesson"
-      ? `{
-  "caselab_version": "2.0",
-  "type": "lesson",
-  "lesson": { "title": "...", "subject": "...", "duration_minutes": ${i.duration}, "learning_goal": "...", "teacher_note": "..." },
-  "blocks": [ ... ]
-}`
-      : `{
-  "caselab_version": "2.0",
-  "type": "blocks",
-  "blocks": [ ... ]
-}`;
+      ? CASELAB_V2_LESSON_OUTPUT_CONTRACT({ duration: i.duration, subject: i.subject })
+      : CASELAB_V2_BLOCK_OUTPUT_CONTRACT;
+
+  const quizRules =
+    i.outputType === "quiz"
+      ? `
+- Lav quiz-/MCQ-aktiviteter som "theory_test"-blokke, eleverne kan tage selvstændigt.
+- Hvis der findes ét fagligt forsvarligt korrekt svar, sæt "correct_option_index" (0 = første svarmulighed) og udfyld "feedback": { "correct": "...", "incorrect": "..." } med kort faglig begrundelse.
+- Hvis spørgsmålet er reelt åbent eller vurderende, undlad "correct_option_index" og "feedback".
+- Brug 3–4 svarmuligheder pr. spørgsmål og gør distraktorerne fagligt plausible.`
+      : "";
 
   return `${COMMON}
 
@@ -366,7 +366,7 @@ ${materialSection(i.material)}
 Krav:
 - Brug materialet som eneste faglige kilde.
 - Sørg for, at eleverne bearbejder materialet aktivt — ikke bare læser det.
-- Fordel tiden, så den samlede varighed rammer ca. ${i.duration} minutter.
+- Fordel tiden, så den samlede varighed rammer ca. ${i.duration} minutter.${quizRules}
 
 Returnér præcis denne struktur:
 ${pkg}`;
