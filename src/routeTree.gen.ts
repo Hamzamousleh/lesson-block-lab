@@ -17,6 +17,7 @@ import { Route as AuthenticatedExtraTimeRouteImport } from './routes/_authentica
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedImproveLessonRouteImport } from './routes/_authenticated/improve-lesson'
+import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedRescueRouteImport } from './routes/_authenticated/rescue'
 import { Route as AuthenticatedUnitsRouteImport } from './routes/_authenticated/units'
 import { Route as AuthenticatedClassesIndexRouteImport } from './routes/_authenticated/classes.index'
@@ -67,6 +68,11 @@ const AuthenticatedImproveLessonRoute =
     path: '/improve-lesson',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRescueRoute = AuthenticatedRescueRouteImport.update({
   id: '/rescue',
   path: '/rescue',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
   '/improve-lesson': typeof AuthenticatedImproveLessonRoute
+  '/library': typeof AuthenticatedLibraryRoute
   '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
   '/improve-lesson': typeof AuthenticatedImproveLessonRoute
+  '/library': typeof AuthenticatedLibraryRoute
   '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/improve-lesson': typeof AuthenticatedImproveLessonRoute
+  '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/rescue': typeof AuthenticatedRescueRoute
   '/_authenticated/units': typeof AuthenticatedUnitsRoute
   '/_authenticated/classes/$classId': typeof AuthenticatedClassesClassIdRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/import'
     | '/improve-lesson'
+    | '/library'
     | '/rescue'
     | '/units'
     | '/classes/$classId'
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/import'
     | '/improve-lesson'
+    | '/library'
     | '/rescue'
     | '/units'
     | '/classes/$classId'
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/import'
     | '/_authenticated/improve-lesson'
+    | '/_authenticated/library'
     | '/_authenticated/rescue'
     | '/_authenticated/units'
     | '/_authenticated/classes/$classId'
@@ -285,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImproveLessonRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/library': {
+      id: '/_authenticated/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof AuthenticatedLibraryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rescue': {
       id: '/_authenticated/rescue'
       path: '/rescue'
@@ -350,6 +369,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedImproveLessonRoute: typeof AuthenticatedImproveLessonRoute
+  AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedRescueRoute: typeof AuthenticatedRescueRoute
   AuthenticatedUnitsRoute: typeof AuthenticatedUnitsRoute
   AuthenticatedClassesClassIdRoute: typeof AuthenticatedClassesClassIdRoute
@@ -365,6 +385,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedImproveLessonRoute: AuthenticatedImproveLessonRoute,
+  AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedRescueRoute: AuthenticatedRescueRoute,
   AuthenticatedUnitsRoute: AuthenticatedUnitsRoute,
   AuthenticatedClassesClassIdRoute: AuthenticatedClassesClassIdRoute,
