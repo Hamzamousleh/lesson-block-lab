@@ -27,6 +27,8 @@ import { Route as AuthenticatedClassesIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedClassesClassIdRouteImport } from './routes/_authenticated/classes.$classId'
 import { Route as AuthenticatedLessonsIndexRouteImport } from './routes/_authenticated/lessons.index'
 import { Route as AuthenticatedLessonsNewRouteImport } from './routes/_authenticated/lessons.new'
+import { Route as AuthenticatedSessionsIndexRouteImport } from './routes/_authenticated/sessions.index'
+import { Route as AuthenticatedSessionsSessionIdRouteImport } from './routes/_authenticated/sessions.$sessionId'
 import { Route as LessonsLessonIdRunRouteImport } from './routes/lessons.$lessonId.run'
 import { Route as AuthenticatedLessonsLessonIdEditRouteImport } from './routes/_authenticated/lessons.$lessonId.edit'
 
@@ -124,6 +126,18 @@ const AuthenticatedLessonsNewRoute = AuthenticatedLessonsNewRouteImport.update({
   path: '/lessons/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSessionsIndexRoute =
+  AuthenticatedSessionsIndexRouteImport.update({
+    id: '/sessions/',
+    path: '/sessions/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSessionsSessionIdRoute =
+  AuthenticatedSessionsSessionIdRouteImport.update({
+    id: '/sessions/$sessionId',
+    path: '/sessions/$sessionId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const LessonsLessonIdRunRoute = LessonsLessonIdRunRouteImport.update({
   id: '/lessons/$lessonId/run',
   path: '/lessons/$lessonId/run',
@@ -152,9 +166,11 @@ export interface FileRoutesByFullPath {
   '/join/': typeof JoinIndexRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
+  '/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
   '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/classes/': typeof AuthenticatedClassesIndexRoute
   '/lessons/': typeof AuthenticatedLessonsIndexRoute
+  '/sessions/': typeof AuthenticatedSessionsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -173,9 +189,11 @@ export interface FileRoutesByTo {
   '/join': typeof JoinIndexRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
+  '/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
   '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/classes': typeof AuthenticatedClassesIndexRoute
   '/lessons': typeof AuthenticatedLessonsIndexRoute
+  '/sessions': typeof AuthenticatedSessionsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
 }
 export interface FileRoutesById {
@@ -196,9 +214,11 @@ export interface FileRoutesById {
   '/join/': typeof JoinIndexRoute
   '/_authenticated/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/_authenticated/lessons/new': typeof AuthenticatedLessonsNewRoute
+  '/_authenticated/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
   '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/_authenticated/classes/': typeof AuthenticatedClassesIndexRoute
   '/_authenticated/lessons/': typeof AuthenticatedLessonsIndexRoute
+  '/_authenticated/sessions/': typeof AuthenticatedSessionsIndexRoute
   '/_authenticated/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
 }
 export interface FileRouteTypes {
@@ -219,9 +239,11 @@ export interface FileRouteTypes {
     | '/join/'
     | '/classes/$classId'
     | '/lessons/new'
+    | '/sessions/$sessionId'
     | '/lessons/$lessonId/run'
     | '/classes/'
     | '/lessons/'
+    | '/sessions/'
     | '/lessons/$lessonId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -240,9 +262,11 @@ export interface FileRouteTypes {
     | '/join'
     | '/classes/$classId'
     | '/lessons/new'
+    | '/sessions/$sessionId'
     | '/lessons/$lessonId/run'
     | '/classes'
     | '/lessons'
+    | '/sessions'
     | '/lessons/$lessonId/edit'
   id:
     | '__root__'
@@ -262,9 +286,11 @@ export interface FileRouteTypes {
     | '/join/'
     | '/_authenticated/classes/$classId'
     | '/_authenticated/lessons/new'
+    | '/_authenticated/sessions/$sessionId'
     | '/lessons/$lessonId/run'
     | '/_authenticated/classes/'
     | '/_authenticated/lessons/'
+    | '/_authenticated/sessions/'
     | '/_authenticated/lessons/$lessonId/edit'
   fileRoutesById: FileRoutesById
 }
@@ -406,6 +432,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLessonsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sessions/': {
+      id: '/_authenticated/sessions/'
+      path: '/sessions'
+      fullPath: '/sessions/'
+      preLoaderRoute: typeof AuthenticatedSessionsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sessions/$sessionId': {
+      id: '/_authenticated/sessions/$sessionId'
+      path: '/sessions/$sessionId'
+      fullPath: '/sessions/$sessionId'
+      preLoaderRoute: typeof AuthenticatedSessionsSessionIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/lessons/$lessonId/run': {
       id: '/lessons/$lessonId/run'
       path: '/lessons/$lessonId/run'
@@ -434,8 +474,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedUnitsRoute: typeof AuthenticatedUnitsRoute
   AuthenticatedClassesClassIdRoute: typeof AuthenticatedClassesClassIdRoute
   AuthenticatedLessonsNewRoute: typeof AuthenticatedLessonsNewRoute
+  AuthenticatedSessionsSessionIdRoute: typeof AuthenticatedSessionsSessionIdRoute
   AuthenticatedClassesIndexRoute: typeof AuthenticatedClassesIndexRoute
   AuthenticatedLessonsIndexRoute: typeof AuthenticatedLessonsIndexRoute
+  AuthenticatedSessionsIndexRoute: typeof AuthenticatedSessionsIndexRoute
   AuthenticatedLessonsLessonIdEditRoute: typeof AuthenticatedLessonsLessonIdEditRoute
 }
 
@@ -450,8 +492,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedUnitsRoute: AuthenticatedUnitsRoute,
   AuthenticatedClassesClassIdRoute: AuthenticatedClassesClassIdRoute,
   AuthenticatedLessonsNewRoute: AuthenticatedLessonsNewRoute,
+  AuthenticatedSessionsSessionIdRoute: AuthenticatedSessionsSessionIdRoute,
   AuthenticatedClassesIndexRoute: AuthenticatedClassesIndexRoute,
   AuthenticatedLessonsIndexRoute: AuthenticatedLessonsIndexRoute,
+  AuthenticatedSessionsIndexRoute: AuthenticatedSessionsIndexRoute,
   AuthenticatedLessonsLessonIdEditRoute: AuthenticatedLessonsLessonIdEditRoute,
 }
 
