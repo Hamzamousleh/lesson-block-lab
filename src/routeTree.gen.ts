@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCreateWithChatgptRouteImport } from './routes/_authenticated/create-with-chatgpt'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
+import { Route as AuthenticatedRescueRouteImport } from './routes/_authenticated/rescue'
 import { Route as AuthenticatedUnitsRouteImport } from './routes/_authenticated/units'
 import { Route as AuthenticatedClassesIndexRouteImport } from './routes/_authenticated/classes.index'
 import { Route as AuthenticatedClassesClassIdRouteImport } from './routes/_authenticated/classes.$classId'
@@ -51,6 +52,11 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
 const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
   id: '/import',
   path: '/import',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRescueRoute = AuthenticatedRescueRouteImport.update({
+  id: '/rescue',
+  path: '/rescue',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedUnitsRoute = AuthenticatedUnitsRouteImport.update({
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
+  '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
+  '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/_authenticated/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
+  '/_authenticated/rescue': typeof AuthenticatedRescueRoute
   '/_authenticated/units': typeof AuthenticatedUnitsRoute
   '/_authenticated/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/_authenticated/lessons/new': typeof AuthenticatedLessonsNewRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/create-with-chatgpt'
     | '/home'
     | '/import'
+    | '/rescue'
     | '/units'
     | '/classes/$classId'
     | '/lessons/new'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/create-with-chatgpt'
     | '/home'
     | '/import'
+    | '/rescue'
     | '/units'
     | '/classes/$classId'
     | '/lessons/new'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/_authenticated/create-with-chatgpt'
     | '/_authenticated/home'
     | '/_authenticated/import'
+    | '/_authenticated/rescue'
     | '/_authenticated/units'
     | '/_authenticated/classes/$classId'
     | '/_authenticated/lessons/new'
@@ -234,6 +246,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/rescue': {
+      id: '/_authenticated/rescue'
+      path: '/rescue'
+      fullPath: '/rescue'
+      preLoaderRoute: typeof AuthenticatedRescueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/units': {
       id: '/_authenticated/units'
       path: '/units'
@@ -290,6 +309,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCreateWithChatgptRoute: typeof AuthenticatedCreateWithChatgptRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
+  AuthenticatedRescueRoute: typeof AuthenticatedRescueRoute
   AuthenticatedUnitsRoute: typeof AuthenticatedUnitsRoute
   AuthenticatedClassesClassIdRoute: typeof AuthenticatedClassesClassIdRoute
   AuthenticatedLessonsNewRoute: typeof AuthenticatedLessonsNewRoute
@@ -302,6 +322,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCreateWithChatgptRoute: AuthenticatedCreateWithChatgptRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
+  AuthenticatedRescueRoute: AuthenticatedRescueRoute,
   AuthenticatedUnitsRoute: AuthenticatedUnitsRoute,
   AuthenticatedClassesClassIdRoute: AuthenticatedClassesClassIdRoute,
   AuthenticatedLessonsNewRoute: AuthenticatedLessonsNewRoute,
