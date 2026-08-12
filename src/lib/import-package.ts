@@ -8,7 +8,13 @@ async function currentUserId(): Promise<string> {
   return data.user.id;
 }
 
-function blockRow(b: PackageBlock, lessonId: string, teacherId: string, order: number) {
+function blockRow(
+  b: PackageBlock,
+  lessonId: string,
+  teacherId: string,
+  order: number,
+  isFallback = false,
+) {
   return {
     lesson_id: lessonId,
     teacher_id: teacherId,
@@ -19,6 +25,7 @@ function blockRow(b: PackageBlock, lessonId: string, teacherId: string, order: n
     student_instructions: b.student_instructions ?? null,
     teacher_notes: b.teacher_notes ?? null,
     content: b.content as never,
+    is_fallback: isFallback,
   };
 }
 
@@ -46,9 +53,14 @@ export async function importLessonPackage(
   if (error || !lesson) throw new Error("Lektionen kunne ikke importeres.");
 
   const created = lesson as Lesson;
-  const { error: blockError } = await supabase
-    .from("lesson_blocks")
-    .insert(pkg.lesson.blocks.map((b, i) => blockRow(b, created.id, teacher_id, i)));
+  const fallback = pkg.lesson.fallback_blocks ?? [];
+  const rows = [
+    ...pkg.lesson.blocks.map((b, i) => blockRow(b, created.id, teacher_id, i, false)),
+    ...fallback.map((b, i) =>
+      blockRow(b, created.id, teacher_id, pkg.lesson.blocks.length + i, true),
+    ),
+  ];
+  const { error: blockError } = await supabase.from("lesson_blocks").insert(rows);
 
   if (blockError) {
     // compensating cleanup so we never leave a half-imported lesson behind
@@ -59,6 +71,7 @@ export async function importLessonPackage(
 
   return created.id;
 }
+
 
 export type InsertionPoint = { kind: "top" } | { kind: "bottom" } | { kind: "after"; blockId: string };
 
