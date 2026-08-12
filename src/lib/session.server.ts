@@ -209,7 +209,7 @@ export async function getStudentState(participant_token: string): Promise<Studen
     .eq("id", session.lesson_id)
     .maybeSingle();
 
-  const all = await loadBlocks(session.lesson_id);
+  const all = await loadBlocks(session.lesson_id, (session as { variant_label?: string | null }).variant_label ?? null);
   const currentBlockId =
     session.mode === "live" ? session.current_block_id : (all[participant.progress_index]?.id ?? null);
 
