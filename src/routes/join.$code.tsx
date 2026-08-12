@@ -68,7 +68,7 @@ function JoinCode() {
 
       {peek.data?.found && peek.data.status === "ended" && (
         <div className="mt-10">
-          <h1 className="font-display text-3xl font-semibold">Aktiviteten er afsluttet</h1>
+          <h1 className="font-display text-3xl font-semibold">Denne aktivitet er afsluttet.</h1>
           <p className="mt-2 text-muted-foreground">Tak for din deltagelse.</p>
         </div>
       )}
