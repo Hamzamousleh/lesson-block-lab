@@ -36,9 +36,16 @@ function Landing() {
         <span className="font-display text-xl font-semibold">
           Case<span className="text-primary">Lab</span>
         </span>
-        <Link to="/auth" className="ml-auto">
-          <Button variant="ghost">Log ind</Button>
-        </Link>
+        <div className="ml-auto flex items-center gap-2">
+          <Link to="/join">
+            <Button variant="outline" className="rounded-full">
+              Deltag med kode
+            </Button>
+          </Link>
+          <Link to="/auth">
+            <Button variant="ghost">Log ind</Button>
+          </Link>
+        </div>
       </header>
       <section className="mx-auto max-w-3xl px-6 pt-16 pb-24 text-center sm:pt-24">
         <p className="text-sm font-medium tracking-wide text-primary uppercase">
