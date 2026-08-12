@@ -50,8 +50,15 @@ const actions = [
     icon: "📄",
     title: "Brug mit materiale",
     description: "Lav undervisning ud fra tekst eller noter.",
-    to: null,
+    to: "/material-to-lesson",
   },
+  {
+    icon: "📱",
+    title: "Elevsessioner",
+    description: "Lad eleverne svare fra deres egen enhed.",
+    to: "/sessions",
+  },
+
 ] as const;
 
 function Home() {
