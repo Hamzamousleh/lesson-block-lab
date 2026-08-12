@@ -76,6 +76,7 @@ export const BLOCK_TYPES: BlockTypeDef[] = [
       { key: "scenario", label: "Situation", kind: "textarea" },
       { key: "question", label: "Spørgsmål", kind: "text" },
       { key: "options", label: "Svarmuligheder", kind: "list", itemLabel: "Svarmulighed" },
+      { key: "correct_option_index", label: "Korrekt svarmulighed (0 = første)", kind: "number" },
       { key: "follow_up_questions", label: "Opfølgende spørgsmål", kind: "list", itemLabel: "Spørgsmål" },
     ],
   },
@@ -166,6 +167,7 @@ export const BLOCK_TYPES: BlockTypeDef[] = [
     fields: [
       { key: "question", label: "Spørgsmål", kind: "text" },
       { key: "options", label: "Svarmuligheder", kind: "list", itemLabel: "Svarmulighed" },
+      { key: "correct_option_index", label: "Korrekt svarmulighed (0 = første, lad stå tom hvis intet facit)", kind: "number" },
     ],
   },
   {

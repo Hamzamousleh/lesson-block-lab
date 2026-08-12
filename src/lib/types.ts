@@ -63,7 +63,7 @@ export interface LessonBlock {
 export const VARIANT_LEVELS = ["Støtte", "Standard", "Udfordring"] as const;
 export type VariantLevel = (typeof VARIANT_LEVELS)[number];
 
-export type LibraryItemType = "block" | "lesson";
+export type LibraryItemType = "block" | "lesson" | "response_example";
 
 export interface LibraryItem {
   id: string;
