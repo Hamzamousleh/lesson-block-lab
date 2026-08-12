@@ -21,6 +21,8 @@ import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedRescueRouteImport } from './routes/_authenticated/rescue'
 import { Route as AuthenticatedUnitsRouteImport } from './routes/_authenticated/units'
 import { Route as JoinIndexRouteImport } from './routes/join.index'
+import { Route as JoinCodeRouteImport } from './routes/join.$code'
+import { Route as StudentCodeRouteImport } from './routes/student.$code'
 import { Route as AuthenticatedClassesIndexRouteImport } from './routes/_authenticated/classes.index'
 import { Route as AuthenticatedClassesClassIdRouteImport } from './routes/_authenticated/classes.$classId'
 import { Route as AuthenticatedLessonsIndexRouteImport } from './routes/_authenticated/lessons.index'
@@ -89,6 +91,16 @@ const JoinIndexRoute = JoinIndexRouteImport.update({
   path: '/join/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JoinCodeRoute = JoinCodeRouteImport.update({
+  id: '/join/$code',
+  path: '/join/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentCodeRoute = StudentCodeRouteImport.update({
+  id: '/student/$code',
+  path: '/student/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedClassesIndexRoute =
   AuthenticatedClassesIndexRouteImport.update({
     id: '/classes/',
@@ -135,6 +147,8 @@ export interface FileRoutesByFullPath {
   '/library': typeof AuthenticatedLibraryRoute
   '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
+  '/join/$code': typeof JoinCodeRoute
+  '/student/$code': typeof StudentCodeRoute
   '/join/': typeof JoinIndexRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
@@ -154,6 +168,8 @@ export interface FileRoutesByTo {
   '/library': typeof AuthenticatedLibraryRoute
   '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
+  '/join/$code': typeof JoinCodeRoute
+  '/student/$code': typeof StudentCodeRoute
   '/join': typeof JoinIndexRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
@@ -175,6 +191,8 @@ export interface FileRoutesById {
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/rescue': typeof AuthenticatedRescueRoute
   '/_authenticated/units': typeof AuthenticatedUnitsRoute
+  '/join/$code': typeof JoinCodeRoute
+  '/student/$code': typeof StudentCodeRoute
   '/join/': typeof JoinIndexRoute
   '/_authenticated/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/_authenticated/lessons/new': typeof AuthenticatedLessonsNewRoute
@@ -196,6 +214,8 @@ export interface FileRouteTypes {
     | '/library'
     | '/rescue'
     | '/units'
+    | '/join/$code'
+    | '/student/$code'
     | '/join/'
     | '/classes/$classId'
     | '/lessons/new'
@@ -215,6 +235,8 @@ export interface FileRouteTypes {
     | '/library'
     | '/rescue'
     | '/units'
+    | '/join/$code'
+    | '/student/$code'
     | '/join'
     | '/classes/$classId'
     | '/lessons/new'
@@ -235,6 +257,8 @@ export interface FileRouteTypes {
     | '/_authenticated/library'
     | '/_authenticated/rescue'
     | '/_authenticated/units'
+    | '/join/$code'
+    | '/student/$code'
     | '/join/'
     | '/_authenticated/classes/$classId'
     | '/_authenticated/lessons/new'
@@ -248,6 +272,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  JoinCodeRoute: typeof JoinCodeRoute
+  StudentCodeRoute: typeof StudentCodeRoute
   JoinIndexRoute: typeof JoinIndexRoute
   LessonsLessonIdRunRoute: typeof LessonsLessonIdRunRoute
 }
@@ -338,6 +364,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/join/$code': {
+      id: '/join/$code'
+      path: '/join/$code'
+      fullPath: '/join/$code'
+      preLoaderRoute: typeof JoinCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/$code': {
+      id: '/student/$code'
+      path: '/student/$code'
+      fullPath: '/student/$code'
+      preLoaderRoute: typeof StudentCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/classes/': {
       id: '/_authenticated/classes/'
       path: '/classes'
@@ -422,6 +462,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  JoinCodeRoute: JoinCodeRoute,
+  StudentCodeRoute: StudentCodeRoute,
   JoinIndexRoute: JoinIndexRoute,
   LessonsLessonIdRunRoute: LessonsLessonIdRunRoute,
 }
