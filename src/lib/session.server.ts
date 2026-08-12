@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { isInteractive, summarize, type ResultSummary } from "./results";
 
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 export type JsonObject = { [key: string]: JsonValue };
@@ -9,20 +10,6 @@ export type JsonObject = { [key: string]: JsonValue };
  * helpers, which authenticate with an opaque participant_token and
  * return only sanitized, session-scoped content.
  * ------------------------------------------------------------------ */
-
-export const INTERACTIVE_TYPES = [
-  "poll",
-  "theory_test",
-  "scale",
-  "short_response",
-  "ranking",
-  "dilemma",
-  "position",
-  "case",
-  "compare",
-  "find_the_error",
-  "exit_ticket",
-] as const;
 
 export interface StudentBlockDTO {
   id: string;
@@ -84,7 +71,7 @@ function toStudentBlock(b: {
     duration_minutes: b.duration_minutes,
     student_instructions: b.student_instructions,
     content: sanitizeContent(b.type, (b.content ?? {}) as JsonObject),
-    interactive: (INTERACTIVE_TYPES as readonly string[]).includes(b.type),
+    interactive: isInteractive(b.type),
   };
 }
 
@@ -178,69 +165,6 @@ export async function peekSessionByCode(code: string) {
     title: lesson?.title ?? "Aktivitet",
     subject: lesson?.subject ?? null,
   };
-}
-
-/* ---------------- results ---------------- */
-
-export type ResultSummary =
-  | { kind: "options"; total: number; labels: string[]; counts: number[] }
-  | { kind: "scale"; total: number; average: number; min: number; max: number; counts: number[] }
-  | { kind: "text"; total: number; items: { name: string; text: string }[] }
-  | { kind: "none"; total: number };
-
-export function summarize(
-  type: string,
-  content: Record<string, unknown>,
-  rows: { display_name: string; response_data: Record<string, unknown> }[],
-): ResultSummary {
-  const total = rows.length;
-  const optionsOf = (key: string) => {
-    const v = content?.[key];
-    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
-  };
-
-  if (type === "poll" || type === "theory_test" || type === "dilemma") {
-    const labels = optionsOf("options");
-    const counts = labels.map(() => 0);
-    for (const r of rows) {
-      const i = r.response_data?.["selected_option_index"];
-      if (typeof i === "number" && counts[i] !== undefined) counts[i] = (counts[i] ?? 0) + 1;
-    }
-    return { kind: "options", total, labels, counts };
-  }
-
-  if (type === "scale" || type === "position") {
-    const min = type === "scale" ? Number(content?.["min"] ?? 1) : 0;
-    const max = type === "scale" ? Number(content?.["max"] ?? 7) : 10;
-    const span = Math.max(1, max - min + 1);
-    const counts = Array.from({ length: span }, () => 0);
-    let sum = 0;
-    let n = 0;
-    for (const r of rows) {
-      const v = r.response_data?.["value"];
-      if (typeof v === "number") {
-        sum += v;
-        n += 1;
-        const idx = Math.round(v) - min;
-        if (counts[idx] !== undefined) counts[idx] = (counts[idx] ?? 0) + 1;
-      }
-    }
-    return { kind: "scale", total, average: n ? Math.round((sum / n) * 10) / 10 : 0, min, max, counts };
-  }
-
-  const texts: { name: string; text: string }[] = [];
-  for (const r of rows) {
-    const d = r.response_data ?? {};
-    let text = "";
-    if (typeof d["text"] === "string") text = d["text"];
-    else if (Array.isArray(d["answers"])) text = (d["answers"] as unknown[]).filter((x) => typeof x === "string").join("\n\n");
-    else if (Array.isArray(d["ordered_items"])) text = (d["ordered_items"] as unknown[]).join(" → ");
-    if (typeof d["justification"] === "string" && d["justification"].trim())
-      text = `${text ? text + "\n" : ""}${d["justification"]}`;
-    if (text.trim()) texts.push({ name: r.display_name, text });
-  }
-  if (texts.length) return { kind: "text", total, items: texts };
-  return { kind: "none", total };
 }
 
 /* ---------------- student state ---------------- */
