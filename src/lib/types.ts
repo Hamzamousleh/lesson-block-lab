@@ -53,9 +53,27 @@ export interface LessonBlock {
   student_instructions: string | null;
   teacher_notes: string | null;
   content: Record<string, unknown>;
+  is_fallback: boolean;
   created_at: string;
   updated_at: string;
 }
+
+export type LibraryItemType = "block" | "lesson";
+
+export interface LibraryItem {
+  id: string;
+  teacher_id: string;
+  item_type: LibraryItemType;
+  title: string;
+  subject: string | null;
+  block_type: string | null;
+  duration_minutes: number;
+  tags: string[];
+  data: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
 
 export const UNIT_STATUS_LABEL: Record<UnitStatus, string> = {
   planned: "Planlagt",
