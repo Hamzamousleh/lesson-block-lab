@@ -10,6 +10,10 @@ export interface PackageBlock {
   student_instructions?: string | null;
   teacher_notes?: string | null;
   content: Record<string, unknown>;
+  /** Differentiation: activities in the same group are variants of one activity. */
+  variant_group?: string | null;
+  /** Neutral level label, e.g. "Støtte", "Standard", "Udfordring". */
+  variant_label?: string | null;
 }
 
 export interface LessonPackage {
@@ -156,6 +160,8 @@ function validateBlock(raw: unknown, index: number, errors: string[]): PackageBl
       typeof raw["student_instructions"] === "string" ? raw["student_instructions"] : null,
     teacher_notes: typeof raw["teacher_notes"] === "string" ? raw["teacher_notes"] : null,
     content: content as Record<string, unknown>,
+    variant_group: typeof raw["variant_group"] === "string" ? raw["variant_group"].trim() || null : null,
+    variant_label: typeof raw["variant_label"] === "string" ? raw["variant_label"].trim() || null : null,
   };
 }
 

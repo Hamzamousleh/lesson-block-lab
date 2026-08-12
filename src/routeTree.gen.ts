@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCreateWithChatgptRouteImport } from './routes/_authenticated/create-with-chatgpt'
+import { Route as AuthenticatedDifferentiateRouteImport } from './routes/_authenticated/differentiate'
 import { Route as AuthenticatedExtraTimeRouteImport } from './routes/_authenticated/extra-time'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
@@ -30,8 +31,10 @@ import { Route as AuthenticatedLessonsIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedLessonsNewRouteImport } from './routes/_authenticated/lessons.new'
 import { Route as AuthenticatedSessionsIndexRouteImport } from './routes/_authenticated/sessions.index'
 import { Route as AuthenticatedSessionsSessionIdRouteImport } from './routes/_authenticated/sessions.$sessionId'
+import { Route as AuthenticatedSessionsCompareRouteImport } from './routes/_authenticated/sessions.compare'
 import { Route as LessonsLessonIdRunRouteImport } from './routes/lessons.$lessonId.run'
 import { Route as AuthenticatedLessonsLessonIdEditRouteImport } from './routes/_authenticated/lessons.$lessonId.edit'
+import { Route as AuthenticatedSessionsSessionIdFollowUpRouteImport } from './routes/_authenticated/sessions.$sessionId_.follow-up'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -51,6 +54,12 @@ const AuthenticatedCreateWithChatgptRoute =
   AuthenticatedCreateWithChatgptRouteImport.update({
     id: '/create-with-chatgpt',
     path: '/create-with-chatgpt',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDifferentiateRoute =
+  AuthenticatedDifferentiateRouteImport.update({
+    id: '/differentiate',
+    path: '/differentiate',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedExtraTimeRoute = AuthenticatedExtraTimeRouteImport.update({
@@ -145,6 +154,12 @@ const AuthenticatedSessionsSessionIdRoute =
     path: '/sessions/$sessionId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSessionsCompareRoute =
+  AuthenticatedSessionsCompareRouteImport.update({
+    id: '/sessions/compare',
+    path: '/sessions/compare',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const LessonsLessonIdRunRoute = LessonsLessonIdRunRouteImport.update({
   id: '/lessons/$lessonId/run',
   path: '/lessons/$lessonId/run',
@@ -156,11 +171,18 @@ const AuthenticatedLessonsLessonIdEditRoute =
     path: '/lessons/$lessonId/edit',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSessionsSessionIdFollowUpRoute =
+  AuthenticatedSessionsSessionIdFollowUpRouteImport.update({
+    id: '/sessions/$sessionId_/follow-up',
+    path: '/sessions/$sessionId/follow-up',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
+  '/differentiate': typeof AuthenticatedDifferentiateRoute
   '/extra-time': typeof AuthenticatedExtraTimeRoute
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
@@ -175,16 +197,19 @@ export interface FileRoutesByFullPath {
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
   '/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
+  '/sessions/compare': typeof AuthenticatedSessionsCompareRoute
   '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/classes/': typeof AuthenticatedClassesIndexRoute
   '/lessons/': typeof AuthenticatedLessonsIndexRoute
   '/sessions/': typeof AuthenticatedSessionsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
+  '/sessions/$sessionId/follow-up': typeof AuthenticatedSessionsSessionIdFollowUpRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
+  '/differentiate': typeof AuthenticatedDifferentiateRoute
   '/extra-time': typeof AuthenticatedExtraTimeRoute
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
@@ -199,11 +224,13 @@ export interface FileRoutesByTo {
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
   '/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
+  '/sessions/compare': typeof AuthenticatedSessionsCompareRoute
   '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/classes': typeof AuthenticatedClassesIndexRoute
   '/lessons': typeof AuthenticatedLessonsIndexRoute
   '/sessions': typeof AuthenticatedSessionsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
+  '/sessions/$sessionId/follow-up': typeof AuthenticatedSessionsSessionIdFollowUpRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -211,6 +238,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
+  '/_authenticated/differentiate': typeof AuthenticatedDifferentiateRoute
   '/_authenticated/extra-time': typeof AuthenticatedExtraTimeRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
@@ -225,11 +253,13 @@ export interface FileRoutesById {
   '/_authenticated/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/_authenticated/lessons/new': typeof AuthenticatedLessonsNewRoute
   '/_authenticated/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
+  '/_authenticated/sessions/compare': typeof AuthenticatedSessionsCompareRoute
   '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/_authenticated/classes/': typeof AuthenticatedClassesIndexRoute
   '/_authenticated/lessons/': typeof AuthenticatedLessonsIndexRoute
   '/_authenticated/sessions/': typeof AuthenticatedSessionsIndexRoute
   '/_authenticated/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
+  '/_authenticated/sessions/$sessionId_/follow-up': typeof AuthenticatedSessionsSessionIdFollowUpRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -237,6 +267,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/create-with-chatgpt'
+    | '/differentiate'
     | '/extra-time'
     | '/home'
     | '/import'
@@ -251,16 +282,19 @@ export interface FileRouteTypes {
     | '/classes/$classId'
     | '/lessons/new'
     | '/sessions/$sessionId'
+    | '/sessions/compare'
     | '/lessons/$lessonId/run'
     | '/classes/'
     | '/lessons/'
     | '/sessions/'
     | '/lessons/$lessonId/edit'
+    | '/sessions/$sessionId/follow-up'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/create-with-chatgpt'
+    | '/differentiate'
     | '/extra-time'
     | '/home'
     | '/import'
@@ -275,17 +309,20 @@ export interface FileRouteTypes {
     | '/classes/$classId'
     | '/lessons/new'
     | '/sessions/$sessionId'
+    | '/sessions/compare'
     | '/lessons/$lessonId/run'
     | '/classes'
     | '/lessons'
     | '/sessions'
     | '/lessons/$lessonId/edit'
+    | '/sessions/$sessionId/follow-up'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/create-with-chatgpt'
+    | '/_authenticated/differentiate'
     | '/_authenticated/extra-time'
     | '/_authenticated/home'
     | '/_authenticated/import'
@@ -300,11 +337,13 @@ export interface FileRouteTypes {
     | '/_authenticated/classes/$classId'
     | '/_authenticated/lessons/new'
     | '/_authenticated/sessions/$sessionId'
+    | '/_authenticated/sessions/compare'
     | '/lessons/$lessonId/run'
     | '/_authenticated/classes/'
     | '/_authenticated/lessons/'
     | '/_authenticated/sessions/'
     | '/_authenticated/lessons/$lessonId/edit'
+    | '/_authenticated/sessions/$sessionId_/follow-up'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -345,6 +384,13 @@ declare module '@tanstack/react-router' {
       path: '/create-with-chatgpt'
       fullPath: '/create-with-chatgpt'
       preLoaderRoute: typeof AuthenticatedCreateWithChatgptRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/differentiate': {
+      id: '/_authenticated/differentiate'
+      path: '/differentiate'
+      fullPath: '/differentiate'
+      preLoaderRoute: typeof AuthenticatedDifferentiateRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/extra-time': {
@@ -466,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSessionsSessionIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sessions/compare': {
+      id: '/_authenticated/sessions/compare'
+      path: '/sessions/compare'
+      fullPath: '/sessions/compare'
+      preLoaderRoute: typeof AuthenticatedSessionsCompareRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/lessons/$lessonId/run': {
       id: '/lessons/$lessonId/run'
       path: '/lessons/$lessonId/run'
@@ -480,11 +533,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLessonsLessonIdEditRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sessions/$sessionId_/follow-up': {
+      id: '/_authenticated/sessions/$sessionId_/follow-up'
+      path: '/sessions/$sessionId/follow-up'
+      fullPath: '/sessions/$sessionId/follow-up'
+      preLoaderRoute: typeof AuthenticatedSessionsSessionIdFollowUpRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCreateWithChatgptRoute: typeof AuthenticatedCreateWithChatgptRoute
+  AuthenticatedDifferentiateRoute: typeof AuthenticatedDifferentiateRoute
   AuthenticatedExtraTimeRoute: typeof AuthenticatedExtraTimeRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
@@ -496,14 +557,17 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedClassesClassIdRoute: typeof AuthenticatedClassesClassIdRoute
   AuthenticatedLessonsNewRoute: typeof AuthenticatedLessonsNewRoute
   AuthenticatedSessionsSessionIdRoute: typeof AuthenticatedSessionsSessionIdRoute
+  AuthenticatedSessionsCompareRoute: typeof AuthenticatedSessionsCompareRoute
   AuthenticatedClassesIndexRoute: typeof AuthenticatedClassesIndexRoute
   AuthenticatedLessonsIndexRoute: typeof AuthenticatedLessonsIndexRoute
   AuthenticatedSessionsIndexRoute: typeof AuthenticatedSessionsIndexRoute
   AuthenticatedLessonsLessonIdEditRoute: typeof AuthenticatedLessonsLessonIdEditRoute
+  AuthenticatedSessionsSessionIdFollowUpRoute: typeof AuthenticatedSessionsSessionIdFollowUpRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCreateWithChatgptRoute: AuthenticatedCreateWithChatgptRoute,
+  AuthenticatedDifferentiateRoute: AuthenticatedDifferentiateRoute,
   AuthenticatedExtraTimeRoute: AuthenticatedExtraTimeRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
@@ -515,10 +579,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClassesClassIdRoute: AuthenticatedClassesClassIdRoute,
   AuthenticatedLessonsNewRoute: AuthenticatedLessonsNewRoute,
   AuthenticatedSessionsSessionIdRoute: AuthenticatedSessionsSessionIdRoute,
+  AuthenticatedSessionsCompareRoute: AuthenticatedSessionsCompareRoute,
   AuthenticatedClassesIndexRoute: AuthenticatedClassesIndexRoute,
   AuthenticatedLessonsIndexRoute: AuthenticatedLessonsIndexRoute,
   AuthenticatedSessionsIndexRoute: AuthenticatedSessionsIndexRoute,
   AuthenticatedLessonsLessonIdEditRoute: AuthenticatedLessonsLessonIdEditRoute,
+  AuthenticatedSessionsSessionIdFollowUpRoute:
+    AuthenticatedSessionsSessionIdFollowUpRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

@@ -26,6 +26,8 @@ function blockRow(
     teacher_notes: b.teacher_notes ?? null,
     content: b.content as never,
     is_fallback: isFallback,
+    variant_group: b.variant_group ?? null,
+    variant_label: b.variant_label ?? null,
   };
 }
 
@@ -79,8 +81,13 @@ export async function importBlocksPackage(
   pkg: BlocksPackage,
   lessonId: string,
   insertion: InsertionPoint,
+  selectedIndices?: number[],
 ): Promise<string[]> {
   const teacher_id = await currentUserId();
+  const chosen = selectedIndices?.length
+    ? pkg.blocks.filter((_, i) => selectedIndices.includes(i))
+    : pkg.blocks;
+  if (!chosen.length) throw new Error("Vælg mindst én aktivitet.");
 
   const { data: existingData, error: readError } = await supabase
     .from("lesson_blocks")
@@ -99,9 +106,7 @@ export async function importBlocksPackage(
 
   const { data: insertedData, error: insertError } = await supabase
     .from("lesson_blocks")
-    .insert(
-      pkg.blocks.map((b, i) => blockRow(b, lessonId, teacher_id, existing.length + 1000 + i)),
-    )
+    .insert(chosen.map((b, i) => blockRow(b, lessonId, teacher_id, existing.length + 1000 + i)))
     .select();
   if (insertError || !insertedData) throw new Error("Aktiviteterne kunne ikke tilføjes.");
   const inserted = insertedData as LessonBlock[];
