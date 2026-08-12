@@ -154,6 +154,36 @@ function AuthPage() {
             </button>
           </p>
         </div>
+
+        <div className="surface-card mt-6 p-6">
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Elev</p>
+          <h2 className="mt-1 text-lg font-semibold">Skal du deltage i undervisningen?</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Du skal ikke oprette en konto — brug bare koden fra din underviser.
+          </p>
+          <form
+            className="mt-4 flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const c = joinCode.trim().toUpperCase();
+              if (c) navigate({ to: "/join/$code", params: { code: c } });
+              else navigate({ to: "/join" });
+            }}
+          >
+            <Input
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              placeholder="ABCD12"
+              autoCapitalize="characters"
+              autoComplete="off"
+              aria-label="Sessionskode"
+              className="h-11 rounded-full text-center font-mono tracking-[0.2em]"
+            />
+            <Button type="submit" variant="secondary" className="h-11 shrink-0 rounded-full px-5">
+              Deltag med kode
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );
