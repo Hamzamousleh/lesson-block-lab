@@ -446,7 +446,15 @@ function LessonEditor() {
         </div>
       )}
 
+      <StartSessionDialog
+        open={sessionOpen}
+        onOpenChange={setSessionOpen}
+        lessonId={lessonId}
+        classId={lesson.data?.class_id ?? null}
+        blocks={blocks.data ?? []}
+      />
       <ActivityPicker
+
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         onPick={(type) => add.mutate(type)}
