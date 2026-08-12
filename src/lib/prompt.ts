@@ -47,7 +47,11 @@ export function CASELAB_V2_LESSON_OUTPUT_CONTRACT(opts: {
 }
 
 /** Canonical Blocks Package contract. */
-export const CASELAB_V2_BLOCK_OUTPUT_CONTRACT = `${CASELAB_V2_BLOCK_OUTPUT_CONTRACT}`;
+export const CASELAB_V2_BLOCK_OUTPUT_CONTRACT = `{
+  "caselab_version": "2.0",
+  "package_type": "blocks",
+  "blocks": [ ... ]
+}`;
 
 export const CASELAB_V2_COMMON_RULES = `Du genererer struktureret undervisningsindhold til CaseLab.
 
