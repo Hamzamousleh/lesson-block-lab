@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ReactNode } from "react";
-import type { ReactNode } from "react";
 
 const navLinks = [
   { to: "/home", label: "Hjem" },
