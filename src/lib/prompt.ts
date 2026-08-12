@@ -308,7 +308,6 @@ Returnér præcis denne struktur:
 }
 
 export function lessonToDetailedText(
-  lesson: { title: string; subject?: string | null; duration_minutes: number; learning_goal?: string | null },
   blocks: { type: string; title: string; duration_minutes: number; content: Record<string, unknown> }[],
 ): string {
   return blocks
