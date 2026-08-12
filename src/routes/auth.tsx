@@ -30,6 +30,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
 
   useEffect(() => {
     if (!sessionLoading && session) navigate({ to: "/home", replace: true });
