@@ -277,7 +277,7 @@ function parsePlacement(raw: unknown): PlacementSuggestion | undefined {
   };
 }
 
-}
+
 
 export function totalDuration(blocks: PackageBlock[]): number {
   return blocks.reduce((sum, b) => sum + b.duration_minutes, 0);
