@@ -20,6 +20,7 @@ import { Route as AuthenticatedClassesIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedClassesClassIdRouteImport } from './routes/_authenticated/classes.$classId'
 import { Route as AuthenticatedLessonsIndexRouteImport } from './routes/_authenticated/lessons.index'
 import { Route as AuthenticatedLessonsNewRouteImport } from './routes/_authenticated/lessons.new'
+import { Route as LessonsLessonIdRunRouteImport } from './routes/lessons.$lessonId.run'
 import { Route as AuthenticatedLessonsLessonIdEditRouteImport } from './routes/_authenticated/lessons.$lessonId.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -80,6 +81,11 @@ const AuthenticatedLessonsNewRoute = AuthenticatedLessonsNewRouteImport.update({
   path: '/lessons/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const LessonsLessonIdRunRoute = LessonsLessonIdRunRouteImport.update({
+  id: '/lessons/$lessonId/run',
+  path: '/lessons/$lessonId/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedLessonsLessonIdEditRoute =
   AuthenticatedLessonsLessonIdEditRouteImport.update({
     id: '/lessons/$lessonId/edit',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/units': typeof AuthenticatedUnitsRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
+  '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/classes/': typeof AuthenticatedClassesIndexRoute
   '/lessons/': typeof AuthenticatedLessonsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/units': typeof AuthenticatedUnitsRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
+  '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/classes': typeof AuthenticatedClassesIndexRoute
   '/lessons': typeof AuthenticatedLessonsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/_authenticated/units': typeof AuthenticatedUnitsRoute
   '/_authenticated/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/_authenticated/lessons/new': typeof AuthenticatedLessonsNewRoute
+  '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/_authenticated/classes/': typeof AuthenticatedClassesIndexRoute
   '/_authenticated/lessons/': typeof AuthenticatedLessonsIndexRoute
   '/_authenticated/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/units'
     | '/classes/$classId'
     | '/lessons/new'
+    | '/lessons/$lessonId/run'
     | '/classes/'
     | '/lessons/'
     | '/lessons/$lessonId/edit'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/units'
     | '/classes/$classId'
     | '/lessons/new'
+    | '/lessons/$lessonId/run'
     | '/classes'
     | '/lessons'
     | '/lessons/$lessonId/edit'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/_authenticated/units'
     | '/_authenticated/classes/$classId'
     | '/_authenticated/lessons/new'
+    | '/lessons/$lessonId/run'
     | '/_authenticated/classes/'
     | '/_authenticated/lessons/'
     | '/_authenticated/lessons/$lessonId/edit'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  LessonsLessonIdRunRoute: typeof LessonsLessonIdRunRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -256,6 +269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLessonsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/lessons/$lessonId/run': {
+      id: '/lessons/$lessonId/run'
+      path: '/lessons/$lessonId/run'
+      fullPath: '/lessons/$lessonId/run'
+      preLoaderRoute: typeof LessonsLessonIdRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/lessons/$lessonId/edit': {
       id: '/_authenticated/lessons/$lessonId/edit'
       path: '/lessons/$lessonId/edit'
@@ -297,6 +317,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  LessonsLessonIdRunRoute: LessonsLessonIdRunRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
