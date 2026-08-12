@@ -524,3 +524,228 @@ Returnér præcis denne struktur:
   }
 }`;
 }
+
+/* ================= Phase 6 — Worlds ================= */
+
+const WORLD_COMMON = `Du hjælper med at bygge et CaseLab World — et vedvarende fiktivt læringsunivers til dansk gymnasieundervisning.
+
+Et World er IKKE et spil. Det er en ramme, hvor eleverne gentagne gange anvender fagteori på de samme personer, institutioner eller organisationer, træffer beslutninger og møder konsekvenser.
+
+Krav:
+- Hver beslutning skal kunne besvares med "hvad siger teorien?" — ikke "hvad lyder sjovt?".
+- Konsekvenser skal indeholde faglige afvejninger (trade-offs), ikke ét objektivt rigtigt svar.
+- Ingen point, badges, XP, levels eller belønninger.
+- Skriv på dansk.
+- Returnér KUN ét gyldigt JSON-objekt uden markdown-fences.`;
+
+const WORLD_STATE_RULES = `World-tilstand:
+- 4–8 variabler i alt. Ikke flere.
+- Hver variabel skal være fagligt meningsfuld og forståelig på et sekund.
+- Talvariabler bruger min_value 0 og max_value 100.
+- "student_visible": true for variabler eleverne må se; false for lærer-variabler.
+- "key" skrives med små bogstaver og understreg, fx public_trust.`;
+
+const CONSEQUENCE_RULES = `Konsekvensregler (consequence_rules):
+- "trigger_type": "majority_choice" | "threshold" | "response_distribution" | "teacher_selected" | "manual".
+- majority_choice og response_distribution bruger trigger_config: { "option_index": 0 } (og "min_share": 50 ved response_distribution).
+- threshold bruger trigger_config: { "comparator": "gte", "value": 5 }.
+- "changes": [{ "state_key": "...", "operation": "increase" | "decrease" | "set" | "enum_change" | "boolean_toggle", "amount": 8 }].
+- "reveal_timing": "immediate" | "end_of_block" | "end_of_episode" | "next_episode".
+- "academic_rationale" er PÅKRÆVET og skal forklare fagligt, hvorfor konsekvensen giver mening.
+- "source_block_title" skal matche titlen på den aktivitet i lektionen, som konsekvensen bygger på.`;
+
+export interface WorldPromptInput {
+  title: string;
+  subject: string;
+  worldTypeLabel: string;
+  academicFocus: string;
+  premiseIdea: string;
+  className?: string | undefined;
+}
+
+export function buildWorldPrompt(i: WorldPromptInput): string {
+  return `${WORLD_COMMON}
+
+Opgave: Lav grundstrukturen til et nyt World.
+
+Titel: ${i.title}
+Fag: ${i.subject}
+Type: ${i.worldTypeLabel}
+Fagligt fokus: ${i.academicFocus}${i.className ? `\nKlasse: ${i.className}` : ""}
+Lærerens idé til grundsituation: ${i.premiseIdea || "(ingen — foreslå selv en)"}
+
+${WORLD_STATE_RULES}
+
+Returnér præcis denne struktur:
+{
+  "caselab_version": "2.0",
+  "package_type": "world",
+  "world": {
+    "title": "${i.title}",
+    "subject": "${i.subject}",
+    "premise": "...",
+    "description": "...",
+    "academic_focus": "${i.academicFocus}",
+    "state": [
+      { "key": "...", "label": "...", "value": 55, "value_type": "number", "min_value": 0, "max_value": 100, "description": "...", "student_visible": true }
+    ],
+    "episodes": []
+  }
+}
+
+Beskriv i "premise" de gennemgående personer eller institutioner, eleverne vil møde igen og igen. Lad "episodes" være tom.`;
+}
+
+export interface NextEpisodePromptInput {
+  worldTitle: string;
+  subject: string;
+  premise: string;
+  academicFocus: string;
+  stateLines: string[];
+  historyLines: string[];
+  previousEpisodes: { number: number; title: string; complexity: string; goal: string }[];
+  complexityLabel: string;
+  intention: string;
+  concepts: string;
+  duration: number;
+  episodeNumber: number;
+}
+
+export function buildNextEpisodePrompt(i: NextEpisodePromptInput): string {
+  const history = i.historyLines.length
+    ? i.historyLines.map((l) => `- ${l}`).join("\n")
+    : "- (ingen konsekvenser endnu)";
+  const prev = i.previousEpisodes.length
+    ? i.previousEpisodes
+        .map((e) => `- Episode ${e.number}: ${e.title} (${e.complexity})${e.goal ? ` — mål: ${e.goal}` : ""}`)
+        .join("\n")
+    : "- (ingen tidligere episoder)";
+
+  return `${WORLD_COMMON}
+
+Opgave: Lav næste episode i et eksisterende World.
+
+World: ${i.worldTitle}
+Fag: ${i.subject}
+Fagligt fokus: ${i.academicFocus}
+
+Grundsituation:
+"""
+${i.premise}
+"""
+
+Nuværende World-tilstand (må IKKE ændres af dig — kun bruges som udgangspunkt):
+${i.stateLines.map((l) => `- ${l}`).join("\n")}
+
+Hvad der er sket indtil nu (World-hukommelse):
+${history}
+
+Tidligere episoder:
+${prev}
+
+Den nye episode:
+- Episodenummer: ${i.episodeNumber}
+- Fagligt kompleksitetsniveau: ${i.complexityLabel}
+- Lærerens hensigt: ${i.intention}
+- Faglige begreber: ${i.concepts}
+- Varighed: ${i.duration} minutter
+
+Vigtige krav:
+- Opfind IKKE tidligere begivenheder. Brug kun det, der står ovenfor.
+- Respektér den nuværende World-tilstand.
+- Brug de samme personer/institutioner konsistent.
+- Lad mindst én tidligere konsekvens få betydning i denne episode.
+- Gør konsekvenser fagligt meningsfulde med reelle afvejninger.
+- Nævn ingen rigtige elevnavne.
+
+${CONSEQUENCE_RULES}
+
+${SCHEMA_REFERENCE}
+
+Returnér præcis denne struktur:
+{
+  "caselab_version": "2.0",
+  "package_type": "world_episode",
+  "world_reference": "${i.worldTitle}",
+  "episode": {
+    "title": "...",
+    "description": "...",
+    "learning_goal": "...",
+    "academic_concepts": ["..."],
+    "episode_number": ${i.episodeNumber},
+    "complexity_level": "...",
+    "lesson": {
+      "title": "...",
+      "subject": "${i.subject}",
+      "duration_minutes": ${i.duration},
+      "learning_goal": "...",
+      "teacher_note": "...",
+      "blocks": [ ... ]
+    },
+    "consequence_rules": [ ... ]
+  }
+}
+
+Brug "dilemma" eller "poll" til elevernes beslutning, så konsekvensmotoren kan aflæse svarene.
+Summen af aktiviteternes duration_minutes skal ramme ${i.duration} minutter ±5.`;
+}
+
+export interface WorldReflectionPromptInput {
+  worldTitle: string;
+  subject: string;
+  premise: string;
+  startLines: string[];
+  endLines: string[];
+  decisionLines: string[];
+  duration: number;
+}
+
+export function buildWorldReflectionPrompt(i: WorldReflectionPromptInput): string {
+  return `${WORLD_COMMON}
+
+Opgave: Lav en afsluttende refleksionslektion til et World, eleverne nu har gennemført.
+
+World: ${i.worldTitle}
+Fag: ${i.subject}
+
+Grundsituation:
+"""
+${i.premise}
+"""
+
+Starttilstand:
+${i.startLines.map((l) => `- ${l}`).join("\n")}
+
+Sluttilstand:
+${i.endLines.map((l) => `- ${l}`).join("\n")}
+
+Vigtigste beslutninger og konsekvenser:
+${(i.decisionLines.length ? i.decisionLines : ["(ingen registreret)"]).map((l) => `- ${l}`).join("\n")}
+
+Lektionen skal få eleverne til at svare på:
+- Hvad ændrede sig mest, og hvorfor?
+- Hvilken beslutning fik størst konsekvens?
+- Hvilken teori forklarer udviklingen bedst?
+- Hvilken tidlig beslutning ville I træffe anderledes i dag?
+- Hvad forenklede vores World i forhold til virkeligheden?
+
+Det sidste spørgsmål er vigtigt: eleverne skal forholde sig kritisk til modellen som model.
+
+${SCHEMA_REFERENCE}
+
+Returnér præcis denne struktur:
+{
+  "caselab_version": "2.0",
+  "package_type": "lesson",
+  "mode": "standard",
+  "lesson": {
+    "title": "...",
+    "subject": "${i.subject}",
+    "duration_minutes": ${i.duration},
+    "learning_goal": "...",
+    "teacher_note": "...",
+    "tags": ["world", "refleksion"],
+    "blocks": [ ... ]
+  }
+}`;
+}
