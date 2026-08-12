@@ -25,22 +25,34 @@ const actions = [
     icon: "✨",
     title: "Planlæg undervisning",
     description: "Lav en lektion eller et forløb.",
-    ready: true,
+    to: "/create-with-chatgpt",
   },
-  { icon: "⚡", title: "Red mig", description: "Jeg skal undervise snart.", ready: false },
+  { icon: "⚡", title: "Red mig", description: "Jeg skal undervise snart.", to: "/rescue" },
   {
-    icon: "📄",
-    title: "Brug mit materiale",
-    description: "Lav undervisning ud fra tekst eller noter.",
-    ready: false,
+    icon: "⏱",
+    title: "Jeg mangler tid",
+    description: "Få ekstra aktiviteter til en lektion.",
+    to: "/extra-time",
   },
   {
     icon: "🎨",
     title: "Gør den mere aktiv",
     description: "Skab mere variation i en eksisterende lektion.",
-    ready: false,
+    to: "/improve-lesson",
   },
-];
+  {
+    icon: "📚",
+    title: "Mit bibliotek",
+    description: "Genbrug aktiviteter og lektioner, du har gemt.",
+    to: "/library",
+  },
+  {
+    icon: "📄",
+    title: "Brug mit materiale",
+    description: "Lav undervisning ud fra tekst eller noter.",
+    to: null,
+  },
+] as const;
 
 function Home() {
   const navigate = useNavigate();
@@ -71,10 +83,10 @@ function Home() {
 
       <section className="mt-14 grid gap-5 sm:grid-cols-2">
         {actions.map((a) =>
-          a.ready ? (
+          a.to ? (
             <Link
               key={a.title}
-              to="/create-with-chatgpt"
+              to={a.to}
               className="surface-card group flex flex-col gap-3 p-8 text-left transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]"
             >
               <span className="text-3xl">{a.icon}</span>

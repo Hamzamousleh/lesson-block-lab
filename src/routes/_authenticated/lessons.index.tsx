@@ -59,12 +59,18 @@ function LessonsPage() {
           return (
             <div key={l.id} className="surface-card flex flex-wrap items-center gap-4 px-6 py-5">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-lg font-medium">{l.title}</p>
+                <p className="truncate text-lg font-medium">
+                  {l.mode === "rescue" && <span className="mr-2">⚡</span>}
+                  {l.title}
+                </p>
                 <p className="text-sm text-muted-foreground">
                   {c ? `${c.name} · ${c.subject}` : "Lektion"} · {l.duration_minutes} min ·{" "}
                   {LESSON_STATUS_LABEL[l.status]}
                 </p>
               </div>
+              <Link to="/lessons/$lessonId/run" params={{ lessonId: l.id }}>
+                <Button className="rounded-full">Start undervisning</Button>
+              </Link>
               <Link to="/lessons/$lessonId/edit" params={{ lessonId: l.id }}>
                 <Button variant="outline" className="rounded-full">
                   Åbn lektion

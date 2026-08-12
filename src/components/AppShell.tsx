@@ -12,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ReactNode } from "react";
 
 const navLinks = [
@@ -20,6 +19,7 @@ const navLinks = [
   { to: "/classes", label: "Klasser" },
   { to: "/units", label: "Forløb" },
   { to: "/lessons", label: "Lektioner" },
+  { to: "/library", label: "Bibliotek" },
 ] as const;
 
 
@@ -53,16 +53,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {l.label}
               </Link>
             ))}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="cursor-not-allowed rounded-full px-4 py-2 text-sm font-medium text-muted-foreground/50">
-                    Bibliotek
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>Kommer snart</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </nav>
           <div className="ml-auto">
             <DropdownMenu>

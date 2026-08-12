@@ -13,13 +13,18 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCreateWithChatgptRouteImport } from './routes/_authenticated/create-with-chatgpt'
+import { Route as AuthenticatedExtraTimeRouteImport } from './routes/_authenticated/extra-time'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
+import { Route as AuthenticatedImproveLessonRouteImport } from './routes/_authenticated/improve-lesson'
+import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
+import { Route as AuthenticatedRescueRouteImport } from './routes/_authenticated/rescue'
 import { Route as AuthenticatedUnitsRouteImport } from './routes/_authenticated/units'
 import { Route as AuthenticatedClassesIndexRouteImport } from './routes/_authenticated/classes.index'
 import { Route as AuthenticatedClassesClassIdRouteImport } from './routes/_authenticated/classes.$classId'
 import { Route as AuthenticatedLessonsIndexRouteImport } from './routes/_authenticated/lessons.index'
 import { Route as AuthenticatedLessonsNewRouteImport } from './routes/_authenticated/lessons.new'
+import { Route as LessonsLessonIdRunRouteImport } from './routes/lessons.$lessonId.run'
 import { Route as AuthenticatedLessonsLessonIdEditRouteImport } from './routes/_authenticated/lessons.$lessonId.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -42,6 +47,11 @@ const AuthenticatedCreateWithChatgptRoute =
     path: '/create-with-chatgpt',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedExtraTimeRoute = AuthenticatedExtraTimeRouteImport.update({
+  id: '/extra-time',
+  path: '/extra-time',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -50,6 +60,22 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
 const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
   id: '/import',
   path: '/import',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedImproveLessonRoute =
+  AuthenticatedImproveLessonRouteImport.update({
+    id: '/improve-lesson',
+    path: '/improve-lesson',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRescueRoute = AuthenticatedRescueRouteImport.update({
+  id: '/rescue',
+  path: '/rescue',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedUnitsRoute = AuthenticatedUnitsRouteImport.update({
@@ -80,6 +106,11 @@ const AuthenticatedLessonsNewRoute = AuthenticatedLessonsNewRouteImport.update({
   path: '/lessons/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const LessonsLessonIdRunRoute = LessonsLessonIdRunRouteImport.update({
+  id: '/lessons/$lessonId/run',
+  path: '/lessons/$lessonId/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedLessonsLessonIdEditRoute =
   AuthenticatedLessonsLessonIdEditRouteImport.update({
     id: '/lessons/$lessonId/edit',
@@ -91,11 +122,16 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
+  '/extra-time': typeof AuthenticatedExtraTimeRoute
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
+  '/improve-lesson': typeof AuthenticatedImproveLessonRoute
+  '/library': typeof AuthenticatedLibraryRoute
+  '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
+  '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/classes/': typeof AuthenticatedClassesIndexRoute
   '/lessons/': typeof AuthenticatedLessonsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
@@ -104,11 +140,16 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
+  '/extra-time': typeof AuthenticatedExtraTimeRoute
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
+  '/improve-lesson': typeof AuthenticatedImproveLessonRoute
+  '/library': typeof AuthenticatedLibraryRoute
+  '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
+  '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/classes': typeof AuthenticatedClassesIndexRoute
   '/lessons': typeof AuthenticatedLessonsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
@@ -119,11 +160,16 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
+  '/_authenticated/extra-time': typeof AuthenticatedExtraTimeRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
+  '/_authenticated/improve-lesson': typeof AuthenticatedImproveLessonRoute
+  '/_authenticated/library': typeof AuthenticatedLibraryRoute
+  '/_authenticated/rescue': typeof AuthenticatedRescueRoute
   '/_authenticated/units': typeof AuthenticatedUnitsRoute
   '/_authenticated/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/_authenticated/lessons/new': typeof AuthenticatedLessonsNewRoute
+  '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/_authenticated/classes/': typeof AuthenticatedClassesIndexRoute
   '/_authenticated/lessons/': typeof AuthenticatedLessonsIndexRoute
   '/_authenticated/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
@@ -134,11 +180,16 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/create-with-chatgpt'
+    | '/extra-time'
     | '/home'
     | '/import'
+    | '/improve-lesson'
+    | '/library'
+    | '/rescue'
     | '/units'
     | '/classes/$classId'
     | '/lessons/new'
+    | '/lessons/$lessonId/run'
     | '/classes/'
     | '/lessons/'
     | '/lessons/$lessonId/edit'
@@ -147,11 +198,16 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/create-with-chatgpt'
+    | '/extra-time'
     | '/home'
     | '/import'
+    | '/improve-lesson'
+    | '/library'
+    | '/rescue'
     | '/units'
     | '/classes/$classId'
     | '/lessons/new'
+    | '/lessons/$lessonId/run'
     | '/classes'
     | '/lessons'
     | '/lessons/$lessonId/edit'
@@ -161,11 +217,16 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/create-with-chatgpt'
+    | '/_authenticated/extra-time'
     | '/_authenticated/home'
     | '/_authenticated/import'
+    | '/_authenticated/improve-lesson'
+    | '/_authenticated/library'
+    | '/_authenticated/rescue'
     | '/_authenticated/units'
     | '/_authenticated/classes/$classId'
     | '/_authenticated/lessons/new'
+    | '/lessons/$lessonId/run'
     | '/_authenticated/classes/'
     | '/_authenticated/lessons/'
     | '/_authenticated/lessons/$lessonId/edit'
@@ -175,6 +236,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  LessonsLessonIdRunRoute: typeof LessonsLessonIdRunRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -207,6 +269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCreateWithChatgptRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/extra-time': {
+      id: '/_authenticated/extra-time'
+      path: '/extra-time'
+      fullPath: '/extra-time'
+      preLoaderRoute: typeof AuthenticatedExtraTimeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/home': {
       id: '/_authenticated/home'
       path: '/home'
@@ -219,6 +288,27 @@ declare module '@tanstack/react-router' {
       path: '/import'
       fullPath: '/import'
       preLoaderRoute: typeof AuthenticatedImportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/improve-lesson': {
+      id: '/_authenticated/improve-lesson'
+      path: '/improve-lesson'
+      fullPath: '/improve-lesson'
+      preLoaderRoute: typeof AuthenticatedImproveLessonRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/library': {
+      id: '/_authenticated/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof AuthenticatedLibraryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rescue': {
+      id: '/_authenticated/rescue'
+      path: '/rescue'
+      fullPath: '/rescue'
+      preLoaderRoute: typeof AuthenticatedRescueRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/units': {
@@ -256,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLessonsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/lessons/$lessonId/run': {
+      id: '/lessons/$lessonId/run'
+      path: '/lessons/$lessonId/run'
+      fullPath: '/lessons/$lessonId/run'
+      preLoaderRoute: typeof LessonsLessonIdRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/lessons/$lessonId/edit': {
       id: '/_authenticated/lessons/$lessonId/edit'
       path: '/lessons/$lessonId/edit'
@@ -268,8 +365,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCreateWithChatgptRoute: typeof AuthenticatedCreateWithChatgptRoute
+  AuthenticatedExtraTimeRoute: typeof AuthenticatedExtraTimeRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
+  AuthenticatedImproveLessonRoute: typeof AuthenticatedImproveLessonRoute
+  AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
+  AuthenticatedRescueRoute: typeof AuthenticatedRescueRoute
   AuthenticatedUnitsRoute: typeof AuthenticatedUnitsRoute
   AuthenticatedClassesClassIdRoute: typeof AuthenticatedClassesClassIdRoute
   AuthenticatedLessonsNewRoute: typeof AuthenticatedLessonsNewRoute
@@ -280,8 +381,12 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCreateWithChatgptRoute: AuthenticatedCreateWithChatgptRoute,
+  AuthenticatedExtraTimeRoute: AuthenticatedExtraTimeRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
+  AuthenticatedImproveLessonRoute: AuthenticatedImproveLessonRoute,
+  AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
+  AuthenticatedRescueRoute: AuthenticatedRescueRoute,
   AuthenticatedUnitsRoute: AuthenticatedUnitsRoute,
   AuthenticatedClassesClassIdRoute: AuthenticatedClassesClassIdRoute,
   AuthenticatedLessonsNewRoute: AuthenticatedLessonsNewRoute,
@@ -297,6 +402,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  LessonsLessonIdRunRoute: LessonsLessonIdRunRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

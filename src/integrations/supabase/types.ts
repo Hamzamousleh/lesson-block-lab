@@ -54,6 +54,7 @@ export type Database = {
           created_at: string
           duration_minutes: number
           id: string
+          is_fallback: boolean
           lesson_id: string
           student_instructions: string | null
           teacher_id: string
@@ -68,6 +69,7 @@ export type Database = {
           created_at?: string
           duration_minutes?: number
           id?: string
+          is_fallback?: boolean
           lesson_id: string
           student_instructions?: string | null
           teacher_id: string
@@ -82,6 +84,7 @@ export type Database = {
           created_at?: string
           duration_minutes?: number
           id?: string
+          is_fallback?: boolean
           lesson_id?: string
           student_instructions?: string | null
           teacher_id?: string
@@ -166,6 +169,48 @@ export type Database = {
           },
         ]
       }
+      library_items: {
+        Row: {
+          block_type: string | null
+          created_at: string
+          data: Json
+          duration_minutes: number
+          id: string
+          item_type: Database["public"]["Enums"]["library_item_type"]
+          subject: string | null
+          tags: string[]
+          teacher_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          block_type?: string | null
+          created_at?: string
+          data?: Json
+          duration_minutes?: number
+          id?: string
+          item_type: Database["public"]["Enums"]["library_item_type"]
+          subject?: string | null
+          tags?: string[]
+          teacher_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          block_type?: string | null
+          created_at?: string
+          data?: Json
+          duration_minutes?: number
+          id?: string
+          item_type?: Database["public"]["Enums"]["library_item_type"]
+          subject?: string | null
+          tags?: string[]
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -241,6 +286,7 @@ export type Database = {
     Enums: {
       lesson_mode: "standard" | "rescue"
       lesson_status: "draft" | "ready" | "completed"
+      library_item_type: "block" | "lesson"
       unit_status: "planned" | "active" | "completed"
     }
     CompositeTypes: {
@@ -371,6 +417,7 @@ export const Constants = {
     Enums: {
       lesson_mode: ["standard", "rescue"],
       lesson_status: ["draft", "ready", "completed"],
+      library_item_type: ["block", "lesson"],
       unit_status: ["planned", "active", "completed"],
     },
   },
