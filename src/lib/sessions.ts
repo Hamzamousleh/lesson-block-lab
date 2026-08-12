@@ -1,0 +1,195 @@
+import { supabase } from "@/integrations/supabase/client";
+import { queryOptions } from "@tanstack/react-query";
+import type { LessonBlock } from "./types";
+
+export type SessionMode = "live" | "self_paced";
+export type SessionStatus = "draft" | "active" | "ended";
+
+export interface StudentSession {
+  id: string;
+  teacher_id: string;
+  lesson_id: string;
+  class_id: string | null;
+  mode: SessionMode;
+  status: SessionStatus;
+  join_code: string;
+  current_block_id: string | null;
+  reveal_results: boolean;
+  allow_anonymous: boolean;
+  created_at: string;
+  updated_at: string;
+  started_at: string | null;
+  ended_at: string | null;
+}
+
+export interface SessionParticipant {
+  id: string;
+  session_id: string;
+  display_name: string;
+  progress_index: number;
+  completed_at: string | null;
+  joined_at: string;
+  last_seen_at: string;
+}
+
+export interface SessionResponse {
+  id: string;
+  session_id: string;
+  participant_id: string;
+  block_id: string;
+  response_type: string;
+  response_data: Record<string, unknown>;
+  submitted_at: string;
+  updated_at: string;
+}
+
+export const SESSION_MODE_LABEL: Record<SessionMode, string> = {
+  live: "Live",
+  self_paced: "Selvstændig",
+};
+
+export const SESSION_STATUS_LABEL: Record<SessionStatus, string> = {
+  draft: "Klar til start",
+  active: "I gang",
+  ended: "Afsluttet",
+};
+
+function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
+  if (res.error) throw new Error(res.error.message);
+  return res.data as T;
+}
+
+const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function randomCode(): string {
+  return Array.from({ length: 6 }, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join("");
+}
+
+/* ---------------- queries ---------------- */
+
+export const sessionsQuery = (opts?: { classId?: string; lessonId?: string }) =>
+  queryOptions({
+    queryKey: ["sessions", opts?.classId ?? "all", opts?.lessonId ?? "all"],
+    queryFn: async (): Promise<StudentSession[]> => {
+      let q = supabase.from("sessions").select("*").order("created_at", { ascending: false });
+      if (opts?.classId) q = q.eq("class_id", opts.classId);
+      if (opts?.lessonId) q = q.eq("lesson_id", opts.lessonId);
+      return (unwrap(await q) ?? []) as StudentSession[];
+    },
+  });
+
+export const sessionQuery = (sessionId: string) =>
+  queryOptions({
+    queryKey: ["session", sessionId],
+    queryFn: async (): Promise<StudentSession> =>
+      unwrap(await supabase.from("sessions").select("*").eq("id", sessionId).single()) as StudentSession,
+  });
+
+export const participantsQuery = (sessionId: string, poll = false) =>
+  queryOptions({
+    queryKey: ["session-participants", sessionId],
+    refetchInterval: poll ? 4000 : false,
+    queryFn: async (): Promise<SessionParticipant[]> =>
+      (unwrap(
+        await supabase
+          .from("session_participants")
+          .select("*")
+          .eq("session_id", sessionId)
+          .order("joined_at", { ascending: true }),
+      ) ?? []) as SessionParticipant[],
+  });
+
+export const responsesQuery = (sessionId: string, poll = false) =>
+  queryOptions({
+    queryKey: ["session-responses", sessionId],
+    refetchInterval: poll ? 4000 : false,
+    queryFn: async (): Promise<SessionResponse[]> =>
+      (unwrap(
+        await supabase
+          .from("session_responses")
+          .select("*")
+          .eq("session_id", sessionId)
+          .order("submitted_at", { ascending: true }),
+      ) ?? []) as SessionResponse[],
+  });
+
+/* ---------------- mutations ---------------- */
+
+export async function createSession(input: {
+  lesson_id: string;
+  class_id: string | null;
+  mode: SessionMode;
+}): Promise<StudentSession> {
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError || !auth.user) throw new Error("Du er ikke logget ind.");
+
+  let lastError = "Sessionen kunne ikke oprettes.";
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const { data, error } = await supabase
+      .from("sessions")
+      .insert({
+        teacher_id: auth.user.id,
+        lesson_id: input.lesson_id,
+        class_id: input.class_id,
+        mode: input.mode,
+        status: "draft",
+        join_code: randomCode(),
+      })
+      .select()
+      .single();
+    if (!error) return data as StudentSession;
+    lastError = error.message;
+    if (!error.message.toLowerCase().includes("duplicate")) break;
+  }
+  throw new Error(lastError);
+}
+
+export async function updateSession(
+  id: string,
+  patch: Partial<Pick<StudentSession, "status" | "current_block_id" | "reveal_results" | "started_at" | "ended_at">>,
+): Promise<StudentSession> {
+  return unwrap(
+    await supabase.from("sessions").update(patch as never).eq("id", id).select().single(),
+  ) as StudentSession;
+}
+
+export async function startSession(id: string, firstBlockId: string | null): Promise<StudentSession> {
+  return updateSession(id, {
+    status: "active",
+    started_at: new Date().toISOString(),
+    current_block_id: firstBlockId,
+  });
+}
+
+export async function endSession(id: string): Promise<StudentSession> {
+  return updateSession(id, { status: "ended", ended_at: new Date().toISOString() });
+}
+
+export async function deleteSession(id: string): Promise<void> {
+  const { error } = await supabase.from("sessions").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+/* ---------------- helpers ---------------- */
+
+export function joinUrl(code: string): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/join/${code}`;
+}
+
+export function responseCount(responses: SessionResponse[], blockId: string | null): number {
+  if (!blockId) return 0;
+  return responses.filter((r) => r.block_id === blockId).length;
+}
+
+export function activeSessionLabel(
+  session: StudentSession,
+  participants: number,
+  completed: number,
+): string {
+  if (session.mode === "live") return `Live · ${participants} deltagere`;
+  return `Selvstændig · ${completed}/${participants} færdige`;
+}
+
+export function blockById(blocks: LessonBlock[], id: string | null): LessonBlock | undefined {
+  return blocks.find((b) => b.id === id);
+}
