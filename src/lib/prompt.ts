@@ -47,11 +47,7 @@ export function CASELAB_V2_LESSON_OUTPUT_CONTRACT(opts: {
 }
 
 /** Canonical Blocks Package contract. */
-export const CASELAB_V2_BLOCK_OUTPUT_CONTRACT = `{
-  "caselab_version": "2.0",
-  "package_type": "blocks",
-  "blocks": [ ... ]
-}`;
+export const CASELAB_V2_BLOCK_OUTPUT_CONTRACT = `${CASELAB_V2_BLOCK_OUTPUT_CONTRACT}`;
 
 export const CASELAB_V2_COMMON_RULES = `Du genererer struktureret undervisningsindhold til CaseLab.
 
@@ -128,20 +124,7 @@ Opgave: Lav én samlet lektion.
 ${lines.join("\n")}${materialSection(i.material)}
 
 Returnér præcis denne struktur:
-{
-  "caselab_version": "2.0",
-  "package_type": "lesson",
-  "mode": "standard",
-  "lesson": {
-    "title": "...",
-    "subject": "...",
-    "duration_minutes": ${i.duration},
-    "learning_goal": "...",
-    "teacher_note": "...",
-    "tags": ["..."],
-    "blocks": [ ... ]
-  }
-}
+${CASELAB_V2_LESSON_OUTPUT_CONTRACT({ duration: i.duration })}
 
 Summen af aktiviteternes duration_minutes skal ramme ${i.duration} minutter ±5 minutter.
 Brug varierede aktivitetstyper, hvor det giver pædagogisk mening. Tving ikke alle typer ind i lektionen.`;
@@ -170,11 +153,7 @@ Opgave: Lav en eller flere aktiviteter, der kan indsættes i en eksisterende lek
 ${lines.join("\n")}${materialSection(i.material)}
 
 Returnér præcis denne struktur:
-{
-  "caselab_version": "2.0",
-  "package_type": "blocks",
-  "blocks": [ ... ]
-}
+${CASELAB_V2_BLOCK_OUTPUT_CONTRACT}
 
 Summen af aktiviteternes duration_minutes skal ramme ca. ${i.minutes} minutter.`;
 }
@@ -235,21 +214,7 @@ Lektionen SKAL:
 Læreren må ikke skulle læse flere sider, før timen kan starte. Hold teacher_notes korte og praktiske (maks. 2 sætninger pr. aktivitet).
 
 Returnér præcis denne struktur:
-{
-  "caselab_version": "2.0",
-  "package_type": "lesson",
-  "mode": "rescue",
-  "lesson": {
-    "title": "...",
-    "subject": "...",
-    "duration_minutes": ${i.duration},
-    "learning_goal": "...",
-    "teacher_note": "...",
-    "tags": ["..."],
-    "blocks": [ ... ],
-    "fallback_blocks": [ ... ]
-  }
-}
+${CASELAB_V2_LESSON_OUTPUT_CONTRACT({ duration: i.duration, mode: "rescue", fallbackBlocks: true })}
 
 Summen af "blocks" skal ramme ${i.duration} minutter ±5 minutter. "fallback_blocks" tæller IKKE med i lektionens varighed og bruges kun, hvis der bliver tid tilovers.`;
 }
@@ -292,11 +257,7 @@ ${lines.join("\n")}${summary}${materialSection("")}
 Aktiviteterne skal kunne gennemføres uden forberedelse og uden print. Undgå at gentage aktiviteter, der allerede findes i lektionen.
 
 Returnér præcis denne struktur:
-{
-  "caselab_version": "2.0",
-  "package_type": "blocks",
-  "blocks": [ ... ]
-}
+${CASELAB_V2_BLOCK_OUTPUT_CONTRACT}
 
 Summen af aktiviteternes duration_minutes skal ramme ca. ${i.minutes} minutter.`;
 }
@@ -549,20 +510,7 @@ Krav:
 - Skriv i teacher_note hvad lektionen bygger på fra overblikket.
 
 Returnér præcis denne struktur:
-{
-  "caselab_version": "2.0",
-  "package_type": "lesson",
-  "mode": "standard",
-  "lesson": {
-    "title": "...",
-    "subject": "...",
-    "duration_minutes": ${i.duration},
-    "learning_goal": "...",
-    "teacher_note": "...",
-    "tags": ["..."],
-    "blocks": [ ... ]
-  }
-}`;
+${CASELAB_V2_LESSON_OUTPUT_CONTRACT({ duration: i.duration })}`;
 }
 
 /* ================= Phase 6 — Worlds ================= */
@@ -791,20 +739,7 @@ Det sidste spørgsmål er vigtigt: eleverne skal forholde sig kritisk til modell
 ${SCHEMA_REFERENCE}
 
 Returnér præcis denne struktur:
-{
-  "caselab_version": "2.0",
-  "package_type": "lesson",
-  "mode": "standard",
-  "lesson": {
-    "title": "...",
-    "subject": "${i.subject}",
-    "duration_minutes": ${i.duration},
-    "learning_goal": "...",
-    "teacher_note": "...",
-    "tags": ["world", "refleksion"],
-    "blocks": [ ... ]
-  }
-}`;
+${CASELAB_V2_LESSON_OUTPUT_CONTRACT({ duration: i.duration, subject: i.subject, tags: ["world", "refleksion"] })}`;
 }
 
 
@@ -855,11 +790,7 @@ Krav:
 ${SCHEMA_REFERENCE}
 
 Returnér præcis denne struktur:
-{
-  "caselab_version": "2.0",
-  "package_type": "blocks",
-  "blocks": [ ... ]
-}`;
+${CASELAB_V2_BLOCK_OUTPUT_CONTRACT}`;
 }
 
 /** Deterministic recurring-character extraction from a World premise. No AI. */
