@@ -19,6 +19,7 @@ const navLinks = [
   { to: "/classes", label: "Klasser" },
   { to: "/units", label: "Forløb" },
   { to: "/lessons", label: "Lektioner" },
+  { to: "/worlds", label: "Worlds" },
   { to: "/library", label: "Bibliotek" },
   { to: "/sessions", label: "Sessioner" },
 
