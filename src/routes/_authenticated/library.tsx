@@ -13,6 +13,7 @@ import {
 } from "@/lib/library";
 import { blocksQuery, classesQuery, lessonsQuery, unitsQuery } from "@/lib/data";
 import { blockDef } from "@/lib/blocks";
+import type { ResponseExampleData } from "@/lib/response-export";
 import type { LibraryItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/library")({
   component: LibraryPage,
 });
 
-type Filter = "all" | "block" | "lesson";
+type Filter = "all" | "block" | "lesson" | "response_example";
 
 function LibraryPage() {
   const queryClient = useQueryClient();
@@ -136,6 +137,7 @@ function LibraryPage() {
             { key: "all", label: "Alle" },
             { key: "block", label: "Aktiviteter" },
             { key: "lesson", label: "Lektioner" },
+            { key: "response_example", label: "Elevsvar" },
           ] as { key: Filter; label: string }[]
         ).map((t) => (
           <Button
@@ -176,14 +178,20 @@ function LibraryPage() {
         {filtered.map((i) => (
           <div key={i.id} className="surface-card flex flex-wrap items-center gap-4 px-6 py-5">
             <span className="text-xl">
-              {i.item_type === "block" ? blockDef(i.block_type ?? "").icon : "📚"}
+              {i.item_type === "block"
+                ? blockDef(i.block_type ?? "").icon
+                : i.item_type === "response_example"
+                  ? "💬"
+                  : "📚"}
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-lg font-medium">{i.title}</p>
               <p className="text-sm text-muted-foreground">
                 {i.item_type === "block"
                   ? blockDef(i.block_type ?? "").label
-                  : "Lektionsskabelon"}
+                  : i.item_type === "response_example"
+                    ? "Gemte elevsvar"
+                    : "Lektionsskabelon"}
                 {i.subject ? ` · ${i.subject}` : ""} · {i.duration_minutes} min
                 {i.tags.length ? ` · ${i.tags.join(", ")}` : ""}
               </p>
@@ -315,10 +323,30 @@ function LibraryPage() {
           <DialogHeader>
             <DialogTitle>{view?.title}</DialogTitle>
             <DialogDescription>
-              {view?.item_type === "block" ? "Aktivitet" : "Lektionsskabelon"}
+              {view?.item_type === "block"
+                ? "Aktivitet"
+                : view?.item_type === "response_example"
+                  ? "Gemte elevsvar"
+                  : "Lektionsskabelon"}
             </DialogDescription>
           </DialogHeader>
-          {view?.item_type === "lesson" ? (
+          {view?.item_type === "response_example" ? (
+            <div className="space-y-3 text-sm">
+              <p className="text-muted-foreground">
+                {(view.data as unknown as ResponseExampleData).block_title}
+                {(view.data as unknown as ResponseExampleData).question
+                  ? ` · ${(view.data as unknown as ResponseExampleData).question}`
+                  : ""}
+              </p>
+              <ul className="space-y-2">
+                {((view.data as unknown as ResponseExampleData).examples ?? []).map((t, i) => (
+                  <li key={i} className="rounded-xl bg-secondary/40 px-4 py-3 whitespace-pre-wrap">
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : view?.item_type === "lesson" ? (
             <ol className="space-y-2 text-sm">
               {((view.data as unknown as LibraryLessonData).blocks ?? []).map((b, i) => (
                 <li key={i} className="rounded-xl bg-secondary/40 px-4 py-3">

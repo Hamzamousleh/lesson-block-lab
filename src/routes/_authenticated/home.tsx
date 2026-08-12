@@ -52,6 +52,12 @@ const actions = [
     to: "/material-to-lesson",
   },
   {
+    icon: "🎚️",
+    title: "Differentiér en aktivitet",
+    description: "Lav niveaudelte varianter med samme faglige mål.",
+    to: "/differentiate",
+  },
+  {
     icon: "📱",
     title: "Elevsessioner",
     description: "Lad eleverne svare fra deres egen enhed.",
