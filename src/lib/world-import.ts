@@ -1,0 +1,160 @@
+import { supabase } from "@/integrations/supabase/client";
+import type { PackageBlock } from "./caselab-package";
+import type { PackageEpisode, WorldEpisodePackage, WorldPackage } from "./world-package";
+import { createConsequence, createEpisode, createWorld, deleteWorld, type World } from "./worlds";
+
+async function currentUserId(): Promise<string> {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error("Du er ikke logget ind.");
+  return data.user.id;
+}
+
+function blockRow(b: PackageBlock, lessonId: string, teacherId: string, order: number) {
+  return {
+    lesson_id: lessonId,
+    teacher_id: teacherId,
+    block_order: order,
+    type: b.type,
+    title: b.title,
+    duration_minutes: b.duration_minutes,
+    student_instructions: b.student_instructions ?? null,
+    teacher_notes: b.teacher_notes ?? null,
+    content: b.content as never,
+    variant_group: b.variant_group ?? null,
+    variant_label: b.variant_label ?? null,
+  };
+}
+
+/** Creates the Lesson + Blocks belonging to an episode, if the package has one. */
+async function createEpisodeLesson(
+  episode: PackageEpisode,
+  teacher_id: string,
+  classId: string | null,
+  worldSubject: string,
+): Promise<{ lessonId: string | null; blockIds: Record<string, string> }> {
+  if (!episode.lesson || !classId) return { lessonId: null, blockIds: {} };
+
+  const { data: lesson, error } = await supabase
+    .from("lessons")
+    .insert({
+      teacher_id,
+      class_id: classId,
+      title: episode.lesson.title,
+      subject: episode.lesson.subject ?? worldSubject,
+      duration_minutes: episode.lesson.duration_minutes,
+      learning_goal: episode.lesson.learning_goal ?? episode.learning_goal ?? null,
+      teacher_note: episode.lesson.teacher_note ?? null,
+      status: "draft",
+      mode: "standard",
+    })
+    .select()
+    .single();
+  if (error || !lesson) throw new Error("Episodens lektion kunne ikke oprettes.");
+
+  const { data: blocks, error: bErr } = await supabase
+    .from("lesson_blocks")
+    .insert(episode.lesson.blocks.map((b, i) => blockRow(b, lesson.id, teacher_id, i)))
+    .select("id,title");
+  if (bErr) {
+    await supabase.from("lessons").delete().eq("id", lesson.id);
+    throw new Error("Episodens aktiviteter kunne ikke oprettes.");
+  }
+  const byTitle: Record<string, string> = {};
+  for (const b of blocks ?? []) byTitle[b.title] = b.id;
+  return { lessonId: lesson.id, blockIds: byTitle };
+}
+
+async function persistEpisode(
+  worldId: string,
+  worldSubject: string,
+  classId: string | null,
+  episode: PackageEpisode,
+  teacher_id: string,
+  fallbackNumber: number,
+): Promise<string> {
+  const { lessonId, blockIds } = await createEpisodeLesson(episode, teacher_id, classId, worldSubject);
+  const created = await createEpisode({
+    world_id: worldId,
+    title: episode.title,
+    description: episode.description ?? null,
+    learning_goal: episode.learning_goal ?? null,
+    academic_concepts: episode.academic_concepts ?? [],
+    episode_number: episode.episode_number ?? fallbackNumber,
+    branch_key: episode.branch_key ?? null,
+    complexity_level: episode.complexity_level,
+    lesson_id: lessonId,
+  });
+
+  for (const rule of episode.consequence_rules ?? []) {
+    await createConsequence({
+      world_id: worldId,
+      episode_id: created.id,
+      source_block_id: rule.source_block_title ? (blockIds[rule.source_block_title] ?? null) : null,
+      title: rule.title,
+      trigger_type: rule.trigger_type,
+      trigger_config: rule.trigger_config,
+      changes: rule.changes,
+      reveal_timing: rule.reveal_timing,
+      teacher_explanation: rule.teacher_explanation ?? null,
+      student_explanation: rule.student_explanation ?? null,
+      academic_rationale: rule.academic_rationale ?? null,
+    });
+  }
+  return created.id;
+}
+
+export async function importWorldPackage(
+  pkg: WorldPackage,
+  target: { classId: string | null },
+): Promise<World> {
+  const teacher_id = await currentUserId();
+  const world = await createWorld({
+    title: pkg.world.title,
+    subject: pkg.world.subject,
+    class_id: target.classId,
+    description: pkg.world.description ?? null,
+    premise: pkg.world.premise,
+    world_type: pkg.world.world_type ?? "other",
+    academic_focus: pkg.world.academic_focus ?? null,
+    status: "active",
+    state: pkg.world.state.map((s) => ({
+      state_key: s.key,
+      label: s.label,
+      value: s.value,
+      value_type: s.value_type,
+      min_value: s.min_value ?? null,
+      max_value: s.max_value ?? null,
+      enum_options: s.enum_options ?? [],
+      description: s.description ?? null,
+      student_visible: s.student_visible,
+    })),
+  });
+
+  try {
+    let i = 1;
+    for (const ep of pkg.world.episodes) {
+      await persistEpisode(world.id, world.subject, target.classId, ep, teacher_id, i);
+      i += 1;
+    }
+  } catch (e) {
+    await deleteWorld(world.id);
+    throw e;
+  }
+  return world;
+}
+
+export async function importEpisodePackage(
+  pkg: WorldEpisodePackage,
+  world: World,
+  episodeNumber: number,
+): Promise<string> {
+  const teacher_id = await currentUserId();
+  return persistEpisode(
+    world.id,
+    world.subject,
+    world.class_id,
+    pkg.episode,
+    teacher_id,
+    episodeNumber,
+  );
+}

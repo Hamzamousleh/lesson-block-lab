@@ -379,6 +379,7 @@ export type Database = {
           created_at: string
           current_block_id: string | null
           ended_at: string | null
+          episode_id: string | null
           id: string
           join_code: string
           lesson_id: string
@@ -396,6 +397,7 @@ export type Database = {
           created_at?: string
           current_block_id?: string | null
           ended_at?: string | null
+          episode_id?: string | null
           id?: string
           join_code: string
           lesson_id: string
@@ -413,6 +415,7 @@ export type Database = {
           created_at?: string
           current_block_id?: string | null
           ended_at?: string | null
+          episode_id?: string | null
           id?: string
           join_code?: string
           lesson_id?: string
@@ -437,6 +440,13 @@ export type Database = {
             columns: ["current_block_id"]
             isOneToOne: false
             referencedRelation: "lesson_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "world_episodes"
             referencedColumns: ["id"]
           },
           {
@@ -492,6 +502,360 @@ export type Database = {
           },
         ]
       }
+      world_consequences: {
+        Row: {
+          academic_rationale: string | null
+          applied_at: string | null
+          consequence_config: Json
+          created_at: string
+          episode_id: string | null
+          id: string
+          pending_changes: Json | null
+          reveal_timing: string
+          source_block_id: string | null
+          status: Database["public"]["Enums"]["world_consequence_status"]
+          student_explanation: string | null
+          teacher_explanation: string | null
+          teacher_id: string
+          title: string
+          trigger_config: Json
+          trigger_type: string
+          updated_at: string
+          world_id: string
+        }
+        Insert: {
+          academic_rationale?: string | null
+          applied_at?: string | null
+          consequence_config?: Json
+          created_at?: string
+          episode_id?: string | null
+          id?: string
+          pending_changes?: Json | null
+          reveal_timing?: string
+          source_block_id?: string | null
+          status?: Database["public"]["Enums"]["world_consequence_status"]
+          student_explanation?: string | null
+          teacher_explanation?: string | null
+          teacher_id: string
+          title?: string
+          trigger_config?: Json
+          trigger_type?: string
+          updated_at?: string
+          world_id: string
+        }
+        Update: {
+          academic_rationale?: string | null
+          applied_at?: string | null
+          consequence_config?: Json
+          created_at?: string
+          episode_id?: string | null
+          id?: string
+          pending_changes?: Json | null
+          reveal_timing?: string
+          source_block_id?: string | null
+          status?: Database["public"]["Enums"]["world_consequence_status"]
+          student_explanation?: string | null
+          teacher_explanation?: string | null
+          teacher_id?: string
+          title?: string
+          trigger_config?: Json
+          trigger_type?: string
+          updated_at?: string
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "world_consequences_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "world_episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "world_consequences_source_block_id_fkey"
+            columns: ["source_block_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "world_consequences_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      world_episodes: {
+        Row: {
+          academic_concepts: string[]
+          branch_key: string | null
+          completion_condition: Json | null
+          complexity_level: string
+          created_at: string
+          description: string | null
+          episode_number: number
+          id: string
+          learning_goal: string | null
+          lesson_id: string | null
+          status: Database["public"]["Enums"]["world_episode_status"]
+          teacher_id: string
+          title: string
+          unlock_condition: Json | null
+          updated_at: string
+          world_id: string
+        }
+        Insert: {
+          academic_concepts?: string[]
+          branch_key?: string | null
+          completion_condition?: Json | null
+          complexity_level?: string
+          created_at?: string
+          description?: string | null
+          episode_number?: number
+          id?: string
+          learning_goal?: string | null
+          lesson_id?: string | null
+          status?: Database["public"]["Enums"]["world_episode_status"]
+          teacher_id: string
+          title: string
+          unlock_condition?: Json | null
+          updated_at?: string
+          world_id: string
+        }
+        Update: {
+          academic_concepts?: string[]
+          branch_key?: string | null
+          completion_condition?: Json | null
+          complexity_level?: string
+          created_at?: string
+          description?: string | null
+          episode_number?: number
+          id?: string
+          learning_goal?: string | null
+          lesson_id?: string | null
+          status?: Database["public"]["Enums"]["world_episode_status"]
+          teacher_id?: string
+          title?: string
+          unlock_condition?: Json | null
+          updated_at?: string
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "world_episodes_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "world_episodes_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      world_events: {
+        Row: {
+          academic_rationale: string | null
+          consequence_id: string | null
+          created_at: string
+          description: string | null
+          episode_id: string | null
+          event_type: string
+          id: string
+          reverted_at: string | null
+          source: string
+          state_changes: Json
+          student_visible: boolean
+          teacher_id: string
+          title: string
+          world_id: string
+        }
+        Insert: {
+          academic_rationale?: string | null
+          consequence_id?: string | null
+          created_at?: string
+          description?: string | null
+          episode_id?: string | null
+          event_type?: string
+          id?: string
+          reverted_at?: string | null
+          source?: string
+          state_changes?: Json
+          student_visible?: boolean
+          teacher_id: string
+          title: string
+          world_id: string
+        }
+        Update: {
+          academic_rationale?: string | null
+          consequence_id?: string | null
+          created_at?: string
+          description?: string | null
+          episode_id?: string | null
+          event_type?: string
+          id?: string
+          reverted_at?: string | null
+          source?: string
+          state_changes?: Json
+          student_visible?: boolean
+          teacher_id?: string
+          title?: string
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "world_events_consequence_id_fkey"
+            columns: ["consequence_id"]
+            isOneToOne: false
+            referencedRelation: "world_consequences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "world_events_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "world_episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "world_events_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      world_state: {
+        Row: {
+          created_at: string
+          description: string | null
+          enum_options: string[]
+          id: string
+          initial_value: Json | null
+          label: string
+          max_value: number | null
+          min_value: number | null
+          sort_order: number
+          state_key: string
+          student_visible: boolean
+          teacher_id: string
+          updated_at: string
+          value: Json
+          value_type: Database["public"]["Enums"]["world_state_value_type"]
+          world_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enum_options?: string[]
+          id?: string
+          initial_value?: Json | null
+          label: string
+          max_value?: number | null
+          min_value?: number | null
+          sort_order?: number
+          state_key: string
+          student_visible?: boolean
+          teacher_id: string
+          updated_at?: string
+          value?: Json
+          value_type?: Database["public"]["Enums"]["world_state_value_type"]
+          world_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enum_options?: string[]
+          id?: string
+          initial_value?: Json | null
+          label?: string
+          max_value?: number | null
+          min_value?: number | null
+          sort_order?: number
+          state_key?: string
+          student_visible?: boolean
+          teacher_id?: string
+          updated_at?: string
+          value?: Json
+          value_type?: Database["public"]["Enums"]["world_state_value_type"]
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "world_state_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      worlds: {
+        Row: {
+          academic_focus: string | null
+          class_id: string | null
+          completed_summary: Json | null
+          created_at: string
+          description: string | null
+          id: string
+          premise: string | null
+          status: Database["public"]["Enums"]["world_status"]
+          subject: string
+          teacher_id: string
+          title: string
+          updated_at: string
+          visual_theme: string | null
+          world_type: string
+        }
+        Insert: {
+          academic_focus?: string | null
+          class_id?: string | null
+          completed_summary?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          premise?: string | null
+          status?: Database["public"]["Enums"]["world_status"]
+          subject?: string
+          teacher_id: string
+          title: string
+          updated_at?: string
+          visual_theme?: string | null
+          world_type?: string
+        }
+        Update: {
+          academic_focus?: string | null
+          class_id?: string | null
+          completed_summary?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          premise?: string | null
+          status?: Database["public"]["Enums"]["world_status"]
+          subject?: string
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+          visual_theme?: string | null
+          world_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worlds_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -506,6 +870,10 @@ export type Database = {
       session_mode: "live" | "self_paced"
       session_status: "draft" | "active" | "ended"
       unit_status: "planned" | "active" | "completed"
+      world_consequence_status: "idle" | "pending" | "applied" | "skipped"
+      world_episode_status: "locked" | "available" | "active" | "completed"
+      world_state_value_type: "number" | "boolean" | "text" | "enum"
+      world_status: "draft" | "active" | "completed" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -639,6 +1007,10 @@ export const Constants = {
       session_mode: ["live", "self_paced"],
       session_status: ["draft", "active", "ended"],
       unit_status: ["planned", "active", "completed"],
+      world_consequence_status: ["idle", "pending", "applied", "skipped"],
+      world_episode_status: ["locked", "available", "active", "completed"],
+      world_state_value_type: ["number", "boolean", "text", "enum"],
+      world_status: ["draft", "active", "completed", "archived"],
     },
   },
 } as const

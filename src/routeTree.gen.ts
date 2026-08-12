@@ -32,6 +32,9 @@ import { Route as AuthenticatedLessonsNewRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSessionsIndexRouteImport } from './routes/_authenticated/sessions.index'
 import { Route as AuthenticatedSessionsSessionIdRouteImport } from './routes/_authenticated/sessions.$sessionId'
 import { Route as AuthenticatedSessionsCompareRouteImport } from './routes/_authenticated/sessions.compare'
+import { Route as AuthenticatedWorldsIndexRouteImport } from './routes/_authenticated/worlds.index'
+import { Route as AuthenticatedWorldsWorldIdRouteImport } from './routes/_authenticated/worlds.$worldId'
+import { Route as AuthenticatedWorldsNewRouteImport } from './routes/_authenticated/worlds.new'
 import { Route as LessonsLessonIdRunRouteImport } from './routes/lessons.$lessonId.run'
 import { Route as AuthenticatedLessonsLessonIdEditRouteImport } from './routes/_authenticated/lessons.$lessonId.edit'
 import { Route as AuthenticatedSessionsSessionIdFollowUpRouteImport } from './routes/_authenticated/sessions.$sessionId_.follow-up'
@@ -160,6 +163,23 @@ const AuthenticatedSessionsCompareRoute =
     path: '/sessions/compare',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedWorldsIndexRoute =
+  AuthenticatedWorldsIndexRouteImport.update({
+    id: '/worlds/',
+    path: '/worlds/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedWorldsWorldIdRoute =
+  AuthenticatedWorldsWorldIdRouteImport.update({
+    id: '/worlds/$worldId',
+    path: '/worlds/$worldId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedWorldsNewRoute = AuthenticatedWorldsNewRouteImport.update({
+  id: '/worlds/new',
+  path: '/worlds/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const LessonsLessonIdRunRoute = LessonsLessonIdRunRouteImport.update({
   id: '/lessons/$lessonId/run',
   path: '/lessons/$lessonId/run',
@@ -198,10 +218,13 @@ export interface FileRoutesByFullPath {
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
   '/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
   '/sessions/compare': typeof AuthenticatedSessionsCompareRoute
+  '/worlds/$worldId': typeof AuthenticatedWorldsWorldIdRoute
+  '/worlds/new': typeof AuthenticatedWorldsNewRoute
   '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/classes/': typeof AuthenticatedClassesIndexRoute
   '/lessons/': typeof AuthenticatedLessonsIndexRoute
   '/sessions/': typeof AuthenticatedSessionsIndexRoute
+  '/worlds/': typeof AuthenticatedWorldsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
   '/sessions/$sessionId/follow-up': typeof AuthenticatedSessionsSessionIdFollowUpRoute
 }
@@ -225,10 +248,13 @@ export interface FileRoutesByTo {
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
   '/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
   '/sessions/compare': typeof AuthenticatedSessionsCompareRoute
+  '/worlds/$worldId': typeof AuthenticatedWorldsWorldIdRoute
+  '/worlds/new': typeof AuthenticatedWorldsNewRoute
   '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/classes': typeof AuthenticatedClassesIndexRoute
   '/lessons': typeof AuthenticatedLessonsIndexRoute
   '/sessions': typeof AuthenticatedSessionsIndexRoute
+  '/worlds': typeof AuthenticatedWorldsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
   '/sessions/$sessionId/follow-up': typeof AuthenticatedSessionsSessionIdFollowUpRoute
 }
@@ -254,10 +280,13 @@ export interface FileRoutesById {
   '/_authenticated/lessons/new': typeof AuthenticatedLessonsNewRoute
   '/_authenticated/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
   '/_authenticated/sessions/compare': typeof AuthenticatedSessionsCompareRoute
+  '/_authenticated/worlds/$worldId': typeof AuthenticatedWorldsWorldIdRoute
+  '/_authenticated/worlds/new': typeof AuthenticatedWorldsNewRoute
   '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/_authenticated/classes/': typeof AuthenticatedClassesIndexRoute
   '/_authenticated/lessons/': typeof AuthenticatedLessonsIndexRoute
   '/_authenticated/sessions/': typeof AuthenticatedSessionsIndexRoute
+  '/_authenticated/worlds/': typeof AuthenticatedWorldsIndexRoute
   '/_authenticated/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
   '/_authenticated/sessions/$sessionId_/follow-up': typeof AuthenticatedSessionsSessionIdFollowUpRoute
 }
@@ -283,10 +312,13 @@ export interface FileRouteTypes {
     | '/lessons/new'
     | '/sessions/$sessionId'
     | '/sessions/compare'
+    | '/worlds/$worldId'
+    | '/worlds/new'
     | '/lessons/$lessonId/run'
     | '/classes/'
     | '/lessons/'
     | '/sessions/'
+    | '/worlds/'
     | '/lessons/$lessonId/edit'
     | '/sessions/$sessionId/follow-up'
   fileRoutesByTo: FileRoutesByTo
@@ -310,10 +342,13 @@ export interface FileRouteTypes {
     | '/lessons/new'
     | '/sessions/$sessionId'
     | '/sessions/compare'
+    | '/worlds/$worldId'
+    | '/worlds/new'
     | '/lessons/$lessonId/run'
     | '/classes'
     | '/lessons'
     | '/sessions'
+    | '/worlds'
     | '/lessons/$lessonId/edit'
     | '/sessions/$sessionId/follow-up'
   id:
@@ -338,10 +373,13 @@ export interface FileRouteTypes {
     | '/_authenticated/lessons/new'
     | '/_authenticated/sessions/$sessionId'
     | '/_authenticated/sessions/compare'
+    | '/_authenticated/worlds/$worldId'
+    | '/_authenticated/worlds/new'
     | '/lessons/$lessonId/run'
     | '/_authenticated/classes/'
     | '/_authenticated/lessons/'
     | '/_authenticated/sessions/'
+    | '/_authenticated/worlds/'
     | '/_authenticated/lessons/$lessonId/edit'
     | '/_authenticated/sessions/$sessionId_/follow-up'
   fileRoutesById: FileRoutesById
@@ -519,6 +557,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSessionsCompareRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/worlds/': {
+      id: '/_authenticated/worlds/'
+      path: '/worlds'
+      fullPath: '/worlds/'
+      preLoaderRoute: typeof AuthenticatedWorldsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/worlds/$worldId': {
+      id: '/_authenticated/worlds/$worldId'
+      path: '/worlds/$worldId'
+      fullPath: '/worlds/$worldId'
+      preLoaderRoute: typeof AuthenticatedWorldsWorldIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/worlds/new': {
+      id: '/_authenticated/worlds/new'
+      path: '/worlds/new'
+      fullPath: '/worlds/new'
+      preLoaderRoute: typeof AuthenticatedWorldsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/lessons/$lessonId/run': {
       id: '/lessons/$lessonId/run'
       path: '/lessons/$lessonId/run'
@@ -558,9 +617,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLessonsNewRoute: typeof AuthenticatedLessonsNewRoute
   AuthenticatedSessionsSessionIdRoute: typeof AuthenticatedSessionsSessionIdRoute
   AuthenticatedSessionsCompareRoute: typeof AuthenticatedSessionsCompareRoute
+  AuthenticatedWorldsWorldIdRoute: typeof AuthenticatedWorldsWorldIdRoute
+  AuthenticatedWorldsNewRoute: typeof AuthenticatedWorldsNewRoute
   AuthenticatedClassesIndexRoute: typeof AuthenticatedClassesIndexRoute
   AuthenticatedLessonsIndexRoute: typeof AuthenticatedLessonsIndexRoute
   AuthenticatedSessionsIndexRoute: typeof AuthenticatedSessionsIndexRoute
+  AuthenticatedWorldsIndexRoute: typeof AuthenticatedWorldsIndexRoute
   AuthenticatedLessonsLessonIdEditRoute: typeof AuthenticatedLessonsLessonIdEditRoute
   AuthenticatedSessionsSessionIdFollowUpRoute: typeof AuthenticatedSessionsSessionIdFollowUpRoute
 }
@@ -580,9 +642,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLessonsNewRoute: AuthenticatedLessonsNewRoute,
   AuthenticatedSessionsSessionIdRoute: AuthenticatedSessionsSessionIdRoute,
   AuthenticatedSessionsCompareRoute: AuthenticatedSessionsCompareRoute,
+  AuthenticatedWorldsWorldIdRoute: AuthenticatedWorldsWorldIdRoute,
+  AuthenticatedWorldsNewRoute: AuthenticatedWorldsNewRoute,
   AuthenticatedClassesIndexRoute: AuthenticatedClassesIndexRoute,
   AuthenticatedLessonsIndexRoute: AuthenticatedLessonsIndexRoute,
   AuthenticatedSessionsIndexRoute: AuthenticatedSessionsIndexRoute,
+  AuthenticatedWorldsIndexRoute: AuthenticatedWorldsIndexRoute,
   AuthenticatedLessonsLessonIdEditRoute: AuthenticatedLessonsLessonIdEditRoute,
   AuthenticatedSessionsSessionIdFollowUpRoute:
     AuthenticatedSessionsSessionIdFollowUpRoute,

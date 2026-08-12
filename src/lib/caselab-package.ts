@@ -98,6 +98,9 @@ export const CONTENT_SCHEMAS: Record<string, z.ZodTypeAny> = {
 
 /* ---------------- validation ---------------- */
 
+export const WORLD_PACKAGE_HINT =
+  "Dette er en World-pakke. Importér den under Worlds → Importér World.";
+
 export interface ValidationResult {
   ok: boolean;
   errors: string[];
@@ -108,7 +111,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-function validateBlock(raw: unknown, index: number, errors: string[]): PackageBlock | null {
+export function validateBlock(raw: unknown, index: number, errors: string[]): PackageBlock | null {
   const nr = index + 1;
   if (!isRecord(raw)) {
     errors.push(`Aktivitet ${nr} har et ugyldigt format.`);
@@ -186,8 +189,14 @@ export function validatePackage(input: string): ValidationResult {
     errors.push("Pakken mangler 'caselab_version': \"2.0\".");
   }
   const type = raw["package_type"];
+  if (type === "world" || type === "world_episode") {
+    // World packages are validated by the Worlds module (Phase 6).
+    return { ok: false, errors: [WORLD_PACKAGE_HINT] };
+  }
   if (type !== "lesson" && type !== "blocks") {
-    errors.push("Pakken skal have 'package_type' sat til enten \"lesson\" eller \"blocks\".");
+    errors.push(
+      "Pakken skal have 'package_type' sat til \"lesson\", \"blocks\", \"world\" eller \"world_episode\".",
+    );
     return { ok: false, errors };
   }
 
