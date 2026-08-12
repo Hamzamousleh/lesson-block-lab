@@ -110,7 +110,7 @@ function NewEpisodePage() {
         });
 
   const importEpisode = useMutation({
-    mutationFn: async (asCopy = false) => {
+    mutationFn: async (asCopy: boolean) => {
       if (!w) throw new Error("Dette World blev ikke fundet.");
       const result = validateWorldPackage(pasted);
       if (!result.ok || !result.data) {
