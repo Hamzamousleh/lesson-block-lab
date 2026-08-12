@@ -361,9 +361,17 @@ function RunMode() {
           {klass.data && <span className="text-muted-foreground"> · {klass.data.name}</span>}
           {useFallback && <span className="ml-2 text-primary">· Ekstra aktivitet</span>}
         </div>
+        {liveSession && (
+          <Link to="/sessions/$sessionId" params={{ sessionId: liveSession.id }}>
+            <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
+              Elevsession · {liveSession.join_code} · {(participants.data ?? []).length} deltagere
+            </span>
+          </Link>
+        )}
         <span className="tabular-nums text-muted-foreground">
           {index + 1} / {active.length}
         </span>
+
         {!hideTime && (
           <span className="flex items-center gap-2 tabular-nums text-muted-foreground">
             <Clock className="size-4" /> {elapsed} min
@@ -422,6 +430,34 @@ function RunMode() {
               <Eye className="size-4" /> Vis næste trin
             </Button>
           )}
+
+          {liveSession && liveSummary && (
+            <section className="surface-card mt-12 p-8">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold">Elevsvar</h2>
+                <span className="text-sm text-muted-foreground">
+                  {liveAnswers.length} / {(participants.data ?? []).length} har svaret · kode{" "}
+                  <span className="font-mono">{liveSession.join_code}</span>
+                </span>
+              </div>
+              <div className="mt-5">
+                <ResultBars summary={liveSummary} />
+              </div>
+              <Button
+                variant={liveSession.reveal_results ? "default" : "outline"}
+                size="sm"
+                className="mt-5 rounded-full"
+                onClick={() =>
+                  void updateSession(liveSession.id, {
+                    reveal_results: !liveSession.reveal_results,
+                  }).then(() => queryClient.invalidateQueries({ queryKey: ["sessions"] }))
+                }
+              >
+                {liveSession.reveal_results ? "Skjul resultat for eleverne" : "Vis resultat for eleverne"}
+              </Button>
+            </section>
+          )}
+
         </div>
       </main>
 
