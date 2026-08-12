@@ -38,6 +38,7 @@ import { Route as AuthenticatedWorldsNewRouteImport } from './routes/_authentica
 import { Route as LessonsLessonIdRunRouteImport } from './routes/lessons.$lessonId.run'
 import { Route as AuthenticatedLessonsLessonIdEditRouteImport } from './routes/_authenticated/lessons.$lessonId.edit'
 import { Route as AuthenticatedSessionsSessionIdFollowUpRouteImport } from './routes/_authenticated/sessions.$sessionId_.follow-up'
+import { Route as AuthenticatedWorldsWorldIdEpisodesNewRouteImport } from './routes/_authenticated/worlds.$worldId_.episodes.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -197,6 +198,12 @@ const AuthenticatedSessionsSessionIdFollowUpRoute =
     path: '/sessions/$sessionId/follow-up',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedWorldsWorldIdEpisodesNewRoute =
+  AuthenticatedWorldsWorldIdEpisodesNewRouteImport.update({
+    id: '/worlds/$worldId_/episodes/new',
+    path: '/worlds/$worldId/episodes/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/worlds/': typeof AuthenticatedWorldsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
   '/sessions/$sessionId/follow-up': typeof AuthenticatedSessionsSessionIdFollowUpRoute
+  '/worlds/$worldId/episodes/new': typeof AuthenticatedWorldsWorldIdEpisodesNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -257,6 +265,7 @@ export interface FileRoutesByTo {
   '/worlds': typeof AuthenticatedWorldsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
   '/sessions/$sessionId/follow-up': typeof AuthenticatedSessionsSessionIdFollowUpRoute
+  '/worlds/$worldId/episodes/new': typeof AuthenticatedWorldsWorldIdEpisodesNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -289,6 +298,7 @@ export interface FileRoutesById {
   '/_authenticated/worlds/': typeof AuthenticatedWorldsIndexRoute
   '/_authenticated/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
   '/_authenticated/sessions/$sessionId_/follow-up': typeof AuthenticatedSessionsSessionIdFollowUpRoute
+  '/_authenticated/worlds/$worldId_/episodes/new': typeof AuthenticatedWorldsWorldIdEpisodesNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
     | '/worlds/'
     | '/lessons/$lessonId/edit'
     | '/sessions/$sessionId/follow-up'
+    | '/worlds/$worldId/episodes/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -351,6 +362,7 @@ export interface FileRouteTypes {
     | '/worlds'
     | '/lessons/$lessonId/edit'
     | '/sessions/$sessionId/follow-up'
+    | '/worlds/$worldId/episodes/new'
   id:
     | '__root__'
     | '/'
@@ -382,6 +394,7 @@ export interface FileRouteTypes {
     | '/_authenticated/worlds/'
     | '/_authenticated/lessons/$lessonId/edit'
     | '/_authenticated/sessions/$sessionId_/follow-up'
+    | '/_authenticated/worlds/$worldId_/episodes/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -599,6 +612,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSessionsSessionIdFollowUpRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/worlds/$worldId_/episodes/new': {
+      id: '/_authenticated/worlds/$worldId_/episodes/new'
+      path: '/worlds/$worldId/episodes/new'
+      fullPath: '/worlds/$worldId/episodes/new'
+      preLoaderRoute: typeof AuthenticatedWorldsWorldIdEpisodesNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -625,6 +645,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWorldsIndexRoute: typeof AuthenticatedWorldsIndexRoute
   AuthenticatedLessonsLessonIdEditRoute: typeof AuthenticatedLessonsLessonIdEditRoute
   AuthenticatedSessionsSessionIdFollowUpRoute: typeof AuthenticatedSessionsSessionIdFollowUpRoute
+  AuthenticatedWorldsWorldIdEpisodesNewRoute: typeof AuthenticatedWorldsWorldIdEpisodesNewRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -651,6 +672,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLessonsLessonIdEditRoute: AuthenticatedLessonsLessonIdEditRoute,
   AuthenticatedSessionsSessionIdFollowUpRoute:
     AuthenticatedSessionsSessionIdFollowUpRoute,
+  AuthenticatedWorldsWorldIdEpisodesNewRoute:
+    AuthenticatedWorldsWorldIdEpisodesNewRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
