@@ -317,3 +317,56 @@ export function lessonToDetailedText(
     })
     .join("\n");
 }
+
+export interface MaterialPromptInput {
+  className?: string | undefined;
+  subject?: string | undefined;
+  material: string;
+  materialKind: string;
+  purpose: string;
+  duration: number;
+  outputType: "lesson" | "blocks";
+  feels: string[];
+}
+
+export function buildMaterialPrompt(i: MaterialPromptInput): string {
+  const ctx = [
+    i.className ? `Klasse: ${i.className}` : "",
+    i.subject ? `Fag: ${i.subject}` : "",
+    `Materialetype: ${i.materialKind}`,
+    `Formål: ${i.purpose}`,
+    `Varighed: ${i.duration} minutter`,
+    i.feels.length ? `Ønsket karakter: ${i.feels.join(", ")}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const pkg =
+    i.outputType === "lesson"
+      ? `{
+  "caselab_version": "2.0",
+  "type": "lesson",
+  "lesson": { "title": "...", "subject": "...", "duration_minutes": ${i.duration}, "learning_goal": "...", "teacher_note": "..." },
+  "blocks": [ ... ]
+}`
+      : `{
+  "caselab_version": "2.0",
+  "type": "blocks",
+  "blocks": [ ... ]
+}`;
+
+  return `${COMMON}
+
+Opgave: Omsæt lærerens eget materiale til undervisning, eleverne kan arbejde med.
+
+${ctx}
+${materialSection(i.material)}
+
+Krav:
+- Brug materialet som eneste faglige kilde.
+- Sørg for, at eleverne bearbejder materialet aktivt — ikke bare læser det.
+- Fordel tiden, så den samlede varighed rammer ca. ${i.duration} minutter.
+
+Returnér præcis denne struktur:
+${pkg}`;
+}

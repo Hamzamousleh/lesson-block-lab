@@ -5,7 +5,6 @@ import { Loader2, Sparkles } from "lucide-react";
 import { classesQuery, lessonsQuery } from "@/lib/data";
 import { loadDemoData } from "@/lib/demo";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
@@ -50,8 +49,15 @@ const actions = [
     icon: "📄",
     title: "Brug mit materiale",
     description: "Lav undervisning ud fra tekst eller noter.",
-    to: null,
+    to: "/material-to-lesson",
   },
+  {
+    icon: "📱",
+    title: "Elevsessioner",
+    description: "Lad eleverne svare fra deres egen enhed.",
+    to: "/sessions",
+  },
+
 ] as const;
 
 function Home() {
@@ -82,35 +88,18 @@ function Home() {
       </section>
 
       <section className="mt-14 grid gap-5 sm:grid-cols-2">
-        {actions.map((a) =>
-          a.to ? (
-            <Link
-              key={a.title}
-              to={a.to}
-              className="surface-card group flex flex-col gap-3 p-8 text-left transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]"
-            >
-              <span className="text-3xl">{a.icon}</span>
-              <span className="text-xl font-semibold">{a.title}</span>
-              <span className="text-muted-foreground">{a.description}</span>
-            </Link>
-          ) : (
-            <TooltipProvider key={a.title}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="surface-card relative flex cursor-not-allowed flex-col gap-3 p-8 text-left opacity-70">
-                    <span className="absolute top-6 right-6 rounded-full bg-accent-warm px-3 py-1 text-xs font-medium text-accent-warm-foreground">
-                      Kommer snart
-                    </span>
-                    <span className="text-3xl">{a.icon}</span>
-                    <span className="text-xl font-semibold">{a.title}</span>
-                    <span className="text-muted-foreground">{a.description}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>Denne funktion er på vej</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ),
-        )}
+        {actions.map((a) => (
+          <Link
+            key={a.title}
+            to={a.to}
+            className="surface-card group flex flex-col gap-3 p-8 text-left transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]"
+          >
+            <span className="text-3xl">{a.icon}</span>
+            <span className="text-xl font-semibold">{a.title}</span>
+            <span className="text-muted-foreground">{a.description}</span>
+          </Link>
+        ))}
+
       </section>
 
       <section className="mt-20">

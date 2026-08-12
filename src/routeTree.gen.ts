@@ -18,12 +18,18 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedImproveLessonRouteImport } from './routes/_authenticated/improve-lesson'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
+import { Route as AuthenticatedMaterialToLessonRouteImport } from './routes/_authenticated/material-to-lesson'
 import { Route as AuthenticatedRescueRouteImport } from './routes/_authenticated/rescue'
 import { Route as AuthenticatedUnitsRouteImport } from './routes/_authenticated/units'
+import { Route as JoinIndexRouteImport } from './routes/join.index'
+import { Route as JoinCodeRouteImport } from './routes/join.$code'
+import { Route as StudentCodeRouteImport } from './routes/student.$code'
 import { Route as AuthenticatedClassesIndexRouteImport } from './routes/_authenticated/classes.index'
 import { Route as AuthenticatedClassesClassIdRouteImport } from './routes/_authenticated/classes.$classId'
 import { Route as AuthenticatedLessonsIndexRouteImport } from './routes/_authenticated/lessons.index'
 import { Route as AuthenticatedLessonsNewRouteImport } from './routes/_authenticated/lessons.new'
+import { Route as AuthenticatedSessionsIndexRouteImport } from './routes/_authenticated/sessions.index'
+import { Route as AuthenticatedSessionsSessionIdRouteImport } from './routes/_authenticated/sessions.$sessionId'
 import { Route as LessonsLessonIdRunRouteImport } from './routes/lessons.$lessonId.run'
 import { Route as AuthenticatedLessonsLessonIdEditRouteImport } from './routes/_authenticated/lessons.$lessonId.edit'
 
@@ -73,6 +79,12 @@ const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMaterialToLessonRoute =
+  AuthenticatedMaterialToLessonRouteImport.update({
+    id: '/material-to-lesson',
+    path: '/material-to-lesson',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRescueRoute = AuthenticatedRescueRouteImport.update({
   id: '/rescue',
   path: '/rescue',
@@ -82,6 +94,21 @@ const AuthenticatedUnitsRoute = AuthenticatedUnitsRouteImport.update({
   id: '/units',
   path: '/units',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const JoinIndexRoute = JoinIndexRouteImport.update({
+  id: '/join/',
+  path: '/join/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinCodeRoute = JoinCodeRouteImport.update({
+  id: '/join/$code',
+  path: '/join/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentCodeRoute = StudentCodeRouteImport.update({
+  id: '/student/$code',
+  path: '/student/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedClassesIndexRoute =
   AuthenticatedClassesIndexRouteImport.update({
@@ -106,6 +133,18 @@ const AuthenticatedLessonsNewRoute = AuthenticatedLessonsNewRouteImport.update({
   path: '/lessons/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSessionsIndexRoute =
+  AuthenticatedSessionsIndexRouteImport.update({
+    id: '/sessions/',
+    path: '/sessions/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSessionsSessionIdRoute =
+  AuthenticatedSessionsSessionIdRouteImport.update({
+    id: '/sessions/$sessionId',
+    path: '/sessions/$sessionId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const LessonsLessonIdRunRoute = LessonsLessonIdRunRouteImport.update({
   id: '/lessons/$lessonId/run',
   path: '/lessons/$lessonId/run',
@@ -127,13 +166,19 @@ export interface FileRoutesByFullPath {
   '/import': typeof AuthenticatedImportRoute
   '/improve-lesson': typeof AuthenticatedImproveLessonRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/material-to-lesson': typeof AuthenticatedMaterialToLessonRoute
   '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
+  '/join/$code': typeof JoinCodeRoute
+  '/student/$code': typeof StudentCodeRoute
+  '/join/': typeof JoinIndexRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
+  '/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
   '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/classes/': typeof AuthenticatedClassesIndexRoute
   '/lessons/': typeof AuthenticatedLessonsIndexRoute
+  '/sessions/': typeof AuthenticatedSessionsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -145,13 +190,19 @@ export interface FileRoutesByTo {
   '/import': typeof AuthenticatedImportRoute
   '/improve-lesson': typeof AuthenticatedImproveLessonRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/material-to-lesson': typeof AuthenticatedMaterialToLessonRoute
   '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
+  '/join/$code': typeof JoinCodeRoute
+  '/student/$code': typeof StudentCodeRoute
+  '/join': typeof JoinIndexRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/lessons/new': typeof AuthenticatedLessonsNewRoute
+  '/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
   '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/classes': typeof AuthenticatedClassesIndexRoute
   '/lessons': typeof AuthenticatedLessonsIndexRoute
+  '/sessions': typeof AuthenticatedSessionsIndexRoute
   '/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
 }
 export interface FileRoutesById {
@@ -165,13 +216,19 @@ export interface FileRoutesById {
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/improve-lesson': typeof AuthenticatedImproveLessonRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
+  '/_authenticated/material-to-lesson': typeof AuthenticatedMaterialToLessonRoute
   '/_authenticated/rescue': typeof AuthenticatedRescueRoute
   '/_authenticated/units': typeof AuthenticatedUnitsRoute
+  '/join/$code': typeof JoinCodeRoute
+  '/student/$code': typeof StudentCodeRoute
+  '/join/': typeof JoinIndexRoute
   '/_authenticated/classes/$classId': typeof AuthenticatedClassesClassIdRoute
   '/_authenticated/lessons/new': typeof AuthenticatedLessonsNewRoute
+  '/_authenticated/sessions/$sessionId': typeof AuthenticatedSessionsSessionIdRoute
   '/lessons/$lessonId/run': typeof LessonsLessonIdRunRoute
   '/_authenticated/classes/': typeof AuthenticatedClassesIndexRoute
   '/_authenticated/lessons/': typeof AuthenticatedLessonsIndexRoute
+  '/_authenticated/sessions/': typeof AuthenticatedSessionsIndexRoute
   '/_authenticated/lessons/$lessonId/edit': typeof AuthenticatedLessonsLessonIdEditRoute
 }
 export interface FileRouteTypes {
@@ -185,13 +242,19 @@ export interface FileRouteTypes {
     | '/import'
     | '/improve-lesson'
     | '/library'
+    | '/material-to-lesson'
     | '/rescue'
     | '/units'
+    | '/join/$code'
+    | '/student/$code'
+    | '/join/'
     | '/classes/$classId'
     | '/lessons/new'
+    | '/sessions/$sessionId'
     | '/lessons/$lessonId/run'
     | '/classes/'
     | '/lessons/'
+    | '/sessions/'
     | '/lessons/$lessonId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -203,13 +266,19 @@ export interface FileRouteTypes {
     | '/import'
     | '/improve-lesson'
     | '/library'
+    | '/material-to-lesson'
     | '/rescue'
     | '/units'
+    | '/join/$code'
+    | '/student/$code'
+    | '/join'
     | '/classes/$classId'
     | '/lessons/new'
+    | '/sessions/$sessionId'
     | '/lessons/$lessonId/run'
     | '/classes'
     | '/lessons'
+    | '/sessions'
     | '/lessons/$lessonId/edit'
   id:
     | '__root__'
@@ -222,13 +291,19 @@ export interface FileRouteTypes {
     | '/_authenticated/import'
     | '/_authenticated/improve-lesson'
     | '/_authenticated/library'
+    | '/_authenticated/material-to-lesson'
     | '/_authenticated/rescue'
     | '/_authenticated/units'
+    | '/join/$code'
+    | '/student/$code'
+    | '/join/'
     | '/_authenticated/classes/$classId'
     | '/_authenticated/lessons/new'
+    | '/_authenticated/sessions/$sessionId'
     | '/lessons/$lessonId/run'
     | '/_authenticated/classes/'
     | '/_authenticated/lessons/'
+    | '/_authenticated/sessions/'
     | '/_authenticated/lessons/$lessonId/edit'
   fileRoutesById: FileRoutesById
 }
@@ -236,6 +311,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  JoinCodeRoute: typeof JoinCodeRoute
+  StudentCodeRoute: typeof StudentCodeRoute
+  JoinIndexRoute: typeof JoinIndexRoute
   LessonsLessonIdRunRoute: typeof LessonsLessonIdRunRoute
 }
 
@@ -304,6 +382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLibraryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/material-to-lesson': {
+      id: '/_authenticated/material-to-lesson'
+      path: '/material-to-lesson'
+      fullPath: '/material-to-lesson'
+      preLoaderRoute: typeof AuthenticatedMaterialToLessonRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rescue': {
       id: '/_authenticated/rescue'
       path: '/rescue'
@@ -317,6 +402,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/units'
       preLoaderRoute: typeof AuthenticatedUnitsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/join/': {
+      id: '/join/'
+      path: '/join'
+      fullPath: '/join/'
+      preLoaderRoute: typeof JoinIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$code': {
+      id: '/join/$code'
+      path: '/join/$code'
+      fullPath: '/join/$code'
+      preLoaderRoute: typeof JoinCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/$code': {
+      id: '/student/$code'
+      path: '/student/$code'
+      fullPath: '/student/$code'
+      preLoaderRoute: typeof StudentCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/classes/': {
       id: '/_authenticated/classes/'
@@ -346,6 +452,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLessonsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sessions/': {
+      id: '/_authenticated/sessions/'
+      path: '/sessions'
+      fullPath: '/sessions/'
+      preLoaderRoute: typeof AuthenticatedSessionsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sessions/$sessionId': {
+      id: '/_authenticated/sessions/$sessionId'
+      path: '/sessions/$sessionId'
+      fullPath: '/sessions/$sessionId'
+      preLoaderRoute: typeof AuthenticatedSessionsSessionIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/lessons/$lessonId/run': {
       id: '/lessons/$lessonId/run'
       path: '/lessons/$lessonId/run'
@@ -370,12 +490,15 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedImproveLessonRoute: typeof AuthenticatedImproveLessonRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
+  AuthenticatedMaterialToLessonRoute: typeof AuthenticatedMaterialToLessonRoute
   AuthenticatedRescueRoute: typeof AuthenticatedRescueRoute
   AuthenticatedUnitsRoute: typeof AuthenticatedUnitsRoute
   AuthenticatedClassesClassIdRoute: typeof AuthenticatedClassesClassIdRoute
   AuthenticatedLessonsNewRoute: typeof AuthenticatedLessonsNewRoute
+  AuthenticatedSessionsSessionIdRoute: typeof AuthenticatedSessionsSessionIdRoute
   AuthenticatedClassesIndexRoute: typeof AuthenticatedClassesIndexRoute
   AuthenticatedLessonsIndexRoute: typeof AuthenticatedLessonsIndexRoute
+  AuthenticatedSessionsIndexRoute: typeof AuthenticatedSessionsIndexRoute
   AuthenticatedLessonsLessonIdEditRoute: typeof AuthenticatedLessonsLessonIdEditRoute
 }
 
@@ -386,12 +509,15 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedImproveLessonRoute: AuthenticatedImproveLessonRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
+  AuthenticatedMaterialToLessonRoute: AuthenticatedMaterialToLessonRoute,
   AuthenticatedRescueRoute: AuthenticatedRescueRoute,
   AuthenticatedUnitsRoute: AuthenticatedUnitsRoute,
   AuthenticatedClassesClassIdRoute: AuthenticatedClassesClassIdRoute,
   AuthenticatedLessonsNewRoute: AuthenticatedLessonsNewRoute,
+  AuthenticatedSessionsSessionIdRoute: AuthenticatedSessionsSessionIdRoute,
   AuthenticatedClassesIndexRoute: AuthenticatedClassesIndexRoute,
   AuthenticatedLessonsIndexRoute: AuthenticatedLessonsIndexRoute,
+  AuthenticatedSessionsIndexRoute: AuthenticatedSessionsIndexRoute,
   AuthenticatedLessonsLessonIdEditRoute: AuthenticatedLessonsLessonIdEditRoute,
 }
 
@@ -402,8 +528,21 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  JoinCodeRoute: JoinCodeRoute,
+  StudentCodeRoute: StudentCodeRoute,
+  JoinIndexRoute: JoinIndexRoute,
   LessonsLessonIdRunRoute: LessonsLessonIdRunRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

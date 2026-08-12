@@ -232,6 +232,175 @@ export type Database = {
         }
         Relationships: []
       }
+      session_participants: {
+        Row: {
+          completed_at: string | null
+          display_name: string
+          id: string
+          joined_at: string
+          last_seen_at: string
+          participant_token: string
+          progress_index: number
+          session_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          display_name: string
+          id?: string
+          joined_at?: string
+          last_seen_at?: string
+          participant_token: string
+          progress_index?: number
+          session_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          display_name?: string
+          id?: string
+          joined_at?: string
+          last_seen_at?: string
+          participant_token?: string
+          progress_index?: number
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_responses: {
+        Row: {
+          block_id: string
+          id: string
+          participant_id: string
+          response_data: Json
+          response_type: string
+          session_id: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          block_id: string
+          id?: string
+          participant_id: string
+          response_data?: Json
+          response_type: string
+          session_id: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          block_id?: string
+          id?: string
+          participant_id?: string
+          response_data?: Json
+          response_type?: string
+          session_id?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_responses_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_responses_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "session_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_responses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          allow_anonymous: boolean
+          class_id: string | null
+          created_at: string
+          current_block_id: string | null
+          ended_at: string | null
+          id: string
+          join_code: string
+          lesson_id: string
+          mode: Database["public"]["Enums"]["session_mode"]
+          reveal_results: boolean
+          started_at: string | null
+          status: Database["public"]["Enums"]["session_status"]
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          allow_anonymous?: boolean
+          class_id?: string | null
+          created_at?: string
+          current_block_id?: string | null
+          ended_at?: string | null
+          id?: string
+          join_code: string
+          lesson_id: string
+          mode?: Database["public"]["Enums"]["session_mode"]
+          reveal_results?: boolean
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["session_status"]
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          allow_anonymous?: boolean
+          class_id?: string | null
+          created_at?: string
+          current_block_id?: string | null
+          ended_at?: string | null
+          id?: string
+          join_code?: string
+          lesson_id?: string
+          mode?: Database["public"]["Enums"]["session_mode"]
+          reveal_results?: boolean
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["session_status"]
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_current_block_id_fkey"
+            columns: ["current_block_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       units: {
         Row: {
           class_id: string
@@ -287,6 +456,8 @@ export type Database = {
       lesson_mode: "standard" | "rescue"
       lesson_status: "draft" | "ready" | "completed"
       library_item_type: "block" | "lesson"
+      session_mode: "live" | "self_paced"
+      session_status: "draft" | "active" | "ended"
       unit_status: "planned" | "active" | "completed"
     }
     CompositeTypes: {
@@ -418,6 +589,8 @@ export const Constants = {
       lesson_mode: ["standard", "rescue"],
       lesson_status: ["draft", "ready", "completed"],
       library_item_type: ["block", "lesson"],
+      session_mode: ["live", "self_paced"],
+      session_status: ["draft", "active", "ended"],
       unit_status: ["planned", "active", "completed"],
     },
   },

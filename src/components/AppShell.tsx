@@ -20,6 +20,8 @@ const navLinks = [
   { to: "/units", label: "Forløb" },
   { to: "/lessons", label: "Lektioner" },
   { to: "/library", label: "Bibliotek" },
+  { to: "/sessions", label: "Sessioner" },
+
 ] as const;
 
 

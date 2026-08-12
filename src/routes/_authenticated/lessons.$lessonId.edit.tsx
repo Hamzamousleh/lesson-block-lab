@@ -32,6 +32,9 @@ import { lessonToText } from "@/lib/prompt";
 import { LESSON_STATUS_LABEL, type LessonBlock, type LessonStatus } from "@/lib/types";
 import { ActivityPicker } from "@/components/editor/ActivityPicker";
 import { BlockEditor, type BlockDraft } from "@/components/editor/BlockEditor";
+import { StartSessionDialog } from "@/components/session/StartSessionDialog";
+import { Smartphone } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -70,6 +73,8 @@ function LessonEditor() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editing, setEditing] = useState<LessonBlock | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [sessionOpen, setSessionOpen] = useState(false);
+
 
   const all = blocks.data ?? [];
   const list = all.filter((b) => !b.is_fallback);
@@ -291,6 +296,10 @@ function LessonEditor() {
               <Play className="size-4" /> Start undervisning
             </Button>
           </Link>
+          <Button variant="outline" className="rounded-full" onClick={() => setSessionOpen(true)}>
+            <Smartphone className="size-4" /> Start elevsession
+          </Button>
+
           <Link to="/import" search={{ lessonId }}>
             <Button variant="outline" className="rounded-full">
               <Plus className="size-4" /> Importér aktiviteter
@@ -437,7 +446,15 @@ function LessonEditor() {
         </div>
       )}
 
+      <StartSessionDialog
+        open={sessionOpen}
+        onOpenChange={setSessionOpen}
+        lessonId={lessonId}
+        classId={lesson.data?.class_id ?? null}
+        blocks={blocks.data ?? []}
+      />
       <ActivityPicker
+
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         onPick={(type) => add.mutate(type)}

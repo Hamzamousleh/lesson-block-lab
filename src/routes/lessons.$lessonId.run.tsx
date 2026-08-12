@@ -20,6 +20,15 @@ import type { LessonBlock } from "@/lib/types";
 import { BlockRenderer, revealSteps } from "@/components/run/BlockRenderer";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  participantsQuery,
+  responsesQuery,
+  sessionsQuery,
+  updateSession,
+} from "@/lib/sessions";
+import { summarize } from "@/lib/results";
+import { ResultBars } from "@/components/student/StudentBlock";
+
 
 export const Route = createFileRoute("/lessons/$lessonId/run")({
   ssr: false,
@@ -88,6 +97,39 @@ function RunMode() {
   const plannedStart = active.slice(0, index).reduce((s, b) => s + b.duration_minutes, 0);
   const plannedEnd = plannedStart + (current?.duration_minutes ?? 0);
   const drift = elapsed - plannedStart;
+
+  /* ---------- live student session (optional) ---------- */
+  const sessions = useQuery({ ...sessionsQuery({ lessonId }), refetchInterval: 15000 });
+  const liveSession =
+    (sessions.data ?? []).find((s) => s.mode === "live" && s.status !== "ended") ?? null;
+  const liveId = liveSession?.id ?? "";
+  const participants = useQuery({ ...participantsQuery(liveId, true), enabled: !!liveId });
+  const responses = useQuery({ ...responsesQuery(liveId, true), enabled: !!liveId });
+
+  useEffect(() => {
+    if (!liveSession || !current) return;
+    if (liveSession.current_block_id === current.id) return;
+    void updateSession(liveSession.id, {
+      current_block_id: current.id,
+      status: "active",
+      reveal_results: false,
+    }).then(() => queryClient.invalidateQueries({ queryKey: ["sessions"] }));
+  }, [liveSession, current, queryClient]);
+
+  const liveAnswers = current ? (responses.data ?? []).filter((a) => a.block_id === current.id) : [];
+  const liveNames = new Map((participants.data ?? []).map((p) => [p.id, p.display_name]));
+  const liveSummary =
+    current && liveSession
+      ? summarize(
+          current.type,
+          (current.content ?? {}) as Record<string, unknown>,
+          liveAnswers.map((a) => ({
+            display_name: liveNames.get(a.participant_id) ?? "",
+            response_data: a.response_data,
+          })),
+        )
+      : null;
+
 
   const complete = useMutation({
     mutationFn: () => updateLesson(lessonId, { status: "completed" }),
@@ -319,9 +361,17 @@ function RunMode() {
           {klass.data && <span className="text-muted-foreground"> · {klass.data.name}</span>}
           {useFallback && <span className="ml-2 text-primary">· Ekstra aktivitet</span>}
         </div>
+        {liveSession && (
+          <Link to="/sessions/$sessionId" params={{ sessionId: liveSession.id }}>
+            <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
+              Elevsession · {liveSession.join_code} · {(participants.data ?? []).length} deltagere
+            </span>
+          </Link>
+        )}
         <span className="tabular-nums text-muted-foreground">
           {index + 1} / {active.length}
         </span>
+
         {!hideTime && (
           <span className="flex items-center gap-2 tabular-nums text-muted-foreground">
             <Clock className="size-4" /> {elapsed} min
@@ -380,6 +430,34 @@ function RunMode() {
               <Eye className="size-4" /> Vis næste trin
             </Button>
           )}
+
+          {liveSession && liveSummary && (
+            <section className="surface-card mt-12 p-8">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold">Elevsvar</h2>
+                <span className="text-sm text-muted-foreground">
+                  {liveAnswers.length} / {(participants.data ?? []).length} har svaret · kode{" "}
+                  <span className="font-mono">{liveSession.join_code}</span>
+                </span>
+              </div>
+              <div className="mt-5">
+                <ResultBars summary={liveSummary} />
+              </div>
+              <Button
+                variant={liveSession.reveal_results ? "default" : "outline"}
+                size="sm"
+                className="mt-5 rounded-full"
+                onClick={() =>
+                  void updateSession(liveSession.id, {
+                    reveal_results: !liveSession.reveal_results,
+                  }).then(() => queryClient.invalidateQueries({ queryKey: ["sessions"] }))
+                }
+              >
+                {liveSession.reveal_results ? "Skjul resultat for eleverne" : "Vis resultat for eleverne"}
+              </Button>
+            </section>
+          )}
+
         </div>
       </main>
 
