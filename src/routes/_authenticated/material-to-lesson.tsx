@@ -49,7 +49,7 @@ function MaterialToLesson() {
   const [kind, setKind] = useState(KINDS[0] as string);
   const [purpose, setPurpose] = useState(PURPOSES[0] as string);
   const [duration, setDuration] = useState(90);
-  const [outputType, setOutputType] = useState<"lesson" | "blocks">("lesson");
+  const [outputType, setOutputType] = useState<"lesson" | "blocks" | "quiz">("lesson");
   const [feels, setFeels] = useState<string[]>([]);
   const [prompt, setPrompt] = useState<string | null>(null);
 
@@ -146,6 +146,7 @@ function MaterialToLesson() {
               [
                 { v: "lesson", label: "En hel lektion" },
                 { v: "blocks", label: "Enkelte aktiviteter" },
+                { v: "quiz", label: "Quiz / MCQ" },
               ] as const
             ).map((o) => (
               <Button
