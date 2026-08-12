@@ -83,14 +83,38 @@ function token(): string {
   return crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
 }
 
-async function loadBlocks(lessonId: string) {
+async function loadBlocks(lessonId: string, variantLabel?: string | null) {
   const { data, error } = await supabaseAdmin
     .from("lesson_blocks")
-    .select("id,type,title,duration_minutes,student_instructions,content,is_fallback,block_order")
+    .select(
+      "id,type,title,duration_minutes,student_instructions,content,is_fallback,block_order,variant_group,variant_label",
+    )
     .eq("lesson_id", lessonId)
     .order("block_order", { ascending: true });
   if (error) throw new Error(error.message);
-  return (data ?? []).filter((b) => !b.is_fallback);
+  const blocks = (data ?? []).filter((b) => !b.is_fallback);
+
+  /* Differentiation: a student only ever sees one variant per variant_group. */
+  const seen = new Set<string>();
+  return blocks.filter((b) => {
+    const group = (b as { variant_group?: string | null }).variant_group;
+    if (!group) return true;
+    const label = (b as { variant_label?: string | null }).variant_label ?? null;
+    const groupBlocks = blocks.filter(
+      (x) => (x as { variant_group?: string | null }).variant_group === group,
+    );
+    const wanted = variantLabel ?? null;
+    const match =
+      groupBlocks.find((x) => (x as { variant_label?: string | null }).variant_label === wanted) ??
+      groupBlocks[0];
+    if (seen.has(group)) return false;
+    if (match && match.id === b.id) {
+      seen.add(group);
+      return true;
+    }
+    void label;
+    return false;
+  });
 }
 
 async function participantByToken(participant_token: string) {
