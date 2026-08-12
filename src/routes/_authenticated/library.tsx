@@ -196,18 +196,20 @@ function LibraryPage() {
                 {i.tags.length ? ` · ${i.tags.join(", ")}` : ""}
               </p>
             </div>
-            <Button
-              className="rounded-full"
-              onClick={() => {
-                setReuse(i);
-                setTargetLessonId("");
-                setInsertion("bottom");
-                setTargetClassId("");
-                setTargetUnitId("none");
-              }}
-            >
-              Brug igen
-            </Button>
+            {i.item_type !== "response_example" && (
+              <Button
+                className="rounded-full"
+                onClick={() => {
+                  setReuse(i);
+                  setTargetLessonId("");
+                  setInsertion("bottom");
+                  setTargetClassId("");
+                  setTargetUnitId("none");
+                }}
+              >
+                Brug igen
+              </Button>
+            )}
             <Button variant="outline" className="rounded-full" onClick={() => setView(i)}>
               Se
             </Button>
