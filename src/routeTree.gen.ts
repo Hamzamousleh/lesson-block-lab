@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCreateWithChatgptRouteImport } from './routes/_authenticated/create-with-chatgpt'
+import { Route as AuthenticatedExtraTimeRouteImport } from './routes/_authenticated/extra-time'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedRescueRouteImport } from './routes/_authenticated/rescue'
@@ -44,6 +45,11 @@ const AuthenticatedCreateWithChatgptRoute =
     path: '/create-with-chatgpt',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedExtraTimeRoute = AuthenticatedExtraTimeRouteImport.update({
+  id: '/extra-time',
+  path: '/extra-time',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
+  '/extra-time': typeof AuthenticatedExtraTimeRoute
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
   '/rescue': typeof AuthenticatedRescueRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
+  '/extra-time': typeof AuthenticatedExtraTimeRoute
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
   '/rescue': typeof AuthenticatedRescueRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/create-with-chatgpt': typeof AuthenticatedCreateWithChatgptRoute
+  '/_authenticated/extra-time': typeof AuthenticatedExtraTimeRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/rescue': typeof AuthenticatedRescueRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/create-with-chatgpt'
+    | '/extra-time'
     | '/home'
     | '/import'
     | '/rescue'
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/create-with-chatgpt'
+    | '/extra-time'
     | '/home'
     | '/import'
     | '/rescue'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/create-with-chatgpt'
+    | '/_authenticated/extra-time'
     | '/_authenticated/home'
     | '/_authenticated/import'
     | '/_authenticated/rescue'
@@ -230,6 +242,13 @@ declare module '@tanstack/react-router' {
       path: '/create-with-chatgpt'
       fullPath: '/create-with-chatgpt'
       preLoaderRoute: typeof AuthenticatedCreateWithChatgptRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/extra-time': {
+      id: '/_authenticated/extra-time'
+      path: '/extra-time'
+      fullPath: '/extra-time'
+      preLoaderRoute: typeof AuthenticatedExtraTimeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/home': {
@@ -307,6 +326,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCreateWithChatgptRoute: typeof AuthenticatedCreateWithChatgptRoute
+  AuthenticatedExtraTimeRoute: typeof AuthenticatedExtraTimeRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedRescueRoute: typeof AuthenticatedRescueRoute
@@ -320,6 +340,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCreateWithChatgptRoute: AuthenticatedCreateWithChatgptRoute,
+  AuthenticatedExtraTimeRoute: AuthenticatedExtraTimeRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedRescueRoute: AuthenticatedRescueRoute,
