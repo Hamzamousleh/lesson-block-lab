@@ -323,6 +323,24 @@ function ImportPage() {
             })}
           </ol>
 
+          {pkg.package_type === "lesson" && !!pkg.lesson.fallback_blocks?.length && (
+            <div>
+              <h3 className="text-lg font-semibold">Hvis du får tid til overs</h3>
+              <ol className="mt-3 space-y-2">
+                {pkg.lesson.fallback_blocks.map((b, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center gap-4 rounded-xl border border-dashed border-border px-5 py-3"
+                  >
+                    <span className="text-xl">{blockDef(b.type).icon}</span>
+                    <span className="min-w-0 flex-1 truncate">{b.title}</span>
+                    <span className="text-sm text-muted-foreground">{b.duration_minutes} min</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
           <p className="text-sm text-muted-foreground">
             {blocks.length} aktiviteter · {plannedMinutes} minutter
             {pkg.package_type === "lesson" &&
@@ -333,22 +351,52 @@ function ImportPage() {
           </p>
 
           {pkg.package_type === "blocks" && (
-            <div className="space-y-2">
-              <Label>Hvor skal aktiviteterne indsættes?</Label>
-              <Select value={insertion} onValueChange={setInsertion}>
-                <SelectTrigger className="rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="top">Øverst i lektionen</SelectItem>
-                  <SelectItem value="bottom">Nederst i lektionen</SelectItem>
-                  {(targetBlocks.data ?? []).map((b) => (
-                    <SelectItem key={b.id} value={b.id}>
-                      Efter aktivitet: {b.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-3">
+              {pkg.placement_suggestion && (
+                <div className="rounded-xl bg-accent-warm/40 p-5">
+                  <p className="font-medium">Forslag fra ChatGPT</p>
+                  {pkg.placement_suggestion.teacher_message && (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {pkg.placement_suggestion.teacher_message}
+                    </p>
+                  )}
+                  {(() => {
+                    const t = pkg.placement_suggestion.after_block_title?.toLowerCase();
+                    const match = (targetBlocks.data ?? []).find(
+                      (b) => t && b.title.toLowerCase() === t,
+                    );
+                    if (!match) return null;
+                    return (
+                      <Button
+                        variant="outline"
+                        className="mt-3 rounded-full"
+                        onClick={() => setInsertion(match.id)}
+                      >
+                        Indsæt efter “{match.title}”
+                      </Button>
+                    );
+                  })()}
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Hvor skal aktiviteterne indsættes?</Label>
+                <Select value={insertion} onValueChange={setInsertion}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="top">Øverst i lektionen</SelectItem>
+                    <SelectItem value="bottom">Nederst i lektionen</SelectItem>
+                    {(targetBlocks.data ?? [])
+                      .filter((b) => !b.is_fallback)
+                      .map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          Efter aktivitet: {b.title}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
 
