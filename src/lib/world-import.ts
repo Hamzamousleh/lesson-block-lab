@@ -1,7 +1,77 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { PackageBlock } from "./caselab-package";
 import type { PackageEpisode, WorldEpisodePackage, WorldPackage } from "./world-package";
-import { createConsequence, createEpisode, createWorld, deleteWorld, type World } from "./worlds";
+import {
+  createConsequence,
+  createEpisode,
+  createWorld,
+  deleteWorld,
+  type World,
+  type WorldEpisode,
+} from "./worlds";
+
+/* ---------------- pre-import inspection (Phase 6.1) ---------------- */
+
+export interface PackageSummary {
+  title: string;
+  stateCount: number;
+  episodeCount: number;
+  lessonCount: number;
+  blockCount: number;
+  ruleCount: number;
+  needsClass: boolean;
+}
+
+function summarizeEpisodes(episodes: PackageEpisode[]) {
+  const lessons = episodes.filter((e) => !!e.lesson);
+  return {
+    lessonCount: lessons.length,
+    blockCount: lessons.reduce((n, e) => n + (e.lesson?.blocks.length ?? 0), 0),
+    ruleCount: episodes.reduce((n, e) => n + (e.consequence_rules?.length ?? 0), 0),
+  };
+}
+
+export function summarizeWorldPackage(pkg: WorldPackage): PackageSummary {
+  const s = summarizeEpisodes(pkg.world.episodes);
+  return {
+    title: pkg.world.title,
+    stateCount: pkg.world.state.length,
+    episodeCount: pkg.world.episodes.length,
+    needsClass: s.lessonCount > 0,
+    ...s,
+  };
+}
+
+export function summarizeEpisodePackage(pkg: WorldEpisodePackage): PackageSummary {
+  const s = summarizeEpisodes([pkg.episode]);
+  return {
+    title: pkg.episode.title,
+    stateCount: 0,
+    episodeCount: 1,
+    needsClass: s.lessonCount > 0,
+    ...s,
+  };
+}
+
+/** Duplicate guard: same title, or same number+branch. */
+export function episodeConflict(
+  existing: WorldEpisode[],
+  episode: PackageEpisode,
+): string | null {
+  const title = episode.title.trim().toLowerCase();
+  if (existing.some((e) => e.title.trim().toLowerCase() === title))
+    return "Der findes allerede en episode med denne titel eller placering.";
+  if (
+    episode.episode_number &&
+    existing.some(
+      (e) =>
+        e.episode_number === episode.episode_number &&
+        (e.branch_key ?? null) === (episode.branch_key ?? null),
+    )
+  )
+    return "Der findes allerede en episode med denne titel eller placering.";
+  return null;
+}
 
 async function currentUserId(): Promise<string> {
   const { data, error } = await supabase.auth.getUser();
@@ -32,7 +102,11 @@ async function createEpisodeLesson(
   classId: string | null,
   worldSubject: string,
 ): Promise<{ lessonId: string | null; blockIds: Record<string, string> }> {
-  if (!episode.lesson || !classId) return { lessonId: null, blockIds: {} };
+  if (!episode.lesson) return { lessonId: null, blockIds: {} };
+  if (!classId)
+    throw new Error(
+      "Dette World indeholder lektioner. Vælg en klasse, før du importerer Worldet.",
+    );
 
   const { data: lesson, error } = await supabase
     .from("lessons")
@@ -108,6 +182,10 @@ export async function importWorldPackage(
   target: { classId: string | null },
 ): Promise<World> {
   const teacher_id = await currentUserId();
+  /* Never write anything if embedded lessons would be dropped. */
+  if (summarizeWorldPackage(pkg).needsClass && !target.classId) {
+    throw new Error("Dette World indeholder lektioner. Vælg en klasse, før du importerer Worldet.");
+  }
   const world = await createWorld({
     title: pkg.world.title,
     subject: pkg.world.subject,
@@ -147,13 +225,22 @@ export async function importEpisodePackage(
   pkg: WorldEpisodePackage,
   world: World,
   episodeNumber: number,
+  opts?: { asCopy?: boolean },
 ): Promise<string> {
   const teacher_id = await currentUserId();
+  if (summarizeEpisodePackage(pkg).needsClass && !world.class_id) {
+    throw new Error(
+      "Episoden indeholder en lektion. Knyt dit World til en klasse, før du importerer.",
+    );
+  }
+  const episode = opts?.asCopy
+    ? { ...pkg.episode, title: `${pkg.episode.title} (kopi)`, episode_number: episodeNumber }
+    : pkg.episode;
   return persistEpisode(
     world.id,
     world.subject,
     world.class_id,
-    pkg.episode,
+    episode,
     teacher_id,
     episodeNumber,
   );

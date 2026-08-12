@@ -21,6 +21,16 @@ export interface StudentBlockDTO {
   interactive: boolean;
 }
 
+/** Sanitized World context — the ONLY World data an anonymous student ever receives. */
+export interface WorldSessionContextDTO {
+  world_title: string;
+  episode_title: string;
+  episode_number: number;
+  learning_goal: string | null;
+  visible_state: { label: string; display: string; value: number | null; max: number | null }[];
+  visible_recent_events: { title: string; description: string | null; changes: string[] }[];
+}
+
 export interface StudentStateDTO {
   session: {
     id: string;
@@ -44,6 +54,91 @@ export interface StudentStateDTO {
   responses: Record<string, JsonObject>;
   /** live results, only when the teacher has revealed them */
   revealed: null | { block_id: string; summary: ResultSummary };
+  /** null unless the session was launched from a World episode */
+  world: WorldSessionContextDTO | null;
+}
+
+/* ---------------- World context ---------------- */
+
+function displayState(v: {
+  value: unknown;
+  value_type: string;
+  max_value: number | null;
+}): string {
+  if (v.value === null || v.value === undefined) return "—";
+  if (v.value_type === "boolean") return v.value ? "Ja" : "Nej";
+  if (v.value_type === "number")
+    return typeof v.max_value === "number" ? `${Number(v.value)} / ${v.max_value}` : String(Number(v.value));
+  return String(v.value);
+}
+
+/**
+ * Builds the student World header. Teacher-only state, consequence configs,
+ * trigger configs, unlock/branch rules and teacher notes are never selected
+ * from the database here — they cannot leak to the client.
+ */
+export async function loadWorldContext(
+  episodeId: string | null,
+): Promise<WorldSessionContextDTO | null> {
+  if (!episodeId) return null;
+
+  const { data: episode } = await supabaseAdmin
+    .from("world_episodes")
+    .select("id,world_id,title,learning_goal,episode_number")
+    .eq("id", episodeId)
+    .maybeSingle();
+  if (!episode) return null;
+
+  const { data: world } = await supabaseAdmin
+    .from("worlds")
+    .select("id,title")
+    .eq("id", episode.world_id)
+    .maybeSingle();
+  if (!world) return null;
+
+  const { data: stateRows } = await supabaseAdmin
+    .from("world_state")
+    .select("state_key,label,value,value_type,max_value,student_visible,sort_order")
+    .eq("world_id", episode.world_id)
+    .eq("student_visible", true)
+    .order("sort_order", { ascending: true });
+
+  const visibleKeys = new Set((stateRows ?? []).map((r) => r.state_key));
+
+  const { data: eventRows } = await supabaseAdmin
+    .from("world_events")
+    .select("title,description,state_changes,student_visible,reverted_at,created_at")
+    .eq("world_id", episode.world_id)
+    .eq("student_visible", true)
+    .is("reverted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(4);
+
+  return {
+    world_title: world.title,
+    episode_title: episode.title,
+    episode_number: episode.episode_number,
+    learning_goal: episode.learning_goal,
+    visible_state: (stateRows ?? []).map((r) => ({
+      label: r.label,
+      display: displayState({
+        value: r.value,
+        value_type: String(r.value_type),
+        max_value: r.max_value,
+      }),
+      value: r.value_type === "number" ? Number(r.value) : null,
+      max: r.max_value,
+    })),
+    visible_recent_events: (eventRows ?? []).map((e) => ({
+      title: e.title,
+      description: e.description,
+      changes: (Array.isArray(e.state_changes) ? e.state_changes : [])
+        .map((raw) => (raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null))
+        .filter((c): c is Record<string, unknown> => !!c && visibleKeys.has(String(c["state_key"] ?? "")))
+        .map((c) => `${String(c["label"])}: ${String(c["before"])} → ${String(c["after"])}`),
+
+    })),
+  };
 }
 
 /** Strip anything the student must never see. */
@@ -272,6 +367,7 @@ export async function getStudentState(participant_token: string): Promise<Studen
     currentBlockId,
     responses,
     revealed,
+    world: await loadWorldContext((session as { episode_id?: string | null }).episode_id ?? null),
   };
 }
 

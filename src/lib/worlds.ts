@@ -545,3 +545,292 @@ export async function markEventReverted(id: string): Promise<void> {
     .eq("id", id);
   if (error) throw new Error(error.message);
 }
+
+/* ------------------------------------------------------------------ *
+ * Phase 6.1 — episode ↔ session integration, branching, completion.
+ * ------------------------------------------------------------------ */
+
+import { summarize, type ResultSummary } from "./results";
+
+export interface EpisodeSessionStats {
+  sessionId: string | null;
+  status: string | null;
+  mode: string | null;
+  joinCode: string | null;
+  participants: number;
+  responses: number;
+}
+
+/** Latest student session launched from an episode, with live counts. */
+export const episodeStatsQuery = (episodeId: string) =>
+  queryOptions({
+    queryKey: ["episode-stats", episodeId],
+    queryFn: async (): Promise<EpisodeSessionStats> => {
+      const sessions = (unwrap(
+        await db
+          .from("sessions")
+          .select("id,status,mode,join_code,created_at")
+          .eq("episode_id", episodeId)
+          .order("created_at", { ascending: false }),
+      ) ?? []) as {
+        id: string;
+        status: string;
+        mode: string;
+        join_code: string;
+      }[];
+      const latest = sessions[0];
+      if (!latest)
+        return { sessionId: null, status: null, mode: null, joinCode: null, participants: 0, responses: 0 };
+      const participants = (unwrap(
+        await db.from("session_participants").select("id").eq("session_id", latest.id),
+      ) ?? []) as { id: string }[];
+      const responses = (unwrap(
+        await db.from("session_responses").select("id").eq("session_id", latest.id),
+      ) ?? []) as { id: string }[];
+      return {
+        sessionId: latest.id,
+        status: latest.status,
+        mode: latest.mode,
+        joinCode: latest.join_code,
+        participants: participants.length,
+        responses: responses.length,
+      };
+    },
+  });
+
+export interface DecisionData {
+  summary: ResultSummary | null;
+  blockTitle: string | null;
+  total: number;
+}
+
+/**
+ * Reuses the Phase 4/5 response summarizer to build the decision basis for a
+ * consequence: all responses to its source block across sessions for the episode.
+ */
+export const decisionQuery = (episodeId: string, blockId: string | null) =>
+  queryOptions({
+    queryKey: ["world-decision", episodeId, blockId ?? "none"],
+    enabled: !!blockId,
+    refetchInterval: 6000,
+    queryFn: async (): Promise<DecisionData> => {
+      if (!blockId) return { summary: null, blockTitle: null, total: 0 };
+      const block = unwrap(
+        await db.from("lesson_blocks").select("id,type,title,content").eq("id", blockId).maybeSingle(),
+      ) as { id: string; type: string; title: string; content: Record<string, unknown> } | null;
+      if (!block) return { summary: null, blockTitle: null, total: 0 };
+
+      const sessions = (unwrap(
+        await db.from("sessions").select("id").eq("episode_id", episodeId),
+      ) ?? []) as { id: string }[];
+      if (!sessions.length) return { summary: null, blockTitle: block.title, total: 0 };
+
+      const rows = (unwrap(
+        await db
+          .from("session_responses")
+          .select("response_data,session_id")
+          .eq("block_id", blockId)
+          .in(
+            "session_id",
+            sessions.map((s) => s.id),
+          ),
+      ) ?? []) as { response_data: Record<string, unknown> }[];
+
+      const summary = summarize(
+        block.type,
+        block.content ?? {},
+        rows.map((r) => ({ display_name: "", response_data: r.response_data ?? {} })),
+      );
+      return { summary, blockTitle: block.title, total: rows.length };
+    },
+  });
+
+/* ---------------- branching ---------------- */
+
+export interface BranchCondition {
+  kind: "state_threshold";
+  state_key: string;
+  comparator: "lt" | "lte" | "gt" | "gte" | "eq";
+  value: number;
+}
+
+/** An episode is a branch when it has a branch_key. */
+export function isBranch(e: WorldEpisode): boolean {
+  return !!e.branch_key;
+}
+
+/* ---------------- completion ---------------- */
+
+export interface WorldSummary {
+  episodes_completed: number;
+  episodes_total: number;
+  start_state: { label: string; value: string }[];
+  final_state: { label: string; value: string }[];
+  major_events: { title: string; changes: string }[];
+}
+
+export function buildWorldSummary(
+  episodes: WorldEpisode[],
+  states: WorldStateVar[],
+  events: WorldEvent[],
+): WorldSummary {
+  const fmt = (v: unknown) => (v === null || v === undefined ? "—" : String(v));
+  return {
+    episodes_completed: episodes.filter((e) => e.status === "completed").length,
+    episodes_total: episodes.length,
+    start_state: states.map((s) => ({ label: s.label, value: fmt(s.initial_value) })),
+    final_state: states.map((s) => ({ label: s.label, value: fmt(s.value) })),
+    major_events: events
+      .filter((e) => !e.reverted_at && e.state_changes.length > 0)
+      .slice(0, 12)
+      .map((e) => ({
+        title: e.title,
+        changes: e.state_changes.map((c) => `${c.label}: ${fmt(c.before)} → ${fmt(c.after)}`).join(" · "),
+      })),
+  };
+}
+
+export async function completeWorld(world: World, summary: WorldSummary): Promise<World> {
+  return updateWorld(world.id, {
+    status: "completed",
+    completed_summary: summary as unknown as Record<string, unknown>,
+  });
+}
+
+/* ---------------- duplication ---------------- */
+
+/**
+ * Copies a World for a new class: metadata, state (reset to initial values),
+ * episodes with their lessons/blocks and consequence rules.
+ * Sessions, participants, responses, history and applied status are NOT copied.
+ */
+export async function duplicateWorld(worldId: string, classId: string | null): Promise<World> {
+  const teacher_id = await currentUserId();
+  const source = unwrap(await db.from("worlds").select("*").eq("id", worldId).single()) as World;
+  const states = (unwrap(
+    await db.from("world_state").select("*").eq("world_id", worldId).order("sort_order"),
+  ) ?? []) as WorldStateVar[];
+  const episodes = (unwrap(
+    await db.from("world_episodes").select("*").eq("world_id", worldId).order("episode_number"),
+  ) ?? []) as WorldEpisode[];
+  const consequences = (unwrap(
+    await db.from("world_consequences").select("*").eq("world_id", worldId),
+  ) ?? []) as WorldConsequence[];
+
+  const copy = await createWorld({
+    title: `${source.title} (kopi)`,
+    subject: source.subject,
+    class_id: classId,
+    description: source.description,
+    premise: source.premise,
+    world_type: source.world_type,
+    academic_focus: source.academic_focus,
+    status: "active",
+    state: states.map((s) => ({
+      state_key: s.state_key,
+      label: s.label,
+      value: s.initial_value ?? s.value,
+      value_type: s.value_type,
+      min_value: s.min_value,
+      max_value: s.max_value,
+      enum_options: s.enum_options,
+      description: s.description,
+      student_visible: s.student_visible,
+    })),
+  });
+
+  try {
+    for (const ep of episodes) {
+      let newLessonId: string | null = null;
+      const blockMap: Record<string, string> = {};
+
+      if (ep.lesson_id) {
+        const lesson = unwrap(
+          await db.from("lessons").select("*").eq("id", ep.lesson_id).maybeSingle(),
+        ) as Record<string, unknown> | null;
+        if (lesson) {
+          const created = unwrap(
+            await db
+              .from("lessons")
+              .insert({
+                teacher_id,
+                class_id: classId ?? (lesson["class_id"] as string),
+                unit_id: null,
+                title: lesson["title"],
+                subject: lesson["subject"],
+                duration_minutes: lesson["duration_minutes"],
+                learning_goal: lesson["learning_goal"],
+                teacher_note: lesson["teacher_note"],
+                status: "draft",
+                mode: lesson["mode"],
+              })
+              .select()
+              .single(),
+          ) as { id: string };
+          newLessonId = created.id;
+
+          const blocks = (unwrap(
+            await db.from("lesson_blocks").select("*").eq("lesson_id", ep.lesson_id).order("block_order"),
+          ) ?? []) as Record<string, unknown>[];
+          for (const b of blocks) {
+            const nb = unwrap(
+              await db
+                .from("lesson_blocks")
+                .insert({
+                  lesson_id: newLessonId,
+                  teacher_id,
+                  block_order: b["block_order"],
+                  type: b["type"],
+                  title: b["title"],
+                  duration_minutes: b["duration_minutes"],
+                  student_instructions: b["student_instructions"],
+                  teacher_notes: b["teacher_notes"],
+                  content: b["content"],
+                  is_fallback: b["is_fallback"],
+                  variant_group: b["variant_group"],
+                  variant_label: b["variant_label"],
+                })
+                .select("id")
+                .single(),
+            ) as { id: string };
+            blockMap[b["id"] as string] = nb.id;
+          }
+        }
+      }
+
+      const newEp = await createEpisode({
+        world_id: copy.id,
+        title: ep.title,
+        description: ep.description,
+        learning_goal: ep.learning_goal,
+        academic_concepts: ep.academic_concepts,
+        episode_number: ep.episode_number,
+        branch_key: ep.branch_key,
+        complexity_level: ep.complexity_level,
+        lesson_id: newLessonId,
+        unlock_condition: ep.unlock_condition,
+        status: ep.unlock_condition ? "locked" : "available",
+      });
+
+      for (const c of consequences.filter((x) => x.episode_id === ep.id)) {
+        await createConsequence({
+          world_id: copy.id,
+          episode_id: newEp.id,
+          source_block_id: c.source_block_id ? (blockMap[c.source_block_id] ?? null) : null,
+          title: c.title,
+          trigger_type: c.trigger_type,
+          trigger_config: c.trigger_config,
+          changes: c.consequence_config?.changes ?? [],
+          reveal_timing: c.reveal_timing,
+          teacher_explanation: c.teacher_explanation,
+          student_explanation: c.student_explanation,
+          academic_rationale: c.academic_rationale,
+        });
+      }
+    }
+  } catch (e) {
+    await deleteWorld(copy.id);
+    throw e;
+  }
+  return copy;
+}

@@ -94,6 +94,8 @@ export function previewChanges(
 
 export interface TriggerEvaluation {
   fires: boolean;
+  /** true when the responses are tied and the teacher must decide. */
+  tie?: boolean;
   /** Human readable Danish explanation of what the responses showed. */
   reason: string;
   /** null when the trigger needs response data that is not there yet. */
@@ -123,7 +125,19 @@ export function evaluateTrigger(
       (best, n, i) => (n > (summary.counts[best] ?? -1) ? i : best),
       0,
     );
+    const topCount = summary.counts[top] ?? 0;
+    const winners = summary.counts.filter((n) => n === topCount).length;
     const share = Math.round(((summary.counts[wanted] ?? 0) / summary.total) * 100);
+    if (winners > 1) {
+      return {
+        fires: false,
+        tie: true,
+        reason: "Der er stemmelighed. Vælg udfald manuelt.",
+        detail: summary.labels
+          .map((l, i) => `${l || `Mulighed ${i + 1}`}: ${summary.counts[i] ?? 0}`)
+          .join(" · "),
+      };
+    }
     return {
       fires: top === wanted,
       reason:
@@ -313,6 +327,34 @@ export async function releasePendingConsequences(
     all.push(...applied);
   }
   return all;
+}
+
+/** Changes stored on a pending (delayed) consequence, normalised to StateChange. */
+export function pendingChangesOf(c: WorldConsequence): StateChange[] {
+  const raw = (c.pending_changes ?? c.consequence_config?.changes ?? []) as unknown;
+  if (!Array.isArray(raw)) return [];
+  return (raw as (StateChange | AppliedChange)[]).map((x) =>
+    "operation" in x
+      ? (x as StateChange)
+      : ({ state_key: x.state_key, operation: "set", value: x.after as never } as StateChange),
+  );
+}
+
+/**
+ * A `next_episode` consequence from Episode N only becomes eligible when an
+ * episode with a HIGHER episode_number is active. Re-activating the source
+ * episode never releases it.
+ */
+export function eligiblePendingConsequences(
+  pending: WorldConsequence[],
+  episodeNumberOf: (episodeId: string | null) => number | null,
+  activeEpisodeNumber: number,
+): WorldConsequence[] {
+  return pending.filter((c) => {
+    if (c.status !== "pending") return false;
+    const source = episodeNumberOf(c.episode_id);
+    return source === null || activeEpisodeNumber > source;
+  });
 }
 
 /** Reverses the newest non-reverted event that changed state. */

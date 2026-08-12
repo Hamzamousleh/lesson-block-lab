@@ -8,7 +8,7 @@ import { buildWorldPrompt } from "@/lib/prompt";
 import { WORLD_TEMPLATES, templateFor } from "@/lib/world-templates";
 import { createWorld, WORLD_TYPE_LABEL, type StateDraft, type WorldType } from "@/lib/worlds";
 import { validateWorldPackage } from "@/lib/world-package";
-import { importWorldPackage } from "@/lib/world-import";
+import { importWorldPackage, summarizeWorldPackage } from "@/lib/world-import";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,6 +97,13 @@ function NewWorldPage() {
       if (result.data.package_type !== "world") {
         setErrors(["Dette er en episode-pakke. Importér den inde i et eksisterende World."]);
         throw new Error("Forkert pakketype.");
+      }
+      const summary = summarizeWorldPackage(result.data);
+      if (summary.needsClass && classId === NO_CLASS) {
+        setErrors([
+          `Pakken indeholder ${summary.lessonCount} lektion(er) med ${summary.blockCount} aktiviteter. Vælg en klasse, før du importerer — ellers ville lektionerne gå tabt.`,
+        ]);
+        throw new Error("Vælg en klasse for at importere lektionerne.");
       }
       setErrors([]);
       return importWorldPackage(result.data, { classId: classId === NO_CLASS ? null : classId });
