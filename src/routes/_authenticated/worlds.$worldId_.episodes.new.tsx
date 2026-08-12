@@ -3,7 +3,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Check, Copy, Loader2 } from "lucide-react";
-import { buildNextEpisodePrompt, buildWorldReflectionPrompt } from "@/lib/prompt";
+import {
+  buildNextEpisodePrompt,
+  buildWorldReflectionPrompt,
+  extractRecurringCharacters,
+} from "@/lib/prompt";
 import { formatStateValue } from "@/lib/consequences";
 import {
   COMPLEXITY_LEVELS,
@@ -14,7 +18,7 @@ import {
   worldStateQuery,
 } from "@/lib/worlds";
 import { validateWorldPackage } from "@/lib/world-package";
-import { importEpisodePackage } from "@/lib/world-import";
+import { episodeConflict, importEpisodePackage } from "@/lib/world-import";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,6 +62,7 @@ function NewEpisodePage() {
   const [copied, setCopied] = useState(false);
   const [pasted, setPasted] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
+  const [conflict, setConflict] = useState<string | null>(null);
 
   const w = world.data;
   const list = episodes.data ?? [];
@@ -101,10 +106,11 @@ function NewEpisodePage() {
           concepts: concepts || w.academic_focus || "fagets kernebegreber",
           duration,
           episodeNumber: nextNumber,
+          recurringCharacters: extractRecurringCharacters(w.premise),
         });
 
   const importEpisode = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (asCopy = false) => {
       if (!w) throw new Error("Dette World blev ikke fundet.");
       const result = validateWorldPackage(pasted);
       if (!result.ok || !result.data) {
@@ -115,8 +121,14 @@ function NewEpisodePage() {
         setErrors(["Dette er ikke en episode-pakke. Brug 'package_type': \"world_episode\"."]);
         throw new Error("Forkert pakketype.");
       }
+      const clash = episodeConflict(list, result.data.episode);
+      if (clash && !asCopy) {
+        setConflict(clash);
+        throw new Error(clash);
+      }
       setErrors([]);
-      return importEpisodePackage(result.data, w, nextNumber);
+      setConflict(null);
+      return importEpisodePackage(result.data, w, nextNumber, { asCopy });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["world-episodes", worldId] });
@@ -270,9 +282,35 @@ function NewEpisodePage() {
               ))}
             </ul>
           )}
+          {conflict && (
+            <div className="rounded-xl border border-border/70 bg-secondary/60 p-4 text-sm">
+              <p className="font-medium">{conflict}</p>
+              <p className="mt-1 text-muted-foreground">
+                Vil du importere den som en kopi i stedet?
+              </p>
+              <div className="mt-3 flex gap-3">
+                <Button
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => importEpisode.mutate(true)}
+                  disabled={importEpisode.isPending}
+                >
+                  Importér som kopi
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="rounded-full"
+                  onClick={() => setConflict(null)}
+                >
+                  Annullér
+                </Button>
+              </div>
+            </div>
+          )}
           <Button
             className="rounded-full"
-            onClick={() => importEpisode.mutate()}
+            onClick={() => importEpisode.mutate(false)}
             disabled={importEpisode.isPending || !pasted.trim()}
           >
             {importEpisode.isPending && <Loader2 className="size-4 animate-spin" />} Importér episode

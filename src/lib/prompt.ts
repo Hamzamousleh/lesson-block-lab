@@ -609,6 +609,8 @@ export interface NextEpisodePromptInput {
   concepts: string;
   duration: number;
   episodeNumber: number;
+  /** Deterministically extracted from the premise — never AI-extracted. */
+  recurringCharacters?: string[];
 }
 
 export function buildNextEpisodePrompt(i: NextEpisodePromptInput): string {
@@ -650,11 +652,26 @@ Den nye episode:
 - Faglige begreber: ${i.concepts}
 - Varighed: ${i.duration} minutter
 
+${
+    i.recurringCharacters && i.recurringCharacters.length
+      ? `Gennemgående personer (brug dem — opfind ikke nye, hvis en af disse kan bære situationen):\n${i.recurringCharacters
+          .map((c) => `- ${c}`)
+          .join("\n")}\n`
+      : ""
+  }
+Kontinuitetskrav (vigtigst):
+- Genbrug eksisterende gennemgående personer og institutioner, når det er fagligt relevant.
+- Introducér kun en ny person, hvis ingen eksisterende kan bære situationen.
+- Referér til mindst én konkret tidligere begivenhed fra World-hukommelsen.
+- Lad den nuværende World-tilstand få reel betydning for, hvad der kan ske.
+- Nulstil ikke relationer, konflikter eller vilkår mellem episoder.
+- Genintroducér kort personer, der ikke har været med længe.
+- Fasthold faktuel kontinuitet: navne, roller, steder og tidligere valg.
+- Hæv den faglige kompleksitet svarende til niveauet "${i.complexityLabel}".
+
 Vigtige krav:
 - Opfind IKKE tidligere begivenheder. Brug kun det, der står ovenfor.
 - Respektér den nuværende World-tilstand.
-- Brug de samme personer/institutioner konsistent.
-- Lad mindst én tidligere konsekvens få betydning i denne episode.
 - Gør konsekvenser fagligt meningsfulde med reelle afvejninger.
 - Nævn ingen rigtige elevnavne.
 
@@ -748,4 +765,78 @@ Returnér præcis denne struktur:
     "blocks": [ ... ]
   }
 }`;
+}
+
+
+/* ---------------- Phase 6.1: reflect on an applied consequence ---------------- */
+
+export interface ConsequenceReflectionInput {
+  worldTitle: string;
+  subject: string;
+  episodeTitle: string;
+  learningGoal: string;
+  decision: string;
+  distribution: string;
+  changeLines: string[];
+  academicRationale: string;
+  duration: number;
+}
+
+export function buildConsequenceReflectionPrompt(i: ConsequenceReflectionInput): string {
+  return `Du hjælper en dansk gymnasielærer i faget ${i.subject}.
+
+Opgave: Lav 1–2 aktiviteter (blocks), hvor eleverne bruger fagteori til at fortolke konsekvensen af deres egen beslutning.
+
+World: ${i.worldTitle}
+Episode: ${i.episodeTitle}
+Læringsmål: ${i.learningGoal}
+
+Elevernes beslutning:
+${i.decision}
+
+Svarfordeling:
+${i.distribution}
+
+Konsekvens i World-tilstanden:
+${i.changeLines.map((l) => `- ${l}`).join("\n")}
+
+Lærerens faglige begrundelse:
+"""
+${i.academicRationale}
+"""
+
+Krav:
+- Brug kun blocktyperne "discussion", "short_response" eller "theory_test".
+- Eleverne skal forklare konsekvensen med fagbegreber — ikke bare vurdere den moralsk.
+- Mindst ét spørgsmål skal bede eleverne overveje, hvad modellen forenkler.
+- Samlet varighed ca. ${i.duration} minutter.
+- Skriv på dansk. Ingen elevnavne.
+
+${SCHEMA_REFERENCE}
+
+Returnér præcis denne struktur:
+{
+  "caselab_version": "2.0",
+  "package_type": "blocks",
+  "blocks": [ ... ]
+}`;
+}
+
+/** Deterministic recurring-character extraction from a World premise. No AI. */
+export function extractRecurringCharacters(premise: string | null): string[] {
+  if (!premise) return [];
+  const stop = new Set([
+    "Eleverne", "Klassen", "Danmark", "Gruppen", "De", "Der", "Det", "Den", "En", "Et",
+    "Hun", "Han", "Man", "Nu", "Her", "I", "Du", "Vi", "Efter", "Da", "Når", "Men", "Og",
+  ]);
+  const counts = new Map<string, number>();
+  const matches = premise.match(/(?<![.!?]\s)(?<!^)\b[A-ZÆØÅ][a-zæøå]{2,}\b/gm) ?? [];
+  for (const m of matches) {
+    if (stop.has(m)) continue;
+    counts.set(m, (counts.get(m) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([name]) => name);
 }

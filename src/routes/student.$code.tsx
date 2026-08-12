@@ -5,6 +5,7 @@ import { Loader2, WifiOff } from "lucide-react";
 import { setProgressFn, studentStateFn, submitResponseFn } from "@/lib/session.functions";
 import { clearToken, readToken } from "@/lib/participant";
 import { StudentBlock } from "@/components/student/StudentBlock";
+import { StudentWorldHeader, StudentWorldRecap } from "@/components/student/StudentWorldHeader";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/student/$code")({
@@ -113,7 +114,10 @@ function StudentSession() {
     );
   }
 
+  const world = s.world ?? null;
   const header = (
+    <>
+      {world && <StudentWorldHeader world={world} />}
     <div className="mb-8 flex items-center justify-between gap-3 text-sm text-muted-foreground">
       <span className="min-w-0 truncate">{s.lesson.title}</span>
       <span className="flex items-center gap-2">
@@ -122,6 +126,7 @@ function StudentSession() {
         {s.participant.display_name}
       </span>
     </div>
+    </>
   );
 
   /* ---------- self-paced ---------- */
@@ -143,7 +148,10 @@ function StudentSession() {
       return (
         <Shell>
           <div className="flex min-h-[75vh] flex-col justify-center">
-            <p className="text-sm text-muted-foreground">{s.lesson.subject ?? "Aktivitet"}</p>
+            {world && <StudentWorldRecap world={world} />}
+            <p className="mt-8 text-sm text-muted-foreground">
+              {world ? `Nu · Episode ${world.episode_number}` : (s.lesson.subject ?? "Aktivitet")}
+            </p>
             <h1 className="mt-2 font-display text-3xl font-semibold text-balance sm:text-4xl">
               {s.lesson.title}
             </h1>
@@ -158,7 +166,7 @@ function StudentSession() {
               className="mt-10 h-14 w-full rounded-2xl text-base"
               onClick={() => setStarted(true)}
             >
-              Start
+              Start aktivitet
             </Button>
           </div>
         </Shell>

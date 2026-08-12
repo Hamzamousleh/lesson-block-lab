@@ -21,12 +21,15 @@ export function StartSessionDialog({
   lessonId,
   classId,
   blocks,
+  episodeId,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   lessonId: string;
   classId: string | null;
   blocks: LessonBlock[];
+  /** Set when the session is launched from a World episode. */
+  episodeId?: string | null;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -48,6 +51,7 @@ export function StartSessionDialog({
         class_id: classId,
         mode: m,
         variant_label: variantLevels.length ? variant : null,
+        episode_id: episodeId ?? null,
       }),
     onSuccess: async (session) => {
       await queryClient.invalidateQueries({ queryKey: ["sessions"] });

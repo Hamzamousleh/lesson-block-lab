@@ -17,6 +17,7 @@ export interface StudentSession {
   reveal_results: boolean;
   allow_anonymous: boolean;
   variant_label: string | null;
+  episode_id: string | null;
   created_at: string;
   updated_at: string;
   started_at: string | null;
@@ -78,6 +79,23 @@ export const sessionsQuery = (opts?: { classId?: string; lessonId?: string }) =>
     },
   });
 
+/** All sessions launched from a specific World episode. */
+export const episodeSessionsQuery = (episodeId: string | null) =>
+  queryOptions({
+    queryKey: ["episode-sessions", episodeId ?? "none"],
+    enabled: !!episodeId,
+    queryFn: async (): Promise<StudentSession[]> =>
+      episodeId
+        ? ((unwrap(
+            await supabase
+              .from("sessions")
+              .select("*")
+              .eq("episode_id", episodeId)
+              .order("created_at", { ascending: false }),
+          ) ?? []) as StudentSession[])
+        : [],
+  });
+
 export const sessionQuery = (sessionId: string) =>
   queryOptions({
     queryKey: ["session", sessionId],
@@ -120,6 +138,7 @@ export async function createSession(input: {
   class_id: string | null;
   mode: SessionMode;
   variant_label?: string | null;
+  episode_id?: string | null;
 }): Promise<StudentSession> {
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) throw new Error("Du er ikke logget ind.");
@@ -136,7 +155,8 @@ export async function createSession(input: {
         status: "draft",
         join_code: randomCode(),
         variant_label: input.variant_label ?? null,
-      })
+        episode_id: input.episode_id ?? null,
+      } as never)
       .select()
       .single();
     if (!error) return data as StudentSession;
