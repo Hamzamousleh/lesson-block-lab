@@ -193,12 +193,14 @@ export function validatePackage(input: string): ValidationResult {
     }
     const parsedBlocks = blocks.map((b, i) => validateBlock(b, i, errors));
     if (errors.length) return { ok: false, errors };
+    const suggestion = parsePlacement(raw["placement_suggestion"]);
     return {
       ok: true,
       errors: [],
       data: {
         caselab_version: "2.0",
         package_type: "blocks",
+        ...(suggestion ? { placement_suggestion: suggestion } : {}),
         blocks: parsedBlocks as PackageBlock[],
       },
     };
@@ -222,6 +224,19 @@ export function validatePackage(input: string): ValidationResult {
     return { ok: false, errors };
   }
   const parsedBlocks = blocks.map((b, i) => validateBlock(b, i, errors));
+
+  const rawFallback = lesson["fallback_blocks"];
+  let parsedFallback: PackageBlock[] = [];
+  if (Array.isArray(rawFallback) && rawFallback.length) {
+    const fbErrors: string[] = [];
+    const fb = rawFallback.map((b, i) => validateBlock(b, i, fbErrors));
+    if (fbErrors.length) {
+      errors.push(...fbErrors.map((e) => `Ekstra aktivitet: ${e}`));
+    } else {
+      parsedFallback = fb as PackageBlock[];
+    }
+  }
+
   if (errors.length) return { ok: false, errors };
 
   return {
@@ -241,9 +256,27 @@ export function validatePackage(input: string): ValidationResult {
           ? lesson["tags"].filter((t): t is string => typeof t === "string")
           : [],
         blocks: parsedBlocks as PackageBlock[],
+        fallback_blocks: parsedFallback,
       },
     },
   };
+}
+
+function parsePlacement(raw: unknown): PlacementSuggestion | undefined {
+  if (!isRecord(raw)) return undefined;
+  const action = raw["action"];
+  const allowed = ["insert_after", "insert_top", "insert_bottom", "replace_suggestion"] as const;
+  const parsedAction = (allowed as readonly string[]).includes(String(action))
+    ? (action as PlacementSuggestion["action"])
+    : "insert_bottom";
+  return {
+    action: parsedAction,
+    after_block_title:
+      typeof raw["after_block_title"] === "string" ? raw["after_block_title"] : null,
+    teacher_message: typeof raw["teacher_message"] === "string" ? raw["teacher_message"] : null,
+  };
+}
+
 }
 
 export function totalDuration(blocks: PackageBlock[]): number {
