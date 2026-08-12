@@ -2,10 +2,12 @@ import { BLOCK_TYPES } from "./blocks";
 
 const TYPE_LIST = BLOCK_TYPES.map((b) => b.type).join(", ");
 
-const SCHEMA_REFERENCE = `teacher_content: { "body": "..." }
+/** Shared block content schemas — the single source of truth for every prompt builder. */
+export const CASELAB_V2_BLOCK_SCHEMAS = `teacher_content: { "body": "..." }
 narrative: { "text": "..." }
 case: { "scenario": "...", "questions": ["...", "..."] }
 theory_test: { "theory": "...", "scenario": "...", "question": "...", "options": ["...", "..."], "follow_up_questions": ["...", "..."] }
+  — valgfrit (bruges til quiz/MCQ med facit): "correct_option_index": 0, "feedback": { "correct": "...", "incorrect": "..." }
 compare: { "item_a": "...", "item_b": "...", "questions": ["...", "..."] }
 find_the_error: { "material": "...", "errors_to_find": 3, "follow_up_question": "..." }
 discussion: { "prompt": "...", "follow_up_questions": ["...", "..."] }
@@ -17,12 +19,48 @@ scale: { "question": "...", "min": 1, "max": 7, "left_label": "...", "right_labe
 short_response: { "question": "...", "placeholder": "..." }
 exit_ticket: { "questions": ["...", "..."] }`;
 
-const COMMON = `Du genererer struktureret undervisningsindhold til CaseLab.
+const SCHEMA_REFERENCE = CASELAB_V2_BLOCK_SCHEMAS;
+
+/** Canonical Lesson Package contract. Blocks ALWAYS live in lesson.blocks. */
+export function CASELAB_V2_LESSON_OUTPUT_CONTRACT(opts: {
+  duration: number;
+  mode?: "standard" | "rescue";
+  subject?: string | undefined;
+  tags?: string[] | undefined;
+  fallbackBlocks?: boolean | undefined;
+}): string {
+  const tags = opts.tags?.length ? opts.tags.map((t) => `"${t}"`).join(", ") : `"..."`;
+  return `{
+  "caselab_version": "2.0",
+  "package_type": "lesson",
+  "mode": "${opts.mode ?? "standard"}",
+  "lesson": {
+    "title": "...",
+    "subject": "${opts.subject ?? "..."}",
+    "duration_minutes": ${opts.duration},
+    "learning_goal": "...",
+    "teacher_note": "...",
+    "tags": [${tags}],
+    "blocks": [ ... ]${opts.fallbackBlocks ? `,\n    "fallback_blocks": [ ... ]` : ""}
+  }
+}`;
+}
+
+/** Canonical Blocks Package contract. */
+export const CASELAB_V2_BLOCK_OUTPUT_CONTRACT = `{
+  "caselab_version": "2.0",
+  "package_type": "blocks",
+  "blocks": [ ... ]
+}`;
+
+export const CASELAB_V2_COMMON_RULES = `Du genererer struktureret undervisningsindhold til CaseLab.
 
 Returnér KUN ét gyldigt JSON-objekt. Ingen markdown-fences, ingen forklaring før eller efter.
 
 Regler:
 - "caselab_version" skal være "2.0".
+- Brug altid "package_type" — aldrig "type" — på øverste niveau.
+- I en lektionspakke ligger aktiviteterne ALTID i "lesson.blocks", aldrig i toppen af objektet.
 - Brug kun disse aktivitetstyper: ${TYPE_LIST}.
 - Følg de præcise indholdsskemaer for hver type.
 - Hver aktivitet har felterne: type, title, duration_minutes, student_instructions, teacher_notes, content.
@@ -45,6 +83,8 @@ Undgå:
 
 Indholdsskemaer:
 ${SCHEMA_REFERENCE}`;
+
+const COMMON = CASELAB_V2_COMMON_RULES;
 
 function materialSection(material: string): string {
   if (!material.trim()) return "";
