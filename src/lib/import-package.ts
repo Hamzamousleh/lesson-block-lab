@@ -88,7 +88,7 @@ export async function importBlocksPackage(
     .eq("lesson_id", lessonId)
     .order("block_order", { ascending: true });
   if (readError) throw new Error("Aktiviteterne kunne ikke tilføjes.");
-  const existing = (existingData ?? []) as LessonBlock[];
+  const existing = ((existingData ?? []) as LessonBlock[]).filter((b) => !b.is_fallback);
 
   let index = existing.length;
   if (insertion.kind === "top") index = 0;
