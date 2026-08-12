@@ -16,6 +16,7 @@ import { Route as AuthenticatedCreateWithChatgptRouteImport } from './routes/_au
 import { Route as AuthenticatedExtraTimeRouteImport } from './routes/_authenticated/extra-time'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
+import { Route as AuthenticatedImproveLessonRouteImport } from './routes/_authenticated/improve-lesson'
 import { Route as AuthenticatedRescueRouteImport } from './routes/_authenticated/rescue'
 import { Route as AuthenticatedUnitsRouteImport } from './routes/_authenticated/units'
 import { Route as AuthenticatedClassesIndexRouteImport } from './routes/_authenticated/classes.index'
@@ -60,6 +61,12 @@ const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
   path: '/import',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedImproveLessonRoute =
+  AuthenticatedImproveLessonRouteImport.update({
+    id: '/improve-lesson',
+    path: '/improve-lesson',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRescueRoute = AuthenticatedRescueRouteImport.update({
   id: '/rescue',
   path: '/rescue',
@@ -112,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/extra-time': typeof AuthenticatedExtraTimeRoute
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
+  '/improve-lesson': typeof AuthenticatedImproveLessonRoute
   '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
@@ -128,6 +136,7 @@ export interface FileRoutesByTo {
   '/extra-time': typeof AuthenticatedExtraTimeRoute
   '/home': typeof AuthenticatedHomeRoute
   '/import': typeof AuthenticatedImportRoute
+  '/improve-lesson': typeof AuthenticatedImproveLessonRoute
   '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
   '/classes/$classId': typeof AuthenticatedClassesClassIdRoute
@@ -146,6 +155,7 @@ export interface FileRoutesById {
   '/_authenticated/extra-time': typeof AuthenticatedExtraTimeRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
+  '/_authenticated/improve-lesson': typeof AuthenticatedImproveLessonRoute
   '/_authenticated/rescue': typeof AuthenticatedRescueRoute
   '/_authenticated/units': typeof AuthenticatedUnitsRoute
   '/_authenticated/classes/$classId': typeof AuthenticatedClassesClassIdRoute
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/extra-time'
     | '/home'
     | '/import'
+    | '/improve-lesson'
     | '/rescue'
     | '/units'
     | '/classes/$classId'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/extra-time'
     | '/home'
     | '/import'
+    | '/improve-lesson'
     | '/rescue'
     | '/units'
     | '/classes/$classId'
@@ -197,6 +209,7 @@ export interface FileRouteTypes {
     | '/_authenticated/extra-time'
     | '/_authenticated/home'
     | '/_authenticated/import'
+    | '/_authenticated/improve-lesson'
     | '/_authenticated/rescue'
     | '/_authenticated/units'
     | '/_authenticated/classes/$classId'
@@ -265,6 +278,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/improve-lesson': {
+      id: '/_authenticated/improve-lesson'
+      path: '/improve-lesson'
+      fullPath: '/improve-lesson'
+      preLoaderRoute: typeof AuthenticatedImproveLessonRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rescue': {
       id: '/_authenticated/rescue'
       path: '/rescue'
@@ -329,6 +349,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedExtraTimeRoute: typeof AuthenticatedExtraTimeRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
+  AuthenticatedImproveLessonRoute: typeof AuthenticatedImproveLessonRoute
   AuthenticatedRescueRoute: typeof AuthenticatedRescueRoute
   AuthenticatedUnitsRoute: typeof AuthenticatedUnitsRoute
   AuthenticatedClassesClassIdRoute: typeof AuthenticatedClassesClassIdRoute
@@ -343,6 +364,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedExtraTimeRoute: AuthenticatedExtraTimeRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
+  AuthenticatedImproveLessonRoute: AuthenticatedImproveLessonRoute,
   AuthenticatedRescueRoute: AuthenticatedRescueRoute,
   AuthenticatedUnitsRoute: AuthenticatedUnitsRoute,
   AuthenticatedClassesClassIdRoute: AuthenticatedClassesClassIdRoute,
