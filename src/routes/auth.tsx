@@ -30,6 +30,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
 
   useEffect(() => {
     if (!sessionLoading && session) navigate({ to: "/home", replace: true });
@@ -84,12 +85,15 @@ function AuthPage() {
           Case<span className="text-primary">Lab</span>
         </Link>
         <div className="surface-card p-8">
-          <h1 className="text-2xl font-semibold">
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            Underviser
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold">
             {mode === "signin" ? "Velkommen tilbage" : "Opret lærerkonto"}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {mode === "signin"
-              ? "Log ind for at fortsætte dit arbejde."
+              ? "Log ind som underviser for at fortsætte dit arbejde."
               : "Kom i gang med dit eget arbejdsrum."}
           </p>
 
@@ -150,6 +154,36 @@ function AuthPage() {
               {mode === "signin" ? "Opret konto" : "Log ind"}
             </button>
           </p>
+        </div>
+
+        <div className="surface-card mt-6 p-6">
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Elev</p>
+          <h2 className="mt-1 text-lg font-semibold">Skal du deltage i undervisningen?</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Du skal ikke oprette en konto — brug bare koden fra din underviser.
+          </p>
+          <form
+            className="mt-4 flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const c = joinCode.trim().toUpperCase();
+              if (c) navigate({ to: "/join/$code", params: { code: c } });
+              else navigate({ to: "/join" });
+            }}
+          >
+            <Input
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              placeholder="ABCD12"
+              autoCapitalize="characters"
+              autoComplete="off"
+              aria-label="Sessionskode"
+              className="h-11 rounded-full text-center font-mono tracking-[0.2em]"
+            />
+            <Button type="submit" variant="secondary" className="h-11 shrink-0 rounded-full px-5">
+              Deltag med kode
+            </Button>
+          </form>
         </div>
       </div>
     </div>

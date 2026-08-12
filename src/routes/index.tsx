@@ -36,9 +36,16 @@ function Landing() {
         <span className="font-display text-xl font-semibold">
           Case<span className="text-primary">Lab</span>
         </span>
-        <Link to="/auth" className="ml-auto">
-          <Button variant="ghost">Log ind</Button>
-        </Link>
+        <div className="ml-auto flex items-center gap-2">
+          <Link to="/join">
+            <Button variant="outline" className="rounded-full">
+              Deltag med kode
+            </Button>
+          </Link>
+          <Link to="/auth">
+            <Button variant="ghost">Log ind</Button>
+          </Link>
+        </div>
       </header>
       <section className="mx-auto max-w-3xl px-6 pt-16 pb-24 text-center sm:pt-24">
         <p className="text-sm font-medium tracking-wide text-primary uppercase">
@@ -51,10 +58,15 @@ function Landing() {
           CaseLab er dit arbejdsrum til at planlægge lektioner, bygge varierede aktiviteter og
           genbruge dit materiale — uden at drukne i systemer.
         </p>
-        <div className="mt-10 flex justify-center gap-3">
+        <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link to="/auth">
             <Button size="lg" className="rounded-full px-8">
               Kom i gang
+            </Button>
+          </Link>
+          <Link to="/join">
+            <Button size="lg" variant="outline" className="rounded-full px-8">
+              Jeg er elev — deltag med kode
             </Button>
           </Link>
         </div>

@@ -58,8 +58,8 @@ function JoinCode() {
 
       {peek.data && !peek.data.found && (
         <div className="mt-10">
-          <h1 className="font-display text-3xl font-semibold">Koden findes ikke</h1>
-          <p className="mt-2 text-muted-foreground">Tjek koden, og prøv igen.</p>
+          <h1 className="font-display text-3xl font-semibold">Sessionen blev ikke fundet.</h1>
+          <p className="mt-2 text-muted-foreground">Tjek koden og prøv igen.</p>
           <Button className="mt-6 h-14 w-full rounded-2xl" onClick={() => void navigate({ to: "/join" })}>
             Prøv en anden kode
           </Button>
@@ -68,7 +68,7 @@ function JoinCode() {
 
       {peek.data?.found && peek.data.status === "ended" && (
         <div className="mt-10">
-          <h1 className="font-display text-3xl font-semibold">Aktiviteten er afsluttet</h1>
+          <h1 className="font-display text-3xl font-semibold">Denne aktivitet er afsluttet.</h1>
           <p className="mt-2 text-muted-foreground">Tak for din deltagelse.</p>
         </div>
       )}
