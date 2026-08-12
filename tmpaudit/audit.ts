@@ -28,5 +28,5 @@ const lesson={caselab_version:"2.0",package_type:"lesson",mode:"standard",lesson
 const quiz={caselab_version:"2.0",package_type:"blocks",blocks:[{type:"theory_test",title:"Quiz",duration_minutes:15,student_instructions:"",teacher_notes:"",content:{theory:"t",scenario:"s",question:"q",options:["a","b"],follow_up_questions:["f"],correct_option_index:1,feedback:{correct:"ja",incorrect:"nej"}}}]};
 for(const [n,pkg] of [["lesson",lesson],["quiz-blocks",quiz]] as const){
   const r=validatePackage(JSON.stringify(pkg));
-  console.log("VALIDATE",n,r.ok?"OK":"ERR",r.ok?JSON.stringify((r as any).pkg).slice(0,180):(r as any).errors);
+  console.log("VALIDATE",n,r.ok?"OK":"ERR",r.ok?JSON.stringify(r).slice(0,220):(r as any).errors);
 }
