@@ -443,6 +443,15 @@ function RunMode() {
               <div className="mt-5">
                 <ResultBars summary={liveSummary} />
               </div>
+              <Link
+                to="/sessions/$sessionId/follow-up"
+                params={{ sessionId: liveSession.id }}
+                target="_blank"
+              >
+                <Button variant="outline" size="sm" className="mt-5 mr-3 rounded-full">
+                  Reagér på svarene
+                </Button>
+              </Link>
               <Button
                 variant={liveSession.reveal_results ? "default" : "outline"}
                 size="sm"
