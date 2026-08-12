@@ -52,6 +52,12 @@ const actions = [
     to: "/material-to-lesson",
   },
   {
+    icon: "🌍",
+    title: "Worlds",
+    description: "Vedvarende læringsuniverser med progression og konsekvenser.",
+    to: "/worlds",
+  },
+  {
     icon: "🎚️",
     title: "Differentiér en aktivitet",
     description: "Lav niveaudelte varianter med samme faglige mål.",
