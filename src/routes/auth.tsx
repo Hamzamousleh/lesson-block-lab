@@ -84,12 +84,15 @@ function AuthPage() {
           Case<span className="text-primary">Lab</span>
         </Link>
         <div className="surface-card p-8">
-          <h1 className="text-2xl font-semibold">
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            Underviser
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold">
             {mode === "signin" ? "Velkommen tilbage" : "Opret lærerkonto"}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {mode === "signin"
-              ? "Log ind for at fortsætte dit arbejde."
+              ? "Log ind som underviser for at fortsætte dit arbejde."
               : "Kom i gang med dit eget arbejdsrum."}
           </p>
 
