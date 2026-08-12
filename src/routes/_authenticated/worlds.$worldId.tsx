@@ -277,7 +277,7 @@ function WorldDetail() {
 
   const undo = useMutation({
     mutationFn: async () => {
-      const latest = (events.data ?? []).find((e) => !e.reverted && e.state_changes.length > 0);
+      const latest = (events.data ?? []).find((e) => !e.reverted_at && e.state_changes.length > 0);
       if (!latest) throw new Error("Der er ingen ændring at fortryde.");
       return rollbackEvent(latest, states.data ?? []);
     },
@@ -368,14 +368,14 @@ function WorldDetail() {
           {(events.data ?? []).map((ev) => (
             <div
               key={ev.id}
-              className={`rounded-xl border border-border/70 p-4 ${ev.reverted ? "opacity-50" : ""}`}
+              className={`rounded-xl border border-border/70 p-4 ${ev.reverted_at ? "opacity-50" : ""}`}
             >
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-medium">{ev.title}</p>
                 <span className="text-xs text-muted-foreground">
                   {new Date(ev.created_at).toLocaleString("da-DK")}
                 </span>
-                {ev.reverted && <span className="text-xs text-muted-foreground">Fortrudt</span>}
+                {ev.reverted_at && <span className="text-xs text-muted-foreground">Fortrudt</span>}
               </div>
               {ev.description && <p className="mt-1 text-sm text-muted-foreground">{ev.description}</p>}
               {ev.state_changes.length > 0 && (
