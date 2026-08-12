@@ -146,6 +146,7 @@ function MaterialToLesson() {
               [
                 { v: "lesson", label: "En hel lektion" },
                 { v: "blocks", label: "Enkelte aktiviteter" },
+                { v: "quiz", label: "Quiz / MCQ" },
               ] as const
             ).map((o) => (
               <Button
