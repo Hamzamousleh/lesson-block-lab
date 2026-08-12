@@ -1,5 +1,8 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+export type JsonObject = { [key: string]: JsonValue };
+
 /* ------------------------------------------------------------------ *
  * Student-facing session logic.
  * Students have NO database access. Everything goes through these
@@ -27,7 +30,7 @@ export interface StudentBlockDTO {
   title: string;
   duration_minutes: number;
   student_instructions: string | null;
-  content: Record<string, unknown>;
+  content: JsonObject;
   interactive: boolean;
 }
 
@@ -51,14 +54,14 @@ export interface StudentStateDTO {
   blocks: StudentBlockDTO[];
   currentBlockId: string | null;
   /** block_id -> saved response payload */
-  responses: Record<string, Record<string, unknown>>;
+  responses: Record<string, JsonObject>;
   /** live results, only when the teacher has revealed them */
   revealed: null | { block_id: string; summary: ResultSummary };
 }
 
 /** Strip anything the student must never see. */
-function sanitizeContent(type: string, content: Record<string, unknown>): Record<string, unknown> {
-  const c = { ...(content ?? {}) };
+function sanitizeContent(type: string, content: JsonObject): JsonObject {
+  const c: JsonObject = { ...(content ?? {}) };
   if (type === "theory_test") {
     delete c["correct_option_index"];
     delete c["feedback"];
@@ -80,7 +83,7 @@ function toStudentBlock(b: {
     title: b.title,
     duration_minutes: b.duration_minutes,
     student_instructions: b.student_instructions,
-    content: sanitizeContent(b.type, (b.content ?? {}) as Record<string, unknown>),
+    content: sanitizeContent(b.type, (b.content ?? {}) as JsonObject),
     interactive: (INTERACTIVE_TYPES as readonly string[]).includes(b.type),
   };
 }
@@ -272,8 +275,8 @@ export async function getStudentState(participant_token: string): Promise<Studen
     .select("block_id,response_data")
     .eq("participant_id", participant.id);
 
-  const responses: Record<string, Record<string, unknown>> = {};
-  for (const r of myResponses ?? []) responses[r.block_id] = (r.response_data ?? {}) as Record<string, unknown>;
+  const responses: Record<string, JsonObject> = {};
+  for (const r of myResponses ?? []) responses[r.block_id] = (r.response_data ?? {}) as JsonObject;
 
   let revealed: StudentStateDTO["revealed"] = null;
   if (session.mode === "live" && session.reveal_results && session.current_block_id) {
@@ -387,7 +390,7 @@ export async function submitStudentResponse(input: {
 export async function setStudentProgress(input: {
   participant_token: string;
   progress_index: number;
-  completed?: boolean;
+  completed?: boolean | undefined;
 }) {
   const participant = await participantByToken(input.participant_token);
   const patch: Record<string, unknown> = {
