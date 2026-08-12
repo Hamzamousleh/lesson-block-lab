@@ -5,7 +5,6 @@ import { Loader2, Sparkles } from "lucide-react";
 import { classesQuery, lessonsQuery } from "@/lib/data";
 import { loadDemoData } from "@/lib/demo";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
