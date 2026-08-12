@@ -154,3 +154,167 @@ export function lessonToText(
   );
   return `${head.join("\n")}\n\nAktiviteter:\n${body.join("\n")}`;
 }
+
+/* ---------------- Phase 3 prompt builders ---------------- */
+
+export interface RescuePromptInput {
+  className?: string | undefined;
+  subject?: string | undefined;
+  topic: string;
+  duration: number;
+  priorKnowledge?: string | undefined;
+  material: string;
+}
+
+export function buildRescuePrompt(i: RescuePromptInput): string {
+  const lines = [
+    i.className ? `Klasse: ${i.className}` : null,
+    i.subject ? `Fag: ${i.subject}` : null,
+    `Emne: ${i.topic}`,
+    `Varighed: ${i.duration} minutter`,
+    i.priorKnowledge ? `Elevernes forudsætninger: ${i.priorKnowledge}` : null,
+  ].filter(Boolean);
+
+  return `${COMMON}
+
+Opgave: Lav én nødlektion ("rescue"). Læreren har meget lidt tid til forberedelse og skal kunne undervise umiddelbart efter import.
+
+${lines.join("\n")}${materialSection(i.material)}
+
+Lektionen SKAL:
+- kunne gennemføres stort set uden forberedelse
+- ikke kræve print eller kopier
+- ikke kræve ukendte eksterne hjemmesider eller apps
+- fungere med projektor, tavle og elevernes egne noter
+- have korte, konkrete lærerinstruktioner i teacher_notes
+- prioritere elevaktivitet frem for langt lærerinput
+- bruge varierede metoder
+- have realistisk timing
+- indeholde mindst én ekstra reserveaktivitet i "fallback_blocks"
+
+Læreren må ikke skulle læse flere sider, før timen kan starte. Hold teacher_notes korte og praktiske (maks. 2 sætninger pr. aktivitet).
+
+Returnér præcis denne struktur:
+{
+  "caselab_version": "2.0",
+  "package_type": "lesson",
+  "mode": "rescue",
+  "lesson": {
+    "title": "...",
+    "subject": "...",
+    "duration_minutes": ${i.duration},
+    "learning_goal": "...",
+    "teacher_note": "...",
+    "tags": ["..."],
+    "blocks": [ ... ],
+    "fallback_blocks": [ ... ]
+  }
+}
+
+Summen af "blocks" skal ramme ${i.duration} minutter ±5 minutter. "fallback_blocks" tæller IKKE med i lektionens varighed og bruges kun, hvis der bliver tid tilovers.`;
+}
+
+export interface ExtraTimePromptInput {
+  className?: string | undefined;
+  subject?: string | undefined;
+  lessonTitle?: string | undefined;
+  learningGoal?: string | undefined;
+  blockSummary?: string | undefined;
+  topic?: string | undefined;
+  minutes: number;
+  want: string;
+}
+
+export function buildExtraTimePrompt(i: ExtraTimePromptInput): string {
+  const lines = [
+    i.className ? `Klasse: ${i.className}` : null,
+    i.subject ? `Fag: ${i.subject}` : null,
+    i.lessonTitle ? `Lektion: ${i.lessonTitle}` : null,
+    i.learningGoal ? `Læringsmål: ${i.learningGoal}` : null,
+    i.topic ? `Emne: ${i.topic}` : null,
+    `Der mangler ca. ${i.minutes} minutters undervisning`,
+    `Ønske: ${i.want}`,
+  ].filter(Boolean);
+
+  const summary = i.blockSummary
+    ? `
+
+Lektionens nuværende aktiviteter:
+${i.blockSummary}`
+    : "";
+
+  return `${COMMON}
+
+Opgave: Lav en eller flere aktiviteter, som læreren kan indsætte i en eksisterende lektion, fordi der er ${i.minutes} minutter tilovers.
+
+${lines.join("\n")}${summary}${materialSection("")}
+
+Aktiviteterne skal kunne gennemføres uden forberedelse og uden print. Undgå at gentage aktiviteter, der allerede findes i lektionen.
+
+Returnér præcis denne struktur:
+{
+  "caselab_version": "2.0",
+  "package_type": "blocks",
+  "blocks": [ ... ]
+}
+
+Summen af aktiviteternes duration_minutes skal ramme ca. ${i.minutes} minutter.`;
+}
+
+export interface ImprovePromptInput {
+  className?: string | undefined;
+  subject?: string | undefined;
+  lessonTitle: string;
+  duration: number;
+  learningGoal?: string | undefined;
+  blockDetail: string;
+  wishes: string[];
+  freeText: string;
+}
+
+export function buildImprovePrompt(i: ImprovePromptInput): string {
+  const lines = [
+    i.className ? `Klasse: ${i.className}` : null,
+    i.subject ? `Fag: ${i.subject}` : null,
+    `Lektion: ${i.lessonTitle}`,
+    `Varighed: ${i.duration} minutter`,
+    i.learningGoal ? `Læringsmål: ${i.learningGoal}` : null,
+    i.wishes.length ? `Ønskede forbedringer: ${i.wishes.join(", ")}` : null,
+    i.freeText.trim() ? `Lærerens egne ønsker: ${i.freeText.trim()}` : null,
+  ].filter(Boolean);
+
+  return `${COMMON}
+
+Opgave: Forbedr en eksisterende lektion. Omskriv IKKE hele lektionen unødigt. Returnér i stedet nye eller erstattende aktiviteter, som læreren selv kan indsætte.
+
+${lines.join("\n")}
+
+Lektionens nuværende aktiviteter:
+${i.blockDetail}
+
+Returnér præcis denne struktur:
+{
+  "caselab_version": "2.0",
+  "package_type": "blocks",
+  "placement_suggestion": {
+    "action": "insert_after",
+    "after_block_title": "titlen på den aktivitet, de nye aktiviteter skal ligge efter",
+    "teacher_message": "kort forklaring til læreren om placering og eventuelle forkortelser"
+  },
+  "blocks": [ ... ]
+}
+
+"teacher_message" er den eneste plads til rådgivning til læreren — skriv ingen tekst uden for JSON. Foreslå gerne, at eksisterende aktiviteter forkortes, men slet eller erstat dem ikke selv.`;
+}
+
+export function lessonToDetailedText(
+  lesson: { title: string; subject?: string | null; duration_minutes: number; learning_goal?: string | null },
+  blocks: { type: string; title: string; duration_minutes: number; content: Record<string, unknown> }[],
+): string {
+  return blocks
+    .map((b, i) => {
+      const summary = JSON.stringify(b.content ?? {}).slice(0, 400);
+      return `${String(i + 1).padStart(2, "0")}. [${b.type}] ${b.title} — ${b.duration_minutes} min\n    ${summary}`;
+    })
+    .join("\n");
+}
