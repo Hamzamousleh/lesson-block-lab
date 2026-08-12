@@ -24,16 +24,25 @@ export interface LessonPackage {
     teacher_note?: string | null;
     tags?: string[];
     blocks: PackageBlock[];
+    fallback_blocks?: PackageBlock[];
   };
+}
+
+export interface PlacementSuggestion {
+  action: "insert_after" | "insert_top" | "insert_bottom" | "replace_suggestion";
+  after_block_title?: string | null;
+  teacher_message?: string | null;
 }
 
 export interface BlocksPackage {
   caselab_version: "2.0";
   package_type: "blocks";
+  placement_suggestion?: PlacementSuggestion;
   blocks: PackageBlock[];
 }
 
 export type CaseLabPackage = LessonPackage | BlocksPackage;
+
 
 /* ---------------- content schemas ---------------- */
 
