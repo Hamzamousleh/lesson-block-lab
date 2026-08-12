@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, Copy, Loader2, Play } from "lucide-react";
+import { Check, Copy, Download, Loader2, Play, Sparkles } from "lucide-react";
 import {
   SESSION_MODE_LABEL,
   SESSION_STATUS_LABEL,
@@ -18,6 +18,7 @@ import { blocksQuery, lessonQuery } from "@/lib/data";
 import { summarize } from "@/lib/results";
 import { blockDef } from "@/lib/blocks";
 import { ResultBars } from "@/components/student/StudentBlock";
+import { downloadCsv, responsesToCsv } from "@/lib/response-export";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/sessions/$sessionId")({
@@ -128,6 +129,28 @@ function SessionDetail() {
               Afslut session
             </Button>
           )}
+          <Link to="/sessions/$sessionId/follow-up" params={{ sessionId }}>
+            <Button variant="outline" className="rounded-full">
+              <Sparkles className="size-4" /> Arbejd videre med svarene
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            className="rounded-full"
+            onClick={() =>
+              downloadCsv(
+                `caselab-svar-${s.join_code}.csv`,
+                responsesToCsv({
+                  responses: answers,
+                  participants: people,
+                  blocks: list,
+                  anonymized: true,
+                }),
+              )
+            }
+          >
+            <Download className="size-4" /> Eksportér svar
+          </Button>
           <Link to="/sessions">
             <Button variant="ghost" className="rounded-full">
               Alle sessioner

@@ -54,11 +54,16 @@ export interface LessonBlock {
   teacher_notes: string | null;
   content: Record<string, unknown>;
   is_fallback: boolean;
+  variant_group?: string | null;
+  variant_label?: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export type LibraryItemType = "block" | "lesson";
+export const VARIANT_LEVELS = ["Støtte", "Standard", "Udfordring"] as const;
+export type VariantLevel = (typeof VARIANT_LEVELS)[number];
+
+export type LibraryItemType = "block" | "lesson" | "response_example";
 
 export interface LibraryItem {
   id: string;

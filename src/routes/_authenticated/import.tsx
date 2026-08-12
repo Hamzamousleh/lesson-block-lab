@@ -57,6 +57,7 @@ function ImportPage() {
     null,
   );
   const [insertion, setInsertion] = useState<string>("bottom");
+  const [skipped, setSkipped] = useState<number[]>([]);
 
   const targetBlocks = useQuery({ ...blocksQuery(lessonId), enabled: !!lessonId });
 
@@ -89,7 +90,8 @@ function ImportPage() {
           : insertion === "bottom"
             ? { kind: "bottom" }
             : { kind: "after", blockId: insertion };
-      const ids = await importBlocksPackage(pkg, lessonId, point);
+      const selectedIndices = pkg.blocks.map((_, i) => i).filter((i) => !skipped.includes(i));
+      const ids = await importBlocksPackage(pkg, lessonId, point, selectedIndices);
       return { kind: "blocks" as const, lessonId, count: ids.length };
     },
     onSuccess: async (r) => {
@@ -102,7 +104,10 @@ function ImportPage() {
     onError: (e: Error) => toast.error(e.message || "Importen kunne ikke gennemføres"),
   });
 
-  const preview = () => setResult(validatePackage(json));
+  const preview = () => {
+    setSkipped([]);
+    setResult(validatePackage(json));
+  };
 
   const insertExample = (which: "lesson" | "blocks") => {
     setJson(JSON.stringify(which === "lesson" ? EXAMPLE_LESSON : EXAMPLE_BLOCKS, null, 2));
@@ -305,8 +310,14 @@ function ImportPage() {
           <ol className="space-y-2">
             {blocks.map((b, i) => {
               const def = blockDef(b.type);
+              const off = pkg.package_type === "blocks" && skipped.includes(i);
               return (
-                <li key={i} className="flex items-center gap-4 rounded-xl bg-secondary/40 px-5 py-4">
+                <li
+                  key={i}
+                  className={`flex items-center gap-4 rounded-xl bg-secondary/40 px-5 py-4 ${
+                    off ? "opacity-40" : ""
+                  }`}
+                >
                   <span className="w-6 shrink-0 text-sm tabular-nums text-muted-foreground">
                     {String(i + 1).padStart(2, "0")}
                   </span>
@@ -316,8 +327,26 @@ function ImportPage() {
                       {def.label}
                     </p>
                     <p className="truncate font-medium">{b.title}</p>
+                    {b.variant_label && (
+                      <p className="mt-1 text-xs text-primary">
+                        Niveau: {b.variant_label}
+                        {b.variant_group ? ` · gruppe ${b.variant_group}` : ""}
+                      </p>
+                    )}
                   </div>
                   <span className="text-sm text-muted-foreground">{b.duration_minutes} min</span>
+                  {pkg.package_type === "blocks" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() =>
+                        setSkipped((s) => (s.includes(i) ? s.filter((x) => x !== i) : [...s, i]))
+                      }
+                    >
+                      {off ? "Tag med" : "Fravælg"}
+                    </Button>
+                  )}
                 </li>
               );
             })}

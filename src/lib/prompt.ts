@@ -370,3 +370,157 @@ Krav:
 Returnér præcis denne struktur:
 ${pkg}`;
 }
+
+/* ---------------- Phase 5 prompt builders ---------------- */
+
+export const FOLLOW_UP_INTENTS = [
+  { id: "misconceptions", label: "Ret misforståelser", hint: "byg aktiviteter der adresserer de fejl, svarene viser" },
+  { id: "deepen", label: "Gå i dybden", hint: "byg videre fagligt på det, eleverne allerede kan" },
+  { id: "discuss", label: "Diskutér svarene", hint: "brug elevernes svar som afsæt for en klassediskussion" },
+  { id: "apply", label: "Anvend i ny kontekst", hint: "overfør det lærte til en ny case" },
+  { id: "differentiate", label: "Differentiér", hint: "lav niveaudelte varianter ud fra svarene" },
+] as const;
+
+export type FollowUpIntentId = (typeof FOLLOW_UP_INTENTS)[number]["id"];
+
+export interface FollowUpPromptInput {
+  className?: string | undefined;
+  subject?: string | undefined;
+  lessonTitle: string;
+  learningGoal?: string | null | undefined;
+  blockTitle: string;
+  blockType: string;
+  question: string;
+  responseSummary: string;
+  intent: FollowUpIntentId;
+  minutes: number;
+  anonymized: boolean;
+}
+
+export function buildFollowUpPrompt(i: FollowUpPromptInput): string {
+  const intent = FOLLOW_UP_INTENTS.find((x) => x.id === i.intent) ?? FOLLOW_UP_INTENTS[0];
+  const head = [
+    i.className ? `Klasse: ${i.className}` : null,
+    i.subject ? `Fag: ${i.subject}` : null,
+    `Lektion: ${i.lessonTitle}`,
+    i.learningGoal ? `Læringsmål: ${i.learningGoal}` : null,
+    `Aktivitet: ${i.blockTitle} (${i.blockType})`,
+    i.question ? `Spørgsmål til eleverne: ${i.question}` : null,
+  ].filter(Boolean);
+
+  return `${COMMON}
+
+Opgave: Lav opfølgende aktiviteter ud fra elevernes faktiske svar. Fokus: ${intent.label} — ${intent.hint}.
+
+${head.join("\n")}
+
+Elevsvar (${i.anonymized ? "anonymiseret" : "med navne"}), opgjort af CaseLab:
+"""
+${i.responseSummary}
+"""
+
+Krav:
+- Tag udgangspunkt i mønstrene i svarene ovenfor. Nævn konkret hvad du reagerer på i teacher_notes.
+- Aktiviteterne skal kunne bruges i næste modul eller resten af timen.
+- Samlet varighed ca. ${i.minutes} minutter.
+
+Returnér præcis denne struktur:
+{
+  "caselab_version": "2.0",
+  "package_type": "blocks",
+  "placement_suggestion": { "action": "insert_bottom", "teacher_message": "..." },
+  "blocks": [ ... ]
+}`;
+}
+
+export interface DifferentiatePromptInput {
+  className?: string | undefined;
+  subject?: string | undefined;
+  lessonTitle?: string | undefined;
+  levels: string[];
+  sourceText: string;
+  minutes: number;
+  note?: string | undefined;
+}
+
+export function buildDifferentiatePrompt(i: DifferentiatePromptInput): string {
+  const head = [
+    i.className ? `Klasse: ${i.className}` : null,
+    i.subject ? `Fag: ${i.subject}` : null,
+    i.lessonTitle ? `Lektion: ${i.lessonTitle}` : null,
+    `Niveauer der skal laves: ${i.levels.join(", ")}`,
+    `Hver variant skal fylde ca. ${i.minutes} minutter`,
+    i.note ? `Lærerens bemærkning: ${i.note}` : null,
+  ].filter(Boolean);
+
+  return `${COMMON}
+
+Opgave: Lav niveaudelte varianter af den samme aktivitet, så alle elever arbejder med det samme faglige mål.
+
+${head.join("\n")}
+
+Aktivitet der skal differentieres:
+"""
+${i.sourceText.trim()}
+"""
+
+Krav:
+- Lav én variant pr. niveau i samme rækkefølge som angivet.
+- Alle varianter skal have samme "variant_group" (en kort tekst, fx "differentiering-1").
+- Sæt "variant_label" til præcis niveaunavnet: ${i.levels.map((l) => `"${l}"`).join(", ")}.
+- Brug neutrale, ikke-stemplende formuleringer i alt elevrettet tekst. Skriv aldrig niveauet til eleverne.
+- Fagligt mål og udbytte skal være det samme på tværs af varianter — det er stilladseringen der ændrer sig.
+
+Returnér præcis denne struktur:
+{
+  "caselab_version": "2.0",
+  "package_type": "blocks",
+  "blocks": [
+    { "type": "...", "title": "...", "duration_minutes": ${i.minutes}, "variant_group": "differentiering-1", "variant_label": "${i.levels[0] ?? "Standard"}", "student_instructions": "...", "teacher_notes": "...", "content": { ... } }
+  ]
+}`;
+}
+
+export interface ClassPlanningPromptInput {
+  className: string;
+  subject?: string | undefined;
+  overview: string;
+  notes: string;
+  focus: string;
+  duration: number;
+}
+
+export function buildClassPlanningPrompt(i: ClassPlanningPromptInput): string {
+  return `${COMMON}
+
+Opgave: Planlæg næste lektion for en konkret klasse ud fra klassens hidtidige data.
+
+Klasse: ${i.className}
+${i.subject ? `Fag: ${i.subject}\n` : ""}Varighed: ${i.duration} minutter
+Lærerens fokus næste gang: ${i.focus || "ikke angivet"}
+
+Fagligt overblik opgjort af CaseLab:
+"""
+${i.overview.trim()}
+"""
+${i.notes.trim() ? `\nLærerens faglige noter om klassen:\n"""\n${i.notes.trim()}\n"""\n` : ""}
+Krav:
+- Byg videre på det, data viser. Gentag ikke det klassen tydeligt mestrer.
+- Skriv i teacher_note hvad lektionen bygger på fra overblikket.
+
+Returnér præcis denne struktur:
+{
+  "caselab_version": "2.0",
+  "package_type": "lesson",
+  "mode": "standard",
+  "lesson": {
+    "title": "...",
+    "subject": "...",
+    "duration_minutes": ${i.duration},
+    "learning_goal": "...",
+    "teacher_note": "...",
+    "tags": ["..."],
+    "blocks": [ ... ]
+  }
+}`;
+}

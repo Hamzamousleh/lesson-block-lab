@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      class_insight_notes: {
+        Row: {
+          body: string
+          class_id: string
+          created_at: string
+          id: string
+          teacher_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          class_id: string
+          created_at?: string
+          id?: string
+          teacher_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          class_id?: string
+          created_at?: string
+          id?: string
+          teacher_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_insight_notes_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classes: {
         Row: {
           created_at: string
@@ -62,6 +100,8 @@ export type Database = {
           title: string
           type: string
           updated_at: string
+          variant_group: string | null
+          variant_label: string | null
         }
         Insert: {
           block_order?: number
@@ -77,6 +117,8 @@ export type Database = {
           title?: string
           type: string
           updated_at?: string
+          variant_group?: string | null
+          variant_label?: string | null
         }
         Update: {
           block_order?: number
@@ -92,6 +134,8 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string
+          variant_group?: string | null
+          variant_label?: string | null
         }
         Relationships: [
           {
@@ -344,6 +388,7 @@ export type Database = {
           status: Database["public"]["Enums"]["session_status"]
           teacher_id: string
           updated_at: string
+          variant_label: string | null
         }
         Insert: {
           allow_anonymous?: boolean
@@ -360,6 +405,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["session_status"]
           teacher_id: string
           updated_at?: string
+          variant_label?: string | null
         }
         Update: {
           allow_anonymous?: boolean
@@ -376,6 +422,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["session_status"]
           teacher_id?: string
           updated_at?: string
+          variant_label?: string | null
         }
         Relationships: [
           {
@@ -455,7 +502,7 @@ export type Database = {
     Enums: {
       lesson_mode: "standard" | "rescue"
       lesson_status: "draft" | "ready" | "completed"
-      library_item_type: "block" | "lesson"
+      library_item_type: "block" | "lesson" | "response_example"
       session_mode: "live" | "self_paced"
       session_status: "draft" | "active" | "ended"
       unit_status: "planned" | "active" | "completed"
@@ -588,7 +635,7 @@ export const Constants = {
     Enums: {
       lesson_mode: ["standard", "rescue"],
       lesson_status: ["draft", "ready", "completed"],
-      library_item_type: ["block", "lesson"],
+      library_item_type: ["block", "lesson", "response_example"],
       session_mode: ["live", "self_paced"],
       session_status: ["draft", "active", "ended"],
       unit_status: ["planned", "active", "completed"],

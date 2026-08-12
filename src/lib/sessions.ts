@@ -16,6 +16,7 @@ export interface StudentSession {
   current_block_id: string | null;
   reveal_results: boolean;
   allow_anonymous: boolean;
+  variant_label: string | null;
   created_at: string;
   updated_at: string;
   started_at: string | null;
@@ -118,6 +119,7 @@ export async function createSession(input: {
   lesson_id: string;
   class_id: string | null;
   mode: SessionMode;
+  variant_label?: string | null;
 }): Promise<StudentSession> {
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) throw new Error("Du er ikke logget ind.");
@@ -133,6 +135,7 @@ export async function createSession(input: {
         mode: input.mode,
         status: "draft",
         join_code: randomCode(),
+        variant_label: input.variant_label ?? null,
       })
       .select()
       .single();

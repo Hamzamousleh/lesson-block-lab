@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2, Plus } from "lucide-react";
 import { classQuery, createUnit, lessonsQuery, unitsQuery, updateUnit } from "@/lib/data";
 import { UNIT_STATUS_LABEL, type UnitStatus } from "@/lib/types";
+import { ClassInsight } from "@/components/class/ClassInsight";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -144,6 +145,12 @@ function ClassPage() {
           ))}
         </div>
       </section>
+
+      <ClassInsight
+        classId={classId}
+        className={klass.data.name}
+        subject={klass.data.subject}
+      />
 
       <NewUnitDialog open={unitOpen} onOpenChange={setUnitOpen} classId={classId} />
     </div>
