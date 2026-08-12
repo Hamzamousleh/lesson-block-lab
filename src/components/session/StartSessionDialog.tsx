@@ -31,10 +31,24 @@ export function StartSessionDialog({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<SessionMode | null>(null);
+  const variantLevels = Array.from(
+    new Set(
+      blocks
+        .filter((b) => b.variant_group && b.variant_label)
+        .map((b) => b.variant_label as string),
+    ),
+  );
+  const [variant, setVariant] = useState<string | null>(variantLevels[0] ?? null);
   const r = readiness(blocks);
 
   const create = useMutation({
-    mutationFn: (m: SessionMode) => createSession({ lesson_id: lessonId, class_id: classId, mode: m }),
+    mutationFn: (m: SessionMode) =>
+      createSession({
+        lesson_id: lessonId,
+        class_id: classId,
+        mode: m,
+        variant_label: variantLevels.length ? variant : null,
+      }),
     onSuccess: async (session) => {
       await queryClient.invalidateQueries({ queryKey: ["sessions"] });
       onOpenChange(false);
@@ -84,6 +98,31 @@ export function StartSessionDialog({
             </span>
           </button>
         </div>
+
+        {variantLevels.length > 0 && (
+          <div className="rounded-2xl bg-secondary p-5">
+            <p className="text-sm font-medium">Lektionen har niveaudelte varianter</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Vælg hvilken variant eleverne møder. Niveauet vises ikke for eleverne.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {variantLevels.map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => setVariant(l)}
+                  className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                    variant === l
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-primary/40"
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {mode === "self_paced" && (
           <div className="rounded-2xl bg-secondary p-5 text-sm">
