@@ -53,14 +53,16 @@ export function summarizeEpisodePackage(pkg: WorldEpisodePackage): PackageSummar
   };
 }
 
-/** Duplicate guard: same title, or same number+branch. */
+const normTitle = (t: string) => t.trim().toLowerCase().replace(/\s+/g, " ");
+
+/** Duplicate guard within one World: same normalized title, or same number+branch. */
 export function episodeConflict(
   existing: WorldEpisode[],
   episode: PackageEpisode,
 ): string | null {
-  const title = episode.title.trim().toLowerCase();
-  if (existing.some((e) => e.title.trim().toLowerCase() === title))
-    return "Der findes allerede en episode med denne titel eller placering.";
+  const title = normTitle(episode.title);
+  if (existing.some((e) => normTitle(e.title) === title))
+    return `Denne World har allerede en episode med titlen "${episode.title.trim()}".`;
   if (
     episode.episode_number &&
     existing.some(
@@ -69,9 +71,20 @@ export function episodeConflict(
         (e.branch_key ?? null) === (episode.branch_key ?? null),
     )
   )
-    return "Der findes allerede en episode med denne titel eller placering.";
+    return `Denne World har allerede en episode med nummer ${episode.episode_number}.`;
   return null;
 }
+
+/** Reads the World's episodes straight from the database (never a stale cache). */
+async function fetchWorldEpisodes(worldId: string): Promise<WorldEpisode[]> {
+  const { data, error } = await supabase
+    .from("world_episodes")
+    .select("*")
+    .eq("world_id", worldId);
+  if (error) throw new Error("Episoderne i dette World kunne ikke hentes.");
+  return (data ?? []) as WorldEpisode[];
+}
+
 
 async function currentUserId(): Promise<string> {
   const { data, error } = await supabase.auth.getUser();
@@ -233,15 +246,31 @@ export async function importEpisodePackage(
       "Episoden indeholder en lektion. Knyt dit World til en klasse, før du importerer.",
     );
   }
-  const episode = opts?.asCopy
-    ? { ...pkg.episode, title: `${pkg.episode.title} (kopi)`, episode_number: episodeNumber }
-    : pkg.episode;
+
+  /* Authoritative guard — the UI check can be stale or bypassed. */
+  const existing = await fetchWorldEpisodes(world.id);
+  const clash = episodeConflict(existing, pkg.episode);
+  if (clash && !opts?.asCopy) throw new Error(clash);
+
+  const nextNumber =
+    existing.reduce((max, e) => Math.max(max, e.episode_number), 0) + 1 > episodeNumber
+      ? existing.reduce((max, e) => Math.max(max, e.episode_number), 0) + 1
+      : episodeNumber;
+
+  let episode = pkg.episode;
+  if (opts?.asCopy) {
+    let title = pkg.episode.title.trim();
+    if (existing.some((e) => normTitle(e.title) === normTitle(title))) title = `${title} (kopi)`;
+    episode = { ...pkg.episode, title, episode_number: nextNumber };
+  }
+
   return persistEpisode(
     world.id,
     world.subject,
     world.class_id,
     episode,
     teacher_id,
-    episodeNumber,
+    nextNumber,
   );
+
 }

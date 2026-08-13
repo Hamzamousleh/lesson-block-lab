@@ -4,6 +4,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   BookmarkPlus,
+  ChevronDown,
+  ChevronUp,
   Copy,
   GripVertical,
   Loader2,
@@ -196,6 +198,16 @@ function LessonEditor() {
     reorder.mutate([...ids, ...fallbacks.map((b) => b.id)]);
   };
 
+  /** Same persistence path as drag-and-drop — just index arithmetic. */
+  const moveBy = (blockId: string, delta: number) => {
+    const ids = list.map((b) => b.id);
+    const from = ids.indexOf(blockId);
+    const to = from + delta;
+    if (from < 0 || to < 0 || to >= ids.length) return;
+    moveTo(blockId, ids[to] as string);
+  };
+
+
   if (lesson.isLoading) {
     return (
       <div className="mx-auto flex max-w-4xl items-center gap-2 px-6 py-20 text-muted-foreground">
@@ -209,7 +221,7 @@ function LessonEditor() {
 
   let running = 0;
 
-  const blockRow = (b: LessonBlock, meta: string, draggable: boolean) => {
+  const blockRow = (b: LessonBlock, meta: string, draggable: boolean, index = 0) => {
     const def = blockDef(b.type);
     return (
       <div
@@ -226,10 +238,39 @@ function LessonEditor() {
         }`}
       >
         {draggable ? (
-          <GripVertical className="size-4 shrink-0 cursor-grab text-muted-foreground" />
+          <div className="flex shrink-0 items-center gap-1">
+            <GripVertical className="hidden size-4 cursor-grab text-muted-foreground sm:block" />
+            <div className="flex flex-col">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                aria-label={`Flyt "${b.title}" op`}
+                title="Flyt op"
+                disabled={index === 0 || reorder.isPending}
+                onClick={() => moveBy(b.id, -1)}
+              >
+                <ChevronUp className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                aria-label={`Flyt "${b.title}" ned`}
+                title="Flyt ned"
+                disabled={index === list.length - 1 || reorder.isPending}
+                onClick={() => moveBy(b.id, 1)}
+              >
+                <ChevronDown className="size-4" />
+              </Button>
+            </div>
+          </div>
         ) : (
           <span className="w-4 shrink-0" />
         )}
+
         <span className="w-14 shrink-0 text-sm tabular-nums text-muted-foreground">{meta}</span>
         <span className="text-xl">{def.icon}</span>
         <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setEditing(b)}>
@@ -422,7 +463,7 @@ function LessonEditor() {
         {list.map((b) => {
           const start = running;
           running += b.duration_minutes;
-          return blockRow(b, `${start}–${running}`, true);
+          return blockRow(b, `${start}–${running}`, true, list.indexOf(b));
         })}
 
         <Button
