@@ -4,6 +4,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   BookmarkPlus,
+  ChevronDown,
+  ChevronUp,
   Copy,
   GripVertical,
   Loader2,
@@ -461,7 +463,7 @@ function LessonEditor() {
         {list.map((b) => {
           const start = running;
           running += b.duration_minutes;
-          return blockRow(b, `${start}–${running}`, true);
+          return blockRow(b, `${start}–${running}`, true, list.indexOf(b));
         })}
 
         <Button
