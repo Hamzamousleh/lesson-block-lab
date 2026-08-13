@@ -3,7 +3,13 @@ import { z } from "zod";
 
 export const joinSessionFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
-    z.object({ code: z.string().min(1).max(20), display_name: z.string().min(1).max(60) }).parse(d),
+    z
+      .object({
+        code: z.string().min(1).max(20),
+        display_name: z.string().min(1).max(60),
+        participant_token: z.string().min(10).max(120).nullish(),
+      })
+      .parse(d),
   )
   .handler(async ({ data }) => {
     const { joinSessionByCode } = await import("./session.server");
