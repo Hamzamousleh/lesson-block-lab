@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { classesQuery } from "@/lib/data";
 import { buildMaterialPrompt } from "@/lib/prompt";
 import { PromptResult } from "@/components/PromptResult";
+import { MaterialPicker, selectedFileNames } from "@/components/materials/MaterialPicker";
+import { materialFilesQuery } from "@/lib/materials";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +54,10 @@ function MaterialToLesson() {
   const [outputType, setOutputType] = useState<"lesson" | "blocks" | "quiz">("lesson");
   const [feels, setFeels] = useState<string[]>([]);
   const [prompt, setPrompt] = useState<string | null>(null);
+  const [fileIds, setFileIds] = useState<string[]>([]);
+  const [promptFiles, setPromptFiles] = useState<string[]>([]);
+  const materials = useQuery(materialFilesQuery());
+  const attachedFiles = selectedFileNames(materials.data ?? [], fileIds);
 
   const selected = useMemo(
     () => (classes.data ?? []).find((c) => c.id === classId),
@@ -62,7 +68,8 @@ function MaterialToLesson() {
     <div className="mx-auto max-w-3xl px-6 py-14">
       <h1 className="font-display text-4xl font-semibold">Brug mit materiale</h1>
       <p className="mt-2 text-muted-foreground">
-        Indsæt dine noter eller en tekst — så laver ChatGPT undervisning ud fra netop dét.
+        Indsæt dine noter eller en tekst — eller vedhæft en uploadet fil — så laver ChatGPT
+        undervisning ud fra netop dét.
       </p>
 
       <section className="surface-card mt-8 space-y-6 p-8">
@@ -139,6 +146,12 @@ function MaterialToLesson() {
           </div>
         </div>
 
+        <MaterialPicker
+          selectedIds={fileIds}
+          onChange={setFileIds}
+          context={{ classId }}
+        />
+
         <div className="space-y-2">
           <Label>Hvad skal du bruge?</Label>
           <div className="flex flex-wrap gap-2">
@@ -184,8 +197,9 @@ function MaterialToLesson() {
         <Button
           size="lg"
           className="rounded-full"
-          disabled={material.trim().length < 40}
-          onClick={() =>
+          disabled={material.trim().length < 40 && attachedFiles.length === 0}
+          onClick={() => {
+            setPromptFiles(attachedFiles);
             setPrompt(
               buildMaterialPrompt({
                 className: selected?.name,
@@ -196,18 +210,21 @@ function MaterialToLesson() {
                 duration,
                 outputType,
                 feels,
+                attachedFiles,
               }),
-            )
-          }
+            );
+          }}
         >
           Lav prompt
         </Button>
-        {material.trim().length < 40 && (
-          <p className="text-sm text-muted-foreground">Indsæt lidt mere tekst for at komme i gang.</p>
+        {material.trim().length < 40 && attachedFiles.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Indsæt lidt mere tekst — eller vælg en uploadet fil — for at komme i gang.
+          </p>
         )}
       </section>
 
-      {prompt && <PromptResult prompt={prompt} />}
+      {prompt && <PromptResult prompt={prompt} attachedFiles={promptFiles} />}
     </div>
   );
 }

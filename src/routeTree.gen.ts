@@ -20,6 +20,7 @@ import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedImproveLessonRouteImport } from './routes/_authenticated/improve-lesson'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedMaterialToLessonRouteImport } from './routes/_authenticated/material-to-lesson'
+import { Route as AuthenticatedMaterialsRouteImport } from './routes/_authenticated/materials'
 import { Route as AuthenticatedRescueRouteImport } from './routes/_authenticated/rescue'
 import { Route as AuthenticatedUnitsRouteImport } from './routes/_authenticated/units'
 import { Route as JoinIndexRouteImport } from './routes/join.index'
@@ -98,6 +99,11 @@ const AuthenticatedMaterialToLessonRoute =
     path: '/material-to-lesson',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMaterialsRoute = AuthenticatedMaterialsRouteImport.update({
+  id: '/materials',
+  path: '/materials',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRescueRoute = AuthenticatedRescueRouteImport.update({
   id: '/rescue',
   path: '/rescue',
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/improve-lesson': typeof AuthenticatedImproveLessonRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/material-to-lesson': typeof AuthenticatedMaterialToLessonRoute
+  '/materials': typeof AuthenticatedMaterialsRoute
   '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
   '/join/$code': typeof JoinCodeRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/improve-lesson': typeof AuthenticatedImproveLessonRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/material-to-lesson': typeof AuthenticatedMaterialToLessonRoute
+  '/materials': typeof AuthenticatedMaterialsRoute
   '/rescue': typeof AuthenticatedRescueRoute
   '/units': typeof AuthenticatedUnitsRoute
   '/join/$code': typeof JoinCodeRoute
@@ -280,6 +288,7 @@ export interface FileRoutesById {
   '/_authenticated/improve-lesson': typeof AuthenticatedImproveLessonRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/material-to-lesson': typeof AuthenticatedMaterialToLessonRoute
+  '/_authenticated/materials': typeof AuthenticatedMaterialsRoute
   '/_authenticated/rescue': typeof AuthenticatedRescueRoute
   '/_authenticated/units': typeof AuthenticatedUnitsRoute
   '/join/$code': typeof JoinCodeRoute
@@ -313,6 +322,7 @@ export interface FileRouteTypes {
     | '/improve-lesson'
     | '/library'
     | '/material-to-lesson'
+    | '/materials'
     | '/rescue'
     | '/units'
     | '/join/$code'
@@ -344,6 +354,7 @@ export interface FileRouteTypes {
     | '/improve-lesson'
     | '/library'
     | '/material-to-lesson'
+    | '/materials'
     | '/rescue'
     | '/units'
     | '/join/$code'
@@ -376,6 +387,7 @@ export interface FileRouteTypes {
     | '/_authenticated/improve-lesson'
     | '/_authenticated/library'
     | '/_authenticated/material-to-lesson'
+    | '/_authenticated/materials'
     | '/_authenticated/rescue'
     | '/_authenticated/units'
     | '/join/$code'
@@ -484,6 +496,13 @@ declare module '@tanstack/react-router' {
       path: '/material-to-lesson'
       fullPath: '/material-to-lesson'
       preLoaderRoute: typeof AuthenticatedMaterialToLessonRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/materials': {
+      id: '/_authenticated/materials'
+      path: '/materials'
+      fullPath: '/materials'
+      preLoaderRoute: typeof AuthenticatedMaterialsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/rescue': {
@@ -631,6 +650,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImproveLessonRoute: typeof AuthenticatedImproveLessonRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedMaterialToLessonRoute: typeof AuthenticatedMaterialToLessonRoute
+  AuthenticatedMaterialsRoute: typeof AuthenticatedMaterialsRoute
   AuthenticatedRescueRoute: typeof AuthenticatedRescueRoute
   AuthenticatedUnitsRoute: typeof AuthenticatedUnitsRoute
   AuthenticatedClassesClassIdRoute: typeof AuthenticatedClassesClassIdRoute
@@ -657,6 +677,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImproveLessonRoute: AuthenticatedImproveLessonRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedMaterialToLessonRoute: AuthenticatedMaterialToLessonRoute,
+  AuthenticatedMaterialsRoute: AuthenticatedMaterialsRoute,
   AuthenticatedRescueRoute: AuthenticatedRescueRoute,
   AuthenticatedUnitsRoute: AuthenticatedUnitsRoute,
   AuthenticatedClassesClassIdRoute: AuthenticatedClassesClassIdRoute,
