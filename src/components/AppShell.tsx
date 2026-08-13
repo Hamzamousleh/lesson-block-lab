@@ -21,6 +21,7 @@ const navLinks = [
   { to: "/lessons", label: "Lektioner" },
   { to: "/worlds", label: "Worlds" },
   { to: "/library", label: "Bibliotek" },
+  { to: "/materials", label: "Materialer" },
   { to: "/sessions", label: "Sessioner" },
 
 ] as const;
