@@ -196,6 +196,16 @@ function LessonEditor() {
     reorder.mutate([...ids, ...fallbacks.map((b) => b.id)]);
   };
 
+  /** Same persistence path as drag-and-drop — just index arithmetic. */
+  const moveBy = (blockId: string, delta: number) => {
+    const ids = list.map((b) => b.id);
+    const from = ids.indexOf(blockId);
+    const to = from + delta;
+    if (from < 0 || to < 0 || to >= ids.length) return;
+    moveTo(blockId, ids[to] as string);
+  };
+
+
   if (lesson.isLoading) {
     return (
       <div className="mx-auto flex max-w-4xl items-center gap-2 px-6 py-20 text-muted-foreground">
