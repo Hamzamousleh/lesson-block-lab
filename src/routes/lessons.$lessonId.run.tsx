@@ -1,16 +1,19 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
   Clock,
   Eye,
   Loader2,
   Maximize2,
-  NotebookPen,
-  ListOrdered,
+  Pause,
+  Play,
+  RotateCcw,
+  SkipForward,
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +22,6 @@ import { blockDef } from "@/lib/blocks";
 import type { LessonBlock } from "@/lib/types";
 import { BlockRenderer, revealSteps } from "@/components/run/BlockRenderer";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   participantsQuery,
   responsesQuery,
@@ -27,8 +29,8 @@ import {
   updateSession,
 } from "@/lib/sessions";
 import { summarize } from "@/lib/results";
-import { ResultBars } from "@/components/student/StudentBlock";
-
+import { ResultBars, StudentBlock } from "@/components/student/StudentBlock";
+import { correctOptionIndex, timerLabel, toPreviewBlock, workMode } from "@/lib/cockpit";
 
 export const Route = createFileRoute("/lessons/$lessonId/run")({
   ssr: false,
@@ -39,27 +41,47 @@ export const Route = createFileRoute("/lessons/$lessonId/run")({
   head: () => ({
     meta: [
       { title: "Undervis — CaseLab" },
-      { name: "description", content: "Kør lektionen direkte fra CaseLab med projektorvisning." },
+      { name: "description", content: "Kør lektionen live med elevvisning, tid og svar i ét billede." },
       { property: "og:title", content: "Undervis — CaseLab" },
-      { property: "og:description", content: "Kør lektionen direkte fra CaseLab." },
+      { property: "og:description", content: "Lærercockpit til live undervisning." },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: RunMode,
 });
 
-function useElapsed(active: boolean) {
+function useElapsed(active: boolean, storageKey: string) {
   const [seconds, setSeconds] = useState(0);
   const startRef = useRef<number | null>(null);
   useEffect(() => {
     if (!active) return;
-    if (startRef.current === null) startRef.current = Date.now();
+    if (startRef.current === null) {
+      const saved = typeof window !== "undefined" ? window.localStorage.getItem(storageKey) : null;
+      const parsed = saved ? Number(saved) : NaN;
+      startRef.current = Number.isFinite(parsed) ? parsed : Date.now();
+      try {
+        window.localStorage.setItem(storageKey, String(startRef.current));
+      } catch {
+        /* private mode */
+      }
+    }
     const t = setInterval(() => {
       setSeconds(Math.floor((Date.now() - (startRef.current as number)) / 1000));
     }, 1000);
     return () => clearInterval(t);
-  }, [active]);
+  }, [active, storageKey]);
   return Math.floor(seconds / 60);
+}
+
+/* ------------------------------------------------------------------ *
+ * Activity countdown. State survives rerenders and query refreshes
+ * (refs + localStorage), and is mirrored to the session row so students
+ * can optionally see it and a browser refresh recovers it.
+ * ------------------------------------------------------------------ */
+interface TimerState {
+  endsAt: number | null;
+  /** signed seconds; negative = overtime */
+  remaining: number;
 }
 
 function RunMode() {
@@ -83,28 +105,33 @@ function RunMode() {
   const [index, setIndex] = useState(0);
   const [step, setStep] = useState(0);
   const [projector, setProjector] = useState(false);
-  const [notesOpen, setNotesOpen] = useState(false);
-  const [overviewOpen, setOverviewOpen] = useState(false);
-  const [hideTime, setHideTime] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [skipped, setSkipped] = useState<string[]>([]);
+  const [showNames, setShowNames] = useState(false);
 
   const active = useFallback ? fallback : main;
-  const elapsed = useElapsed(started);
+  const elapsed = useElapsed(started, `caselab-run-start-${lessonId}`);
 
   const current: LessonBlock | undefined = active[index];
   const totalSteps = current ? revealSteps(current) : 1;
 
+  const plannedTotal = active.reduce((s, b) => s + b.duration_minutes, 0);
   const plannedStart = active.slice(0, index).reduce((s, b) => s + b.duration_minutes, 0);
   const plannedEnd = plannedStart + (current?.duration_minutes ?? 0);
   const drift = elapsed - plannedStart;
 
   /* ---------- live student session (optional) ---------- */
-  const sessions = useQuery({ ...sessionsQuery({ lessonId }), refetchInterval: 15000 });
+  const sessions = useQuery({ ...sessionsQuery({ lessonId }), refetchInterval: 5000 });
   const liveSession =
     (sessions.data ?? []).find((s) => s.mode === "live" && s.status !== "ended") ?? null;
   const liveId = liveSession?.id ?? "";
   const participants = useQuery({ ...participantsQuery(liveId, true), enabled: !!liveId });
   const responses = useQuery({ ...responsesQuery(liveId, true), enabled: !!liveId });
+
+  const refreshSessions = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: ["sessions"] }),
+    [queryClient],
+  );
 
   useEffect(() => {
     if (!liveSession || !current) return;
@@ -113,23 +140,88 @@ function RunMode() {
       current_block_id: current.id,
       status: "active",
       reveal_results: false,
-    }).then(() => queryClient.invalidateQueries({ queryKey: ["sessions"] }));
-  }, [liveSession, current, queryClient]);
+      reveal_answer_key: false,
+    }).then(refreshSessions);
+  }, [liveSession, current, refreshSessions]);
 
+  /* ---------- activity timer ---------- */
+  const timerKey = `caselab-timer-${lessonId}`;
+  const [timer, setTimer] = useState<TimerState>({ endsAt: null, remaining: 0 });
+  const [, tick] = useState(0);
+  const timerBlockRef = useRef<string | null>(null);
+
+  // seed / reset per activity, recovering a persisted timer after a refresh
+  useEffect(() => {
+    if (!current) return;
+    if (timerBlockRef.current === current.id) return;
+    timerBlockRef.current = current.id;
+    let next: TimerState = { endsAt: null, remaining: current.duration_minutes * 60 };
+    try {
+      const raw = window.localStorage.getItem(timerKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { blockId?: string } & TimerState;
+        if (parsed.blockId === current.id) next = { endsAt: parsed.endsAt, remaining: parsed.remaining };
+      }
+    } catch {
+      /* ignore */
+    }
+    setTimer(next);
+  }, [current, timerKey]);
+
+  const running = timer.endsAt !== null;
+  useEffect(() => {
+    if (!running) return;
+    const t = setInterval(() => tick((n) => n + 1), 500);
+    return () => clearInterval(t);
+  }, [running]);
+
+  const seconds = timer.endsAt !== null ? (timer.endsAt - Date.now()) / 1000 : timer.remaining;
+
+  const applyTimer = useCallback(
+    (next: TimerState) => {
+      setTimer(next);
+      if (current) {
+        try {
+          window.localStorage.setItem(timerKey, JSON.stringify({ blockId: current.id, ...next }));
+        } catch {
+          /* ignore */
+        }
+      }
+      if (liveSession) {
+        void updateSession(liveSession.id, {
+          timer_ends_at: next.endsAt ? new Date(next.endsAt).toISOString() : null,
+          timer_remaining_seconds: Math.round(next.remaining),
+        }).then(refreshSessions);
+      }
+    },
+    [current, timerKey, liveSession, refreshSessions],
+  );
+
+  const startTimer = () => applyTimer({ endsAt: Date.now() + timer.remaining * 1000, remaining: timer.remaining });
+  const pauseTimer = () => applyTimer({ endsAt: null, remaining: seconds });
+  const resetTimer = () => applyTimer({ endsAt: null, remaining: (current?.duration_minutes ?? 0) * 60 });
+  const addMinutes = (m: number) =>
+    timer.endsAt !== null
+      ? applyTimer({ endsAt: timer.endsAt + m * 60000, remaining: timer.remaining })
+      : applyTimer({ endsAt: null, remaining: timer.remaining + m * 60 });
+
+  /* ---------- live responses ---------- */
   const liveAnswers = current ? (responses.data ?? []).filter((a) => a.block_id === current.id) : [];
-  const liveNames = new Map((participants.data ?? []).map((p) => [p.id, p.display_name]));
+  const people = participants.data ?? [];
+  const liveNames = new Map(people.map((p) => [p.id, p.display_name]));
   const liveSummary =
     current && liveSession
       ? summarize(
           current.type,
           (current.content ?? {}) as Record<string, unknown>,
           liveAnswers.map((a) => ({
-            display_name: liveNames.get(a.participant_id) ?? "",
+            display_name: showNames ? (liveNames.get(a.participant_id) ?? "") : "",
             response_data: a.response_data,
           })),
         )
       : null;
 
+  const answerKeyIndex = correctOptionIndex(current);
 
   const complete = useMutation({
     mutationFn: () => updateLesson(lessonId, { status: "completed" }),
@@ -170,7 +262,11 @@ function RunMode() {
     setIndex(i);
     setStep(0);
     setFinished(false);
-    setOverviewOpen(false);
+  };
+  const skipCurrent = () => {
+    if (current) setSkipped((s) => (s.includes(current.id) ? s : [...s, current.id]));
+    if (index < active.length - 1) jumpTo(index + 1);
+    else setFinished(true);
   };
 
   useEffect(() => {
@@ -180,21 +276,13 @@ function RunMode() {
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       if (e.key === "ArrowRight") {
         e.preventDefault();
-        if (step < totalSteps - 1) setStep((s) => s + 1);
-        else if (index < active.length - 1) {
-          setIndex((i) => i + 1);
-          setStep(0);
-        } else setFinished(true);
+        next();
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
         prev();
       } else if (e.key === " ") {
         e.preventDefault();
         next();
-      } else if (e.key.toLowerCase() === "n") {
-        setNotesOpen((v) => !v);
-      } else if (e.key.toLowerCase() === "o") {
-        setOverviewOpen((v) => !v);
       } else if (e.key.toLowerCase() === "f") {
         setProjector((v) => {
           const nextVal = !v;
@@ -275,7 +363,7 @@ function RunMode() {
           </Link>
         </div>
         <p className="mt-10 text-sm text-muted-foreground">
-          Genveje: ← → skift · Mellemrum viser næste trin · N noter · O oversigt · F projektor
+          Genveje: ← → skift aktivitet · Mellemrum næste · F projektor
         </p>
       </div>
     );
@@ -288,7 +376,7 @@ function RunMode() {
         <h1 className="font-display text-4xl font-semibold">Lektionen er afsluttet</h1>
         <p className="mt-4 text-xl">{l.title}</p>
         <p className="mt-2 text-muted-foreground">
-          Planlagt {l.duration_minutes} min · {main.length} aktiviteter · brugt {elapsed} min
+          Planlagt {plannedTotal} min · {main.length} aktiviteter · brugt {elapsed} min
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link to="/lessons/$lessonId/edit" params={{ lessonId }}>
@@ -296,11 +384,7 @@ function RunMode() {
               Tilbage til lektionen
             </Button>
           </Link>
-          <Button
-            className="rounded-full"
-            disabled={complete.isPending}
-            onClick={() => complete.mutate()}
-          >
+          <Button className="rounded-full" disabled={complete.isPending} onClick={() => complete.mutate()}>
             {complete.isPending && <Loader2 className="size-4 animate-spin" />}
             Markér som afsluttet
           </Button>
@@ -323,14 +407,14 @@ function RunMode() {
     );
   }
 
-  const progress = ((index + 1) / active.length) * 100;
+  const progressPct = ((index + 1) / active.length) * 100;
 
   /* ---------- projector ---------- */
   if (projector) {
     return (
       <div className="flex min-h-screen flex-col bg-background">
         <div className="h-1 w-full bg-secondary">
-          <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+          <div className="h-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
         </div>
         <div className="flex flex-1 items-center px-10 py-12 sm:px-20">
           <div className="w-full">
@@ -341,6 +425,7 @@ function RunMode() {
           <button type="button" onClick={prev} className="rounded-full px-4 py-2 hover:bg-secondary">
             ← Forrige
           </button>
+          <span className="tabular-nums">{timerLabel(seconds)}</span>
           <span>
             {index + 1} / {active.length}
           </span>
@@ -352,40 +437,27 @@ function RunMode() {
     );
   }
 
-  /* ---------- teacher view ---------- */
+  /* ---------- cockpit ---------- */
+  const overtime = seconds <= -1;
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="flex flex-wrap items-center gap-4 border-b border-border/70 px-6 py-3 text-sm">
+      <header className="flex flex-wrap items-center gap-3 border-b border-border/70 px-6 py-3 text-sm">
         <div className="min-w-0 flex-1 truncate">
           <span className="font-medium">{l.title}</span>
           {klass.data && <span className="text-muted-foreground"> · {klass.data.name}</span>}
           {useFallback && <span className="ml-2 text-primary">· Ekstra aktivitet</span>}
         </div>
+        <span className="rounded-full bg-secondary px-3 py-1 font-medium tabular-nums">
+          Aktivitet {index + 1} af {active.length}
+        </span>
         {liveSession && (
           <Link to="/sessions/$sessionId" params={{ sessionId: liveSession.id }}>
             <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
-              Elevsession · {liveSession.join_code} · {(participants.data ?? []).length} deltagere
+              Elevsession · {liveSession.join_code} · {people.length} deltagere
             </span>
           </Link>
         )}
-        <span className="tabular-nums text-muted-foreground">
-          {index + 1} / {active.length}
-        </span>
-
-        {!hideTime && (
-          <span className="flex items-center gap-2 tabular-nums text-muted-foreground">
-            <Clock className="size-4" /> {elapsed} min
-          </span>
-        )}
-        <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setHideTime((v) => !v)}>
-          {hideTime ? "Vis tid" : "Skjul tid"}
-        </Button>
-        <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setNotesOpen(true)}>
-          <NotebookPen className="size-4" /> Noter
-        </Button>
-        <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setOverviewOpen(true)}>
-          <ListOrdered className="size-4" /> Oversigt
-        </Button>
         <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setProjector(true)}>
           <Maximize2 className="size-4" /> Projektor
         </Button>
@@ -397,182 +469,280 @@ function RunMode() {
       </header>
 
       <div className="h-1 w-full bg-secondary">
-        <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+        <div className="h-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
       </div>
 
-      <main className="flex-1 px-6 py-10 sm:px-12">
-        <div className="mx-auto max-w-5xl">
-          {!hideTime && (
-            <p className="mb-6 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              <span>
-                Planlagt: {plannedStart}–{plannedEnd} min
-              </span>
-              {Math.abs(drift) >= 3 && (
-                <span className="rounded-full bg-secondary px-3 py-1">
-                  {drift < 0 ? `${Math.abs(drift)} min foran planen` : `${drift} min efter planen`}
-                </span>
-              )}
-            </p>
-          )}
-          {current && (
-            <BlockRenderer
-              block={current}
-              step={step}
-              view="teacher"
-              onSkip={() => {
-                if (index < active.length - 1) jumpTo(index + 1);
-                else setFinished(true);
-              }}
-            />
-          )}
-          {step < totalSteps - 1 && (
-            <Button variant="outline" className="mt-10 rounded-full" onClick={next}>
-              <Eye className="size-4" /> Vis næste trin
-            </Button>
-          )}
-
-          {liveSession && liveSummary && (
-            <section className="surface-card mt-12 p-8">
+      <main className="flex-1 px-5 py-8 sm:px-8">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+          {/* ---------------- left: what students see + responses ---------------- */}
+          <div className="space-y-6">
+            <section className="surface-card p-6 sm:p-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold">Elevsvar</h2>
-                <span className="text-sm text-muted-foreground">
-                  {liveAnswers.length} / {(participants.data ?? []).length} har svaret · kode{" "}
-                  <span className="font-mono">{liveSession.join_code}</span>
+                <h2 className="text-lg font-semibold">Det eleverne ser</h2>
+                <span className="text-xs tracking-widest text-muted-foreground uppercase">
+                  {blockDef(current?.type ?? "").label} · {workMode(current?.type ?? "")}
                 </span>
               </div>
-              <div className="mt-5">
-                <ResultBars summary={liveSummary} />
+              <div className="mt-6 rounded-2xl border border-border bg-background p-5 sm:p-6">
+                {current ? (
+                  <StudentBlock
+                    key={current.id}
+                    block={toPreviewBlock(current)}
+                    saved={undefined}
+                    submitting={false}
+                    disabled
+                    preview
+                  />
+                ) : (
+                  <p className="text-muted-foreground">Ingen aktiv aktivitet.</p>
+                )}
               </div>
-              <Link
-                to="/sessions/$sessionId/follow-up"
-                params={{ sessionId: liveSession.id }}
-                target="_blank"
-              >
-                <Button variant="outline" size="sm" className="mt-5 mr-3 rounded-full">
-                  Reagér på svarene
+              {step < totalSteps - 1 && (
+                <Button variant="outline" className="mt-6 rounded-full" onClick={next}>
+                  <Eye className="size-4" /> Vis næste trin
                 </Button>
-              </Link>
-              <Button
-                variant={liveSession.reveal_results ? "default" : "outline"}
-                size="sm"
-                className="mt-5 rounded-full"
-                onClick={() =>
-                  void updateSession(liveSession.id, {
-                    reveal_results: !liveSession.reveal_results,
-                  }).then(() => queryClient.invalidateQueries({ queryKey: ["sessions"] }))
-                }
-              >
-                {liveSession.reveal_results ? "Skjul resultat for eleverne" : "Vis resultat for eleverne"}
-              </Button>
+              )}
             </section>
-          )}
 
+            {liveSession && liveSummary && (
+              <section className="surface-card p-6 sm:p-8">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-lg font-semibold">Elevsvar</h2>
+                  <span className="text-sm tabular-nums text-muted-foreground">
+                    Svar: {liveAnswers.length} / {people.length}
+                  </span>
+                </div>
+                <div className="mt-5">
+                  <ResultBars summary={liveSummary} />
+                </div>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  <Button
+                    variant={liveSession.reveal_results ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() =>
+                      void updateSession(liveSession.id, {
+                        reveal_results: !liveSession.reveal_results,
+                      }).then(refreshSessions)
+                    }
+                  >
+                    {liveSession.reveal_results ? "Skjul svarfordeling" : "Vis svarfordeling"}
+                  </Button>
+                  {answerKeyIndex !== null && (
+                    <Button
+                      variant={liveSession.reveal_answer_key ? "default" : "outline"}
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() =>
+                        void updateSession(liveSession.id, {
+                          reveal_answer_key: !liveSession.reveal_answer_key,
+                        }).then(refreshSessions)
+                      }
+                    >
+                      {liveSession.reveal_answer_key ? "Skjul facit" : "Vis facit"}
+                    </Button>
+                  )}
+                  {liveSession.reveal_answer_key && answerKeyIndex !== null && (
+                    <span className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary">
+                      <Check className="size-4" /> Facit vist
+                    </span>
+                  )}
+                  {liveSummary.kind === "text" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => setShowNames((v) => !v)}
+                    >
+                      {showNames ? "Skjul navne" : "Vis navne"}
+                    </Button>
+                  )}
+                  <Link
+                    to="/sessions/$sessionId/follow-up"
+                    params={{ sessionId: liveSession.id }}
+                    target="_blank"
+                  >
+                    <Button variant="ghost" size="sm" className="rounded-full">
+                      Reagér på svarene
+                    </Button>
+                  </Link>
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* ---------------- right: time, plan, notes ---------------- */}
+          <aside className="space-y-6">
+            <section className="surface-card p-6">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold">Tid til aktiviteten</h2>
+                <span className="text-sm text-muted-foreground">
+                  Afsat tid: {current?.duration_minutes ?? 0} min
+                </span>
+              </div>
+              <p
+                className={`mt-4 font-mono text-4xl font-semibold tabular-nums ${
+                  overtime ? "text-destructive" : ""
+                }`}
+              >
+                {timerLabel(seconds)}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {running ? (
+                  <Button variant="outline" size="sm" className="rounded-full" onClick={pauseTimer}>
+                    <Pause className="size-4" /> Pause
+                  </Button>
+                ) : (
+                  <Button size="sm" className="rounded-full" onClick={startTimer}>
+                    <Play className="size-4" /> Start timer
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" className="rounded-full" onClick={resetTimer}>
+                  <RotateCcw className="size-4" /> Nulstil
+                </Button>
+                <Button variant="outline" size="sm" className="rounded-full" onClick={() => addMinutes(1)}>
+                  +1 min
+                </Button>
+                <Button variant="outline" size="sm" className="rounded-full" onClick={() => addMinutes(2)}>
+                  +2 min
+                </Button>
+              </div>
+              {overtime && (
+                <Button className="mt-4 w-full rounded-full" onClick={next}>
+                  Gå til næste
+                </Button>
+              )}
+              {liveSession && (
+                <Button
+                  variant={liveSession.timer_show_students ? "default" : "ghost"}
+                  size="sm"
+                  className="mt-4 w-full rounded-full"
+                  onClick={() =>
+                    void updateSession(liveSession.id, {
+                      timer_show_students: !liveSession.timer_show_students,
+                    }).then(refreshSessions)
+                  }
+                >
+                  {liveSession.timer_show_students ? "Skjul tiden for elever" : "Vis tiden for elever"}
+                </Button>
+              )}
+            </section>
+
+            <section className="surface-card p-6">
+              <h2 className="text-sm font-semibold">Lektionens tid</h2>
+              <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+                <p className="flex items-center gap-2">
+                  <Clock className="size-4" /> Planlagt: {plannedTotal} min
+                </p>
+                <p>Planlagt progression: {plannedEnd} min</p>
+                <p>Brugt: {elapsed} min</p>
+              </div>
+              <p
+                className={`mt-3 inline-block rounded-full px-3 py-1 text-sm ${
+                  Math.abs(drift) < 3
+                    ? "bg-secondary text-muted-foreground"
+                    : drift < 0
+                      ? "bg-primary/10 text-primary"
+                      : "bg-accent-warm text-accent-warm-foreground"
+                }`}
+              >
+                {Math.abs(drift) < 3
+                  ? "Følger planen"
+                  : drift < 0
+                    ? `${Math.abs(drift)} min foran planen`
+                    : `${drift} min efter planen`}
+              </p>
+            </section>
+
+            <section className="surface-card p-6">
+              <h2 className="text-sm font-semibold">Lærernote</h2>
+              <p className="mt-3 text-sm whitespace-pre-wrap">
+                {current?.teacher_notes || "Ingen noter til denne aktivitet."}
+              </p>
+              {current?.student_instructions && (
+                <>
+                  <p className="mt-5 text-xs tracking-widest text-muted-foreground uppercase">
+                    Elevinstruktion
+                  </p>
+                  <p className="mt-1 text-sm whitespace-pre-wrap">{current.student_instructions}</p>
+                </>
+              )}
+              {answerKeyIndex !== null && (
+                <p className="mt-5 text-sm">
+                  <span className="text-xs tracking-widest text-muted-foreground uppercase">Facit</span>
+                  <br />
+                  Korrekt svar: {String.fromCharCode(65 + answerKeyIndex)}
+                </p>
+              )}
+            </section>
+
+            <section className="surface-card p-6">
+              <h2 className="text-sm font-semibold">Forløbet</h2>
+              <ol className="mt-3 space-y-1">
+                {active.map((b, i) => {
+                  const isSkipped = skipped.includes(b.id);
+                  const done = i < index && !isSkipped;
+                  return (
+                    <li key={b.id}>
+                      <button
+                        type="button"
+                        onClick={() => jumpTo(i)}
+                        className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                          i === index
+                            ? "bg-accent font-medium text-accent-foreground"
+                            : "hover:bg-secondary"
+                        } ${isSkipped ? "line-through opacity-50" : ""} ${
+                          done ? "text-muted-foreground" : ""
+                        }`}
+                      >
+                        <span className="w-4 shrink-0">
+                          {i === index ? "→" : done ? "✓" : isSkipped ? "–" : ""}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate">{b.title}</span>
+                        <span className="shrink-0 tabular-nums text-muted-foreground">
+                          {b.duration_minutes} min
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+              {fallback.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4 w-full rounded-full"
+                  onClick={() => {
+                    setUseFallback((v) => !v);
+                    setIndex(0);
+                    setStep(0);
+                  }}
+                >
+                  {useFallback ? "Tilbage til lektionen" : `Ekstra aktivitet (${fallback.length})`}
+                </Button>
+              )}
+            </section>
+          </aside>
         </div>
       </main>
 
-      <footer className="sticky bottom-0 flex items-center justify-between gap-4 border-t border-border/70 bg-background/90 px-6 py-4 backdrop-blur">
+      <footer className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-border/70 bg-background/90 px-6 py-4 backdrop-blur">
         <Button variant="outline" className="rounded-full" onClick={prev} disabled={index === 0 && step === 0}>
           <ArrowLeft className="size-4" /> Forrige
         </Button>
-        <span className="min-w-0 truncate text-center text-sm text-muted-foreground">
-          {current ? `${blockDef(current.type).icon} ${current.title}` : ""}
-        </span>
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="min-w-0 truncate text-center text-sm text-muted-foreground">
+            {current ? `${blockDef(current.type).icon} ${current.title}` : ""}
+          </span>
+          <Button variant="ghost" size="sm" className="rounded-full" onClick={skipCurrent}>
+            <SkipForward className="size-4" /> Spring over
+          </Button>
+        </div>
         <Button className="rounded-full" onClick={next}>
           {index === active.length - 1 && step === totalSteps - 1 ? "Afslut" : "Næste"}
           <ArrowRight className="size-4" />
         </Button>
       </footer>
-
-      {/* teacher notes */}
-      <Sheet open={notesOpen} onOpenChange={setNotesOpen}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle className="font-display text-2xl">Kun til dig</SheetTitle>
-          </SheetHeader>
-          {current && (
-            <div className="space-y-6 px-4 pb-10">
-              <div>
-                <p className="text-xs tracking-widest text-muted-foreground uppercase">Aktivitet</p>
-                <p className="mt-1 font-medium">
-                  {blockDef(current.type).label} · {current.duration_minutes} min
-                </p>
-              </div>
-              <div>
-                <p className="text-xs tracking-widest text-muted-foreground uppercase">Lærernoter</p>
-                <p className="mt-1 whitespace-pre-wrap">
-                  {current.teacher_notes || "Ingen noter til denne aktivitet."}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs tracking-widest text-muted-foreground uppercase">
-                  Elevinstruktion
-                </p>
-                <p className="mt-1 whitespace-pre-wrap">
-                  {current.student_instructions || "Ingen instruktion."}
-                </p>
-              </div>
-              {fallback.length > 0 && !useFallback && (
-                <Button
-                  variant="outline"
-                  className="w-full rounded-full"
-                  onClick={() => {
-                    setUseFallback(true);
-                    setIndex(0);
-                    setStep(0);
-                    setNotesOpen(false);
-                  }}
-                >
-                  Ekstra aktivitet ({fallback.length})
-                </Button>
-              )}
-              {useFallback && (
-                <Button
-                  variant="outline"
-                  className="w-full rounded-full"
-                  onClick={() => {
-                    setUseFallback(false);
-                    setIndex(0);
-                    setStep(0);
-                    setNotesOpen(false);
-                  }}
-                >
-                  Tilbage til lektionen
-                </Button>
-              )}
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
-
-      {/* overview */}
-      <Sheet open={overviewOpen} onOpenChange={setOverviewOpen}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle className="font-display text-2xl">Oversigt</SheetTitle>
-          </SheetHeader>
-          <ol className="space-y-2 px-4 pb-10">
-            {active.map((b, i) => (
-              <li key={b.id}>
-                <button
-                  type="button"
-                  onClick={() => jumpTo(i)}
-                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors ${
-                    i === index ? "bg-accent text-accent-foreground" : "hover:bg-secondary"
-                  }`}
-                >
-                  <span className="tabular-nums text-muted-foreground">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">
-                    {blockDef(b.type).label} · {b.title}
-                  </span>
-                  <span className="text-sm text-muted-foreground">{b.duration_minutes} min</span>
-                </button>
-              </li>
-            ))}
-          </ol>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }

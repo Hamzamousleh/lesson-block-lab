@@ -37,6 +37,7 @@ export interface StudentStateDTO {
     mode: "live" | "self_paced";
     status: "draft" | "active" | "ended";
     reveal_results: boolean;
+    reveal_answer_key: boolean;
     current_block_id: string | null;
   };
   lesson: {
@@ -54,9 +55,22 @@ export interface StudentStateDTO {
   responses: Record<string, JsonObject>;
   /** live results, only when the teacher has revealed them */
   revealed: null | { block_id: string; summary: ResultSummary };
+  /**
+   * Correct answer for the active block. ONLY populated after the teacher has
+   * pressed "Vis facit" — before that the answer key never leaves the server.
+   */
+  answerKey: null | {
+    block_id: string;
+    correct_option_index: number;
+    my_correct: boolean | null;
+    message: string | null;
+  };
+  /** Countdown shared with students, only when the teacher enabled it. */
+  timer: null | { ends_at: string | null; remaining_seconds: number | null };
   /** null unless the session was launched from a World episode */
   world: WorldSessionContextDTO | null;
 }
+
 
 /* ---------------- World context ---------------- */
 
@@ -342,14 +356,52 @@ export async function getStudentState(participant_token: string): Promise<Studen
     }
   }
 
+  /* Answer key: never leaves the server before the teacher reveals it. */
+  const sx = session as unknown as {
+    reveal_answer_key?: boolean | null;
+    timer_ends_at?: string | null;
+    timer_remaining_seconds?: number | null;
+    timer_show_students?: boolean | null;
+  };
+  let answerKey: StudentStateDTO["answerKey"] = null;
+  const keyBlockId = session.mode === "live" ? session.current_block_id : currentBlockId;
+  if (sx.reveal_answer_key === true && keyBlockId) {
+    const block = all.find((b) => b.id === keyBlockId);
+    const c = (block?.content ?? {}) as Record<string, unknown>;
+    const idx = c["correct_option_index"];
+    if (block && block.type === "theory_test" && typeof idx === "number") {
+      const mine = responses[block.id]?.["selected_option_index"];
+      const myCorrect = typeof mine === "number" ? mine === idx : null;
+      const fb = (c["feedback"] ?? {}) as Record<string, unknown>;
+      const raw = myCorrect === null ? null : myCorrect ? fb["correct"] : fb["incorrect"];
+      answerKey = {
+        block_id: block.id,
+        correct_option_index: idx,
+        my_correct: myCorrect,
+        message: typeof raw === "string" && raw.trim() ? raw : null,
+      };
+    }
+  }
+
+  const timer =
+    sx.timer_show_students === true
+      ? {
+          ends_at: sx.timer_ends_at ?? null,
+          remaining_seconds:
+            typeof sx.timer_remaining_seconds === "number" ? sx.timer_remaining_seconds : null,
+        }
+      : null;
+
   return {
     session: {
       id: session.id,
       mode: session.mode,
       status: session.status,
       reveal_results: session.reveal_results,
+      reveal_answer_key: sx.reveal_answer_key === true,
       current_block_id: session.current_block_id,
     },
+
     lesson: {
       title: lesson?.title ?? "Aktivitet",
       subject: lesson?.subject ?? null,
@@ -367,7 +419,11 @@ export async function getStudentState(participant_token: string): Promise<Studen
     currentBlockId,
     responses,
     revealed,
+    answerKey,
+    timer,
     world: await loadWorldContext((session as { episode_id?: string | null }).episode_id ?? null),
+
+
   };
 }
 

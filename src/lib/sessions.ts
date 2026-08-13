@@ -15,7 +15,12 @@ export interface StudentSession {
   join_code: string;
   current_block_id: string | null;
   reveal_results: boolean;
+  reveal_answer_key: boolean;
+  timer_ends_at: string | null;
+  timer_remaining_seconds: number | null;
+  timer_show_students: boolean;
   allow_anonymous: boolean;
+
   variant_label: string | null;
   episode_id: string | null;
   created_at: string;
@@ -168,8 +173,22 @@ export async function createSession(input: {
 
 export async function updateSession(
   id: string,
-  patch: Partial<Pick<StudentSession, "status" | "current_block_id" | "reveal_results" | "started_at" | "ended_at">>,
+  patch: Partial<
+    Pick<
+      StudentSession,
+      | "status"
+      | "current_block_id"
+      | "reveal_results"
+      | "reveal_answer_key"
+      | "timer_ends_at"
+      | "timer_remaining_seconds"
+      | "timer_show_students"
+      | "started_at"
+      | "ended_at"
+    >
+  >,
 ): Promise<StudentSession> {
+
   return unwrap(
     await supabase.from("sessions").update(patch as never).eq("id", id).select().single(),
   ) as StudentSession;
