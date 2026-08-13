@@ -292,7 +292,7 @@ export function buildImprovePrompt(i: ImprovePromptInput & { attachedFiles?: str
 
 Opgave: Forbedr en eksisterende lektion. Omskriv IKKE hele lektionen unødigt. Returnér i stedet nye eller erstattende aktiviteter, som læreren selv kan indsætte.
 
-${lines.join("\n")}
+${lines.join("\n")}${attachedFilesSection(i.attachedFiles ?? [])}
 
 Lektionens nuværende aktiviteter:
 ${i.blockDetail}
@@ -484,7 +484,7 @@ export function buildDifferentiatePrompt(i: DifferentiatePromptInput & { attache
 
 Opgave: Lav niveaudelte varianter af den samme aktivitet, så alle elever arbejder med det samme faglige mål.
 
-${head.join("\n")}
+${head.join("\n")}${attachedFilesSection(i.attachedFiles ?? [])}
 
 Aktivitet der skal differentieres:
 """
