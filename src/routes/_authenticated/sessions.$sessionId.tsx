@@ -2,9 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, Copy, Download, Loader2, Play, Sparkles } from "lucide-react";
+import { Check, Copy, Download, Loader2, Monitor, Play, Sparkles } from "lucide-react";
 import {
   SESSION_MODE_LABEL,
+  activeParticipants,
   SESSION_STATUS_LABEL,
   endSession,
   joinUrl,
@@ -90,7 +91,7 @@ function SessionDetail() {
   }
 
   const url = joinUrl(s.join_code);
-  const people = participants.data ?? [];
+  const people = activeParticipants(participants.data ?? [], s);
   const answers = responses.data ?? [];
   const nameById = new Map(people.map((p) => [p.id, p.display_name]));
   const completed = people.filter((p) => p.completed_at).length;
@@ -123,6 +124,13 @@ function SessionDetail() {
               {start.isPending ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
               Start session
             </Button>
+          )}
+          {s.status !== "ended" && s.mode === "live" && (
+            <Link to="/lessons/$lessonId/run" params={{ lessonId: s.lesson_id }} search={{ session: sessionId }}>
+              <Button className="rounded-full">
+                <Monitor className="size-4" /> Åbn lærercockpit
+              </Button>
+            </Link>
           )}
           {s.status !== "ended" && (
             <Button variant="outline" className="rounded-full" disabled={stop.isPending} onClick={() => stop.mutate()}>
@@ -188,7 +196,7 @@ function SessionDetail() {
           </a>
         </div>
         <p className="mt-6 text-lg">
-          {people.length} deltagere
+          {people.length} {people.length === 1 ? "deltager" : "deltagere"} med i aktiviteten nu
           {s.mode === "self_paced" ? ` · ${completed} færdige` : ""}
         </p>
       </section>
