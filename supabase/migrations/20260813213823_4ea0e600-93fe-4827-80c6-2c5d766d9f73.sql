@@ -1,0 +1,2 @@
+DELETE FROM public.world_episodes WHERE title = 'Efter reformen (kopi)' AND world_id = '40bd205b-d679-4771-b385-db0ef7e7ab3b';
+DELETE FROM public.world_episodes WHERE world_id = '8a70cae4-a7fb-4822-9b02-7625c3488004' AND title = 'Efter reformen';
