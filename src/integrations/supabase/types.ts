@@ -255,6 +255,79 @@ export type Database = {
         }
         Relationships: []
       }
+      material_files: {
+        Row: {
+          class_id: string | null
+          created_at: string
+          file_name: string
+          file_size: number
+          id: string
+          lesson_id: string | null
+          mime_type: string
+          note: string | null
+          storage_path: string
+          subject: string | null
+          teacher_id: string
+          title: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string
+          file_name: string
+          file_size: number
+          id?: string
+          lesson_id?: string | null
+          mime_type: string
+          note?: string | null
+          storage_path: string
+          subject?: string | null
+          teacher_id: string
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string
+          file_name?: string
+          file_size?: number
+          id?: string
+          lesson_id?: string | null
+          mime_type?: string
+          note?: string | null
+          storage_path?: string
+          subject?: string | null
+          teacher_id?: string
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_files_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_files_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_files_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
