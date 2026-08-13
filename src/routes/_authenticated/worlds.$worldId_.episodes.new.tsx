@@ -135,7 +135,10 @@ function NewEpisodePage() {
       toast.success("Episoden er importeret.");
       navigate({ to: "/worlds/$worldId", params: { worldId } });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      if (e.message.startsWith("Denne World har allerede")) setConflict(e.message);
+      toast.error(e.message);
+    },
   });
 
   async function copyPrompt() {
