@@ -7,6 +7,8 @@ import { blockDef } from "@/lib/blocks";
 import { buildDifferentiatePrompt } from "@/lib/prompt";
 import { VARIANT_LEVELS } from "@/lib/types";
 import { PromptResult } from "@/components/PromptResult";
+import { MaterialPicker, selectedFileNames } from "@/components/materials/MaterialPicker";
+import { materialFilesQuery } from "@/lib/materials";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,6 +66,10 @@ function DifferentiatePage() {
   const [note, setNote] = useState("");
   const [manual, setManual] = useState("");
   const [prompt, setPrompt] = useState<string | null>(null);
+  const [fileIds, setFileIds] = useState<string[]>([]);
+  const [promptFiles, setPromptFiles] = useState<string[]>([]);
+  const materials = useQuery(materialFilesQuery());
+  const attachedFiles = selectedFileNames(materials.data ?? [], fileIds);
 
   const blocks = useQuery({ ...blocksQuery(lessonId), enabled: !!lessonId });
   const lesson = (lessons.data ?? []).find((l) => l.id === lessonId);
@@ -205,10 +211,17 @@ function DifferentiatePage() {
           </div>
         </div>
 
+        <MaterialPicker
+          selectedIds={fileIds}
+          onChange={setFileIds}
+          context={{ classId: lesson?.class_id ?? null, lessonId }}
+        />
+
         <Button
           className="rounded-full"
           disabled={!sourceText.trim() || levels.length === 0}
-          onClick={() =>
+          onClick={() => {
+            setPromptFiles(attachedFiles);
             setPrompt(
               buildDifferentiatePrompt({
                 className: klass?.name,
@@ -218,16 +231,21 @@ function DifferentiatePage() {
                 sourceText,
                 minutes,
                 note: note.trim() || undefined,
+                attachedFiles,
               }),
-            )
-          }
+            );
+          }}
         >
           Lav prompt
         </Button>
       </section>
 
       {prompt && (
-        <PromptResult prompt={prompt} importSearch={lessonId ? { lessonId } : {}} />
+        <PromptResult
+          prompt={prompt}
+          importSearch={lessonId ? { lessonId } : {}}
+          attachedFiles={promptFiles}
+        />
       )}
     </div>
   );

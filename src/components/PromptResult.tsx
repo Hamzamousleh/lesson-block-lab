@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Check, Copy, ExternalLink } from "lucide-react";
+import { Check, Copy, ExternalLink, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 export function PromptResult({
   prompt,
   importSearch,
+  attachedFiles = [],
 }: {
   prompt: string;
   importSearch?: { lessonId?: string };
+  attachedFiles?: string[];
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -28,6 +30,18 @@ export function PromptResult({
   return (
     <section className="surface-card mt-6 space-y-4 p-8">
       <h2 className="text-xl font-semibold">Din prompt</h2>
+      {attachedFiles.length > 0 && (
+        <div className="rounded-xl border border-primary/40 bg-accent p-4 text-sm">
+          <p className="flex items-center gap-2 font-medium">
+            <Paperclip className="size-4" /> Husk at vedhæfte disse filer i ChatGPT
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {attachedFiles.map((n) => (
+              <li key={n}>{n}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <Textarea readOnly value={prompt} className="min-h-64 rounded-xl font-mono text-xs" />
       <div className="flex flex-wrap gap-3">
         <Button className="rounded-full" onClick={() => void copy()}>
@@ -46,7 +60,7 @@ export function PromptResult({
       </div>
       <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
         <li>Kopiér prompten.</li>
-        <li>Indsæt den i ChatGPT.</li>
+        <li>Indsæt den i ChatGPT{attachedFiles.length ? " — og vedhæft filerne ovenfor" : ""}.</li>
         <li>Kopiér hele JSON-svaret.</li>
         <li>Indsæt det under Importér, og gennemgå det.</li>
       </ol>

@@ -5,6 +5,8 @@ import { blocksQuery, classQuery, lessonQuery, lessonsQuery } from "@/lib/data";
 import { buildImprovePrompt, lessonToDetailedText } from "@/lib/prompt";
 import { blockDef } from "@/lib/blocks";
 import { PromptResult } from "@/components/PromptResult";
+import { MaterialPicker, selectedFileNames } from "@/components/materials/MaterialPicker";
+import { materialFilesQuery } from "@/lib/materials";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,6 +53,10 @@ function ImprovePage() {
   const [wishes, setWishes] = useState<string[]>([]);
   const [freeText, setFreeText] = useState("");
   const [prompt, setPrompt] = useState<string | null>(null);
+  const [fileIds, setFileIds] = useState<string[]>([]);
+  const [promptFiles, setPromptFiles] = useState<string[]>([]);
+  const materials = useQuery(materialFilesQuery());
+  const attachedFiles = selectedFileNames(materials.data ?? [], fileIds);
 
   const lesson = useQuery({ ...lessonQuery(lessonId), enabled: !!lessonId });
   const blocks = useQuery({ ...blocksQuery(lessonId), enabled: !!lessonId });
@@ -144,13 +150,20 @@ function ImprovePage() {
           />
         </div>
 
+        <MaterialPicker
+          selectedIds={fileIds}
+          onChange={setFileIds}
+          context={{ classId: lesson.data?.class_id ?? null, lessonId }}
+        />
+
         <Button
           size="lg"
           className="rounded-full"
           disabled={!canGenerate}
-          onClick={() =>
-            lesson.data &&
-            setPrompt(
+          onClick={() => {
+            setPromptFiles(attachedFiles);
+            if (lesson.data)
+              setPrompt(
               buildImprovePrompt({
                 className: klass.data?.name,
                 subject: klass.data?.subject ?? lesson.data.subject ?? undefined,
@@ -160,9 +173,10 @@ function ImprovePage() {
                 blockDetail: lessonToDetailedText(main),
                 wishes,
                 freeText,
+                attachedFiles,
               }),
-            )
-          }
+            );
+          }}
         >
           Lav prompt til ChatGPT
         </Button>
@@ -173,7 +187,9 @@ function ImprovePage() {
         )}
       </section>
 
-      {prompt && <PromptResult prompt={prompt} importSearch={{ lessonId }} />}
+      {prompt && (
+        <PromptResult prompt={prompt} importSearch={{ lessonId }} attachedFiles={promptFiles} />
+      )}
     </div>
   );
 }

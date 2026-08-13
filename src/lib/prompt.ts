@@ -277,7 +277,7 @@ export interface ImprovePromptInput {
   freeText: string;
 }
 
-export function buildImprovePrompt(i: ImprovePromptInput): string {
+export function buildImprovePrompt(i: ImprovePromptInput & { attachedFiles?: string[] | undefined }): string {
   const lines = [
     i.className ? `Klasse: ${i.className}` : null,
     i.subject ? `Fag: ${i.subject}` : null,
@@ -292,7 +292,7 @@ export function buildImprovePrompt(i: ImprovePromptInput): string {
 
 Opgave: Forbedr en eksisterende lektion. Omskriv IKKE hele lektionen unødigt. Returnér i stedet nye eller erstattende aktiviteter, som læreren selv kan indsætte.
 
-${lines.join("\n")}
+${lines.join("\n")}${attachedFilesSection(i.attachedFiles ?? [])}
 
 Lektionens nuværende aktiviteter:
 ${i.blockDetail}
@@ -323,6 +323,27 @@ export function lessonToDetailedText(
     .join("\n");
 }
 
+/** Files the teacher must attach manually in ChatGPT — CaseLab never reads their contents. */
+export function attachedFilesSection(fileNames: string[]): string {
+  if (!fileNames.length) return "";
+  return `
+
+VEDHÆFTEDE FILER
+Vedhæft disse filer i ChatGPT sammen med denne prompt:
+${fileNames.map((n) => `- ${n}`).join("\n")}
+
+Filerne er den primære faglige kilde.
+CaseLab har ikke læst filernes indhold — det gør du (ChatGPT) ud fra de vedhæftede filer.
+Opfind ikke indhold, der ikke findes i de vedhæftede filer.
+Hvis en fil mangler eller ikke kan læses, så sig det tydeligt i stedet for at gætte.
+
+Når du omsætter materialet:
+- bevar lærerens kerneindhold og progression, hvor det er nyttigt
+- reducér passiv lærertale, hvor det giver mening
+- omsæt egnede dele til interaktive CaseLab-aktiviteter
+- kræv ikke eksterne ressourcer, medmindre materialet allerede forudsætter dem`;
+}
+
 export interface MaterialPromptInput {
   className?: string | undefined;
   subject?: string | undefined;
@@ -332,6 +353,7 @@ export interface MaterialPromptInput {
   duration: number;
   outputType: "lesson" | "blocks" | "quiz";
   feels: string[];
+  attachedFiles?: string[] | undefined;
 }
 
 export function buildMaterialPrompt(i: MaterialPromptInput): string {
@@ -365,7 +387,7 @@ export function buildMaterialPrompt(i: MaterialPromptInput): string {
 Opgave: Omsæt lærerens eget materiale til undervisning, eleverne kan arbejde med.
 
 ${ctx}
-${materialSection(i.material)}
+${materialSection(i.material)}${attachedFilesSection(i.attachedFiles ?? [])}
 
 Krav:
 - Brug materialet som eneste faglige kilde.
@@ -448,7 +470,7 @@ export interface DifferentiatePromptInput {
   note?: string | undefined;
 }
 
-export function buildDifferentiatePrompt(i: DifferentiatePromptInput): string {
+export function buildDifferentiatePrompt(i: DifferentiatePromptInput & { attachedFiles?: string[] | undefined }): string {
   const head = [
     i.className ? `Klasse: ${i.className}` : null,
     i.subject ? `Fag: ${i.subject}` : null,
@@ -462,7 +484,7 @@ export function buildDifferentiatePrompt(i: DifferentiatePromptInput): string {
 
 Opgave: Lav niveaudelte varianter af den samme aktivitet, så alle elever arbejder med det samme faglige mål.
 
-${head.join("\n")}
+${head.join("\n")}${attachedFilesSection(i.attachedFiles ?? [])}
 
 Aktivitet der skal differentieres:
 """
