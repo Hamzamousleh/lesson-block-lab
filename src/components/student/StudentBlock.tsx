@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2, Check, ArrowDown, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,32 +44,47 @@ function OptionButton({
   index,
   selected,
   disabled,
+  state,
   onSelect,
 }: {
   label: string;
   index: number;
   selected: boolean;
   disabled: boolean;
+  state?: "correct" | "wrong" | null;
   onSelect: () => void;
 }) {
+  const tone =
+    state === "correct"
+      ? "border-primary bg-primary/15 text-foreground"
+      : state === "wrong"
+        ? "border-destructive/60 bg-destructive/10 text-foreground"
+        : selected
+          ? "border-primary bg-primary/10 text-foreground"
+          : "border-border bg-card hover:border-primary/50";
   return (
     <button
       type="button"
       disabled={disabled}
       onClick={onSelect}
-      className={`flex w-full items-start gap-4 rounded-2xl border px-5 py-4 text-left text-lg transition-colors ${
-        selected
-          ? "border-primary bg-primary/10 text-foreground"
-          : "border-border bg-card hover:border-primary/50"
-      } ${disabled ? "opacity-70" : ""}`}
+      className={`flex w-full items-start gap-4 rounded-2xl border px-5 py-4 text-left text-lg transition-colors ${tone} ${
+        disabled ? "opacity-90" : ""
+      }`}
     >
       <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold">
         {String.fromCharCode(65 + index)}
       </span>
       <span className="min-w-0 flex-1">{label}</span>
+      {state === "correct" && (
+        <span className="shrink-0 text-sm font-medium text-primary">Korrekt</span>
+      )}
+      {state === "wrong" && (
+        <span className="shrink-0 text-sm font-medium text-destructive">Dit svar</span>
+      )}
     </button>
   );
 }
+
 
 export function ResultBars({ summary }: { summary: ResultSummary }) {
   if (summary.kind === "options") {
@@ -136,14 +151,34 @@ export function ResultBars({ summary }: { summary: ResultSummary }) {
   return <p className="text-sm text-muted-foreground">{summary.total} svar registreret.</p>;
 }
 
+export type SaveState = "idle" | "saving" | "saved" | "error";
+
+export interface StudentAnswerKey {
+  correct_option_index: number;
+  my_correct: boolean | null;
+  message: string | null;
+}
+
 export interface StudentBlockProps {
   block: StudentBlockData;
   saved: Record<string, unknown> | undefined;
   submitting: boolean;
   disabled: boolean;
+  /** explicit save lifecycle for the submit button */
+  saveState?: SaveState;
   feedback?: { correct: boolean; message: string } | null;
   revealed?: ResultSummary | null;
-  onSubmit: (data: Record<string, unknown>) => void;
+  /** only present after the teacher pressed "Vis facit" */
+  answerKey?: StudentAnswerKey | null;
+  /** read-only teacher preview: renders exactly what students see, no submitting */
+  preview?: boolean;
+  onSubmit?: (data: Record<string, unknown>) => void;
+}
+
+/** shallow compare of the fields we are about to submit against what is stored */
+function samePayload(data: Record<string, unknown>, saved: Record<string, unknown> | undefined): boolean {
+  if (!saved) return false;
+  return Object.keys(data).every((k) => JSON.stringify(data[k]) === JSON.stringify(saved[k]));
 }
 
 export function StudentBlock({
@@ -151,8 +186,11 @@ export function StudentBlock({
   saved,
   submitting,
   disabled,
+  saveState = "idle",
   feedback,
   revealed,
+  answerKey,
+  preview = false,
   onSubmit,
 }: StudentBlockProps) {
   const c = block.content ?? {};
@@ -173,6 +211,11 @@ export function StudentBlock({
     Array.isArray(saved?.["ordered_items"]) ? (saved["ordered_items"] as string[]) : arr(c, "items"),
   );
 
+  /*
+   * Local answer state is ONLY (re)seeded when the activity itself changes.
+   * Background polling of the session must never overwrite what the student
+   * is currently typing, reset scroll or steal focus.
+   */
   useEffect(() => {
     setOption(typeof saved?.["selected_option_index"] === "number" ? (saved["selected_option_index"] as number) : null);
     setText(typeof saved?.["text"] === "string" ? (saved["text"] as string) : "");
@@ -183,46 +226,99 @@ export function StudentBlock({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [block.id]);
 
-  const answered = !!saved;
-  const lock = disabled;
+  const wasUpdate = useRef(false);
 
-  const submitBar = (payload: () => Record<string, unknown> | null, label = "Indsend svar") => (
-    <div className="space-y-3 pt-2">
-      <Button
-        size="lg"
-        className="h-14 w-full rounded-2xl text-base"
-        disabled={submitting || lock}
-        onClick={() => {
-          const data = payload();
-          if (data) onSubmit(data);
-        }}
-      >
-        {submitting && <Loader2 className="size-4 animate-spin" />}
-        {answered ? "Opdatér svar" : label}
-      </Button>
-      {answered && !submitting && (
-        <p className="flex items-center justify-center gap-2 text-sm text-primary">
-          <Check className="size-4" /> Svar registreret
-        </p>
-      )}
-      {feedback && (
-        <div
-          className={`rounded-2xl p-4 text-base ${
-            feedback.correct ? "bg-primary/10 text-foreground" : "bg-accent-warm text-accent-warm-foreground"
-          }`}
+  const answered = !!saved;
+  const lock = disabled || preview;
+
+  const optionState = (i: number): "correct" | "wrong" | null => {
+    if (!answerKey) return null;
+    if (i === answerKey.correct_option_index) return "correct";
+    if (option === i && answerKey.my_correct === false) return "wrong";
+    return null;
+  };
+
+  const submitBar = (payload: () => Record<string, unknown> | null, label = "Indsend svar") => {
+    if (preview) return null;
+    const data = payload();
+    const dirty = !answered || !data || !samePayload(data, saved);
+
+    let buttonLabel = label;
+    if (saveState === "saving") buttonLabel = "Gemmer…";
+    else if (saveState === "error") buttonLabel = "Kunne ikke gemme — prøv igen";
+    else if (answered && dirty) buttonLabel = "Gem ændringer";
+    else if (answered && !dirty)
+      buttonLabel = wasUpdate.current ? "✓ Ændringer gemt" : "✓ Svar gemt";
+
+    const restingSaved = answered && !dirty && saveState !== "saving" && saveState !== "error";
+
+    return (
+      <div className="space-y-3 pt-2">
+        <Button
+          size="lg"
+          variant={saveState === "error" ? "destructive" : restingSaved ? "outline" : "default"}
+          className="h-14 w-full rounded-2xl text-base"
+          disabled={submitting || lock || saveState === "saving" || restingSaved}
+          onClick={() => {
+            if (!data || !onSubmit) return;
+            wasUpdate.current = answered;
+            onSubmit(data);
+          }}
         >
-          <p className="font-medium">{feedback.correct ? "Korrekt ✓" : "Ikke helt"}</p>
-          <p className="mt-1">{feedback.message}</p>
-        </div>
-      )}
-      {revealed && (
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <p className="mb-3 text-sm font-medium">Klassens svar</p>
-          <ResultBars summary={revealed} />
-        </div>
-      )}
-    </div>
-  );
+          {saveState === "saving" && <Loader2 className="size-4 animate-spin" />}
+          {buttonLabel}
+        </Button>
+        {restingSaved && (
+          <p className="flex items-center justify-center gap-2 text-sm text-primary">
+            <Check className="size-4" /> Dit svar er registreret
+          </p>
+        )}
+        {saveState === "error" && (
+          <p className="text-center text-sm text-destructive">
+            Dit svar er stadig her — tryk igen når du har forbindelse.
+          </p>
+        )}
+        {answerKey && (
+          <div
+            className={`rounded-2xl p-4 text-base ${
+              answerKey.my_correct
+                ? "bg-primary/10 text-foreground"
+                : "bg-accent-warm text-accent-warm-foreground"
+            }`}
+          >
+            <p className="font-medium">
+              {answerKey.my_correct === null
+                ? "Facit er vist"
+                : answerKey.my_correct
+                  ? "Korrekt ✓"
+                  : "Ikke helt"}
+            </p>
+            <p className="mt-1">
+              {answerKey.message ??
+                `Det rigtige svar er ${String.fromCharCode(65 + answerKey.correct_option_index)}.`}
+            </p>
+          </div>
+        )}
+        {feedback && (
+          <div
+            className={`rounded-2xl p-4 text-base ${
+              feedback.correct ? "bg-primary/10 text-foreground" : "bg-accent-warm text-accent-warm-foreground"
+            }`}
+          >
+            <p className="font-medium">{feedback.correct ? "Korrekt ✓" : "Ikke helt"}</p>
+            <p className="mt-1">{feedback.message}</p>
+          </div>
+        )}
+        {revealed && (
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <p className="mb-3 text-sm font-medium">Klassens svar</p>
+            <ResultBars summary={revealed} />
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   const header = (kicker: string) => (
     <div className="space-y-3">
@@ -318,8 +414,10 @@ export function StudentBlock({
                 label={o}
                 index={i}
                 selected={option === i}
-                disabled={lock}
+                disabled={lock || !!answerKey}
+                state={optionState(i)}
                 onSelect={() => setOption(i)}
+
               />
             ))}
           </div>
@@ -452,7 +550,7 @@ export function StudentBlock({
             onChange={(e) => setText(e.target.value)}
             className="min-h-40 rounded-2xl text-base"
           />
-          {submitBar(() => (text.trim() ? { text } : null), "Gem svar")}
+          {submitBar(() => (text.trim() ? { text } : null))}
         </div>
       );
 
@@ -481,7 +579,7 @@ export function StudentBlock({
               />
             </div>
           )}
-          {submitBar(() => (text.trim() ? { text, justification } : null), "Gem svar")}
+          {submitBar(() => (text.trim() ? { text, justification } : null))}
         </div>
       );
 
@@ -529,7 +627,7 @@ export function StudentBlock({
           {submitBar(() => {
             const filled = questions.map((_, i) => answers[i] ?? "");
             return filled.some((a) => a.trim()) ? { answers: filled } : null;
-          }, "Gem svar")}
+          })}
         </div>
       );
     }
@@ -582,7 +680,7 @@ export function StudentBlock({
               </li>
             ))}
           </ol>
-          {submitBar(() => ({ ordered_items: order }), "Indsend rækkefølge")}
+          {submitBar(() => ({ ordered_items: order }))}
         </div>
       );
 

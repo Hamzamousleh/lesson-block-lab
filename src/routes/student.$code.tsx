@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, WifiOff } from "lucide-react";
+import { Check, Loader2, Timer, WifiOff } from "lucide-react";
 import { setProgressFn, studentStateFn, submitResponseFn } from "@/lib/session.functions";
 import { clearToken, readToken } from "@/lib/participant";
-import { StudentBlock } from "@/components/student/StudentBlock";
+import { StudentBlock, type SaveState } from "@/components/student/StudentBlock";
 import { StudentWorldHeader, StudentWorldRecap } from "@/components/student/StudentWorldHeader";
 import { Button } from "@/components/ui/button";
 
@@ -30,6 +30,36 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function mmss(total: number): string {
+  const s = Math.max(0, Math.floor(total));
+  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+}
+
+/** Calm, non-dominant countdown. Only rendered when the teacher enabled it. */
+function StudentTimer({ endsAt, paused }: { endsAt: string | null; paused: number | null }) {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!endsAt) return;
+    const t = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(t);
+  }, [endsAt]);
+
+  const remaining = endsAt
+    ? (new Date(endsAt).getTime() - Date.now()) / 1000
+    : paused !== null
+      ? paused
+      : null;
+  if (remaining === null) return null;
+
+  return (
+    <span className="flex items-center gap-1.5 tabular-nums text-muted-foreground">
+      <Timer className="size-3.5" />
+      {remaining <= 0 ? "Tiden er gået" : `${mmss(remaining)} tilbage`}
+      {!endsAt && " (pause)"}
+    </span>
+  );
+}
+
 function StudentSession() {
   const { code } = Route.useParams();
   const navigate = useNavigate();
@@ -37,6 +67,7 @@ function StudentSession() {
   const [token, setToken] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
   const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
 
   useEffect(() => {
     const t = readToken(code);
@@ -48,7 +79,14 @@ function StudentSession() {
     queryKey: ["student-state", code],
     enabled: !!token,
     queryFn: () => studentStateFn({ data: { participant_token: token as string } }),
-    refetchInterval: 3000,
+    refetchInterval: 4000,
+    /* Background polling must be invisible: never blank the screen, never
+       surface transient fetch states, never refetch on focus/reconnect. */
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: (prev) => prev,
+    notifyOnChangeProps: ["data", "isError", "error"],
+    structuralSharing: true,
     retry: 1,
   });
 
@@ -56,14 +94,28 @@ function StudentSession() {
   const selfPaced = s?.session.mode === "self_paced";
   const index = s?.participant.progress_index ?? 0;
   const currentBlock = selfPaced ? s?.blocks[index] : s?.blocks[0];
+  const currentId = currentBlock?.id ?? null;
+
+  /* Reset the save indicator when the activity changes, not on every poll. */
+  const lastBlock = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastBlock.current !== currentId) {
+      lastBlock.current = currentId;
+      setSaveState("idle");
+      setFeedback(null);
+    }
+  }, [currentId]);
 
   const submit = useMutation({
     mutationFn: (vars: { block_id: string; response_data: Record<string, unknown> }) =>
       submitResponseFn({ data: { participant_token: token as string, ...vars } }),
+    onMutate: () => setSaveState("saving"),
     onSuccess: async (res) => {
       setFeedback(res.feedback ?? null);
+      setSaveState("saved");
       await queryClient.invalidateQueries({ queryKey: ["student-state", code] });
     },
+    onError: () => setSaveState("error"),
   });
 
   const progress = useMutation({
@@ -72,7 +124,14 @@ function StudentSession() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["student-state", code] }),
   });
 
-  if (!token || state.isLoading) {
+  const timerNode = useMemo(
+    () =>
+      s?.timer ? <StudentTimer endsAt={s.timer.ends_at} paused={s.timer.remaining_seconds} /> : null,
+    [s?.timer],
+  );
+
+  /* Only a true first load may show a loading screen. */
+  if (!token || (state.isLoading && !s)) {
     return (
       <Shell>
         <p className="flex items-center gap-2 text-muted-foreground">
@@ -82,7 +141,7 @@ function StudentSession() {
     );
   }
 
-  if (state.isError || !s) {
+  if (!s) {
     return (
       <Shell>
         <h1 className="font-display text-2xl font-semibold">Vi kunne ikke finde din deltagelse</h1>
@@ -118,16 +177,25 @@ function StudentSession() {
   const header = (
     <>
       {world && <StudentWorldHeader world={world} />}
-    <div className="mb-8 flex items-center justify-between gap-3 text-sm text-muted-foreground">
-      <span className="min-w-0 truncate">{s.lesson.title}</span>
-      <span className="flex items-center gap-2">
-        {state.isRefetching && <span className="text-xs">opdaterer …</span>}
-        {state.isError ? <WifiOff className="size-4" /> : null}
-        {s.participant.display_name}
-      </span>
-    </div>
+      <div className="mb-8 flex items-center justify-between gap-3 text-sm text-muted-foreground">
+        <span className="min-w-0 truncate">{s.lesson.title}</span>
+        <span className="flex items-center gap-3">
+          {timerNode}
+          {state.isError ? <WifiOff className="size-4" aria-label="Ingen forbindelse" /> : null}
+          <span className="truncate">{s.participant.display_name}</span>
+        </span>
+      </div>
     </>
   );
+
+  const answerKey =
+    s.answerKey && currentId && s.answerKey.block_id === currentId
+      ? {
+          correct_option_index: s.answerKey.correct_option_index,
+          my_correct: s.answerKey.my_correct,
+          message: s.answerKey.message,
+        }
+      : null;
 
   /* ---------- self-paced ---------- */
   if (selfPaced) {
@@ -193,16 +261,16 @@ function StudentSession() {
 
         {currentBlock && (
           <StudentBlock
+            key={currentBlock.id}
             block={currentBlock}
             saved={s.responses[currentBlock.id]}
             submitting={submit.isPending}
+            saveState={saveState}
             disabled={false}
             feedback={feedback}
+            answerKey={answerKey}
             onSubmit={(data) => submit.mutate({ block_id: currentBlock.id, response_data: data })}
           />
-        )}
-        {submit.isError && (
-          <p className="mt-3 text-sm text-destructive">{(submit.error as Error).message}</p>
         )}
 
         <div className="mt-10 flex gap-3">
@@ -248,18 +316,30 @@ function StudentSession() {
     );
   }
 
+  const hasAnswered = !!s.responses[currentBlock.id];
+
   return (
     <Shell>
       {header}
       <StudentBlock
+        key={currentBlock.id}
         block={currentBlock}
         saved={s.responses[currentBlock.id]}
         submitting={submit.isPending}
+        saveState={saveState}
         disabled={false}
+        answerKey={answerKey}
         revealed={s.revealed?.block_id === currentBlock.id ? s.revealed.summary : null}
         onSubmit={(data) => submit.mutate({ block_id: currentBlock.id, response_data: data })}
       />
-      {submit.isError && <p className="mt-3 text-sm text-destructive">{(submit.error as Error).message}</p>}
+      {hasAnswered && saveState !== "saving" && saveState !== "error" && (
+        <div className="mt-8 rounded-2xl bg-secondary px-5 py-4 text-center">
+          <p className="flex items-center justify-center gap-2 font-medium">
+            <Check className="size-4 text-primary" /> Dit svar er gemt
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Vent på næste aktivitet.</p>
+        </div>
+      )}
     </Shell>
   );
 }

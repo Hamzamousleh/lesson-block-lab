@@ -384,10 +384,14 @@ export type Database = {
           join_code: string
           lesson_id: string
           mode: Database["public"]["Enums"]["session_mode"]
+          reveal_answer_key: boolean
           reveal_results: boolean
           started_at: string | null
           status: Database["public"]["Enums"]["session_status"]
           teacher_id: string
+          timer_ends_at: string | null
+          timer_remaining_seconds: number | null
+          timer_show_students: boolean
           updated_at: string
           variant_label: string | null
         }
@@ -402,10 +406,14 @@ export type Database = {
           join_code: string
           lesson_id: string
           mode?: Database["public"]["Enums"]["session_mode"]
+          reveal_answer_key?: boolean
           reveal_results?: boolean
           started_at?: string | null
           status?: Database["public"]["Enums"]["session_status"]
           teacher_id: string
+          timer_ends_at?: string | null
+          timer_remaining_seconds?: number | null
+          timer_show_students?: boolean
           updated_at?: string
           variant_label?: string | null
         }
@@ -420,10 +428,14 @@ export type Database = {
           join_code?: string
           lesson_id?: string
           mode?: Database["public"]["Enums"]["session_mode"]
+          reveal_answer_key?: boolean
           reveal_results?: boolean
           started_at?: string | null
           status?: Database["public"]["Enums"]["session_status"]
           teacher_id?: string
+          timer_ends_at?: string | null
+          timer_remaining_seconds?: number | null
+          timer_show_students?: boolean
           updated_at?: string
           variant_label?: string | null
         }
