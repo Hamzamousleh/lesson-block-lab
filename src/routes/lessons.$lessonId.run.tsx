@@ -23,6 +23,7 @@ import type { LessonBlock } from "@/lib/types";
 import { BlockRenderer, revealSteps } from "@/components/run/BlockRenderer";
 import { Button } from "@/components/ui/button";
 import {
+  activeParticipants,
   participantsQuery,
   responsesQuery,
   sessionsQuery,
@@ -34,6 +35,8 @@ import { correctOptionIndex, timerLabel, toPreviewBlock, workMode } from "@/lib/
 
 export const Route = createFileRoute("/lessons/$lessonId/run")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>): { session?: string } =>
+    typeof search["session"] === "string" ? { session: search["session"] } : {},
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
@@ -100,7 +103,9 @@ function RunMode() {
   const main = useMemo(() => all.filter((b) => !b.is_fallback), [all]);
   const fallback = useMemo(() => all.filter((b) => b.is_fallback), [all]);
 
-  const [started, setStarted] = useState(false);
+  const search = Route.useSearch();
+  // Opened straight from a running student session: skip the start screen.
+  const [started, setStarted] = useState(!!search.session);
   const [useFallback, setUseFallback] = useState(false);
   const [index, setIndex] = useState(0);
   const [step, setStep] = useState(0);
@@ -123,7 +128,9 @@ function RunMode() {
   /* ---------- live student session (optional) ---------- */
   const sessions = useQuery({ ...sessionsQuery({ lessonId }), refetchInterval: 5000 });
   const liveSession =
-    (sessions.data ?? []).find((s) => s.mode === "live" && s.status !== "ended") ?? null;
+    (search.session ? (sessions.data ?? []).find((s) => s.id === search.session) : undefined) ??
+    (sessions.data ?? []).find((s) => s.mode === "live" && s.status !== "ended") ??
+    null;
   const liveId = liveSession?.id ?? "";
   const participants = useQuery({ ...participantsQuery(liveId, true), enabled: !!liveId });
   const responses = useQuery({ ...responsesQuery(liveId, true), enabled: !!liveId });
@@ -133,8 +140,23 @@ function RunMode() {
     [queryClient],
   );
 
+  /* Adopt the session's current activity once, so opening the cockpit from a
+     running session continues where the class is — instead of resetting it. */
+  const adoptedRef = useRef(false);
   useEffect(() => {
-    if (!liveSession || !current) return;
+    if (adoptedRef.current || !liveSession) return;
+    if (!main.length) return;
+    adoptedRef.current = true;
+    const i = main.findIndex((b) => b.id === liveSession.current_block_id);
+    if (i >= 0) {
+      setUseFallback(false);
+      setIndex(i);
+      setStep(0);
+    }
+  }, [liveSession, main]);
+
+  useEffect(() => {
+    if (!liveSession || !current || !adoptedRef.current) return;
     if (liveSession.current_block_id === current.id) return;
     void updateSession(liveSession.id, {
       current_block_id: current.id,
@@ -156,6 +178,16 @@ function RunMode() {
     if (timerBlockRef.current === current.id) return;
     timerBlockRef.current = current.id;
     let next: TimerState = { endsAt: null, remaining: current.duration_minutes * 60 };
+    if (liveSession && liveSession.current_block_id === current.id) {
+      if (liveSession.timer_ends_at) {
+        next = {
+          endsAt: new Date(liveSession.timer_ends_at).getTime(),
+          remaining: liveSession.timer_remaining_seconds ?? next.remaining,
+        };
+      } else if (typeof liveSession.timer_remaining_seconds === "number") {
+        next = { endsAt: null, remaining: liveSession.timer_remaining_seconds };
+      }
+    }
     try {
       const raw = window.localStorage.getItem(timerKey);
       if (raw) {
@@ -166,7 +198,7 @@ function RunMode() {
       /* ignore */
     }
     setTimer(next);
-  }, [current, timerKey]);
+  }, [current, timerKey, liveSession]);
 
   const running = timer.endsAt !== null;
   useEffect(() => {
@@ -207,7 +239,7 @@ function RunMode() {
 
   /* ---------- live responses ---------- */
   const liveAnswers = current ? (responses.data ?? []).filter((a) => a.block_id === current.id) : [];
-  const people = participants.data ?? [];
+  const people = activeParticipants(participants.data ?? [], liveSession);
   const liveNames = new Map(people.map((p) => [p.id, p.display_name]));
   const liveSummary =
     current && liveSession
@@ -454,7 +486,8 @@ function RunMode() {
         {liveSession && (
           <Link to="/sessions/$sessionId" params={{ sessionId: liveSession.id }}>
             <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
-              Elevsession · {liveSession.join_code} · {people.length} deltagere
+              Elevsession · {liveSession.join_code} · {people.length}{" "}
+              {people.length === 1 ? "deltager" : "deltagere"}
             </span>
           </Link>
         )}
@@ -509,7 +542,8 @@ function RunMode() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-lg font-semibold">Elevsvar</h2>
                   <span className="text-sm tabular-nums text-muted-foreground">
-                    Svar: {liveAnswers.length} / {people.length}
+                    Svar: {liveAnswers.filter((a) => people.some((p) => p.id === a.participant_id)).length} /{" "}
+                    {people.length}
                   </span>
                 </div>
                 <div className="mt-5">

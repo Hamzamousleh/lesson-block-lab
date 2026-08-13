@@ -235,3 +235,25 @@ export function activeSessionLabel(
 export function blockById(blocks: LessonBlock[], id: string | null): LessonBlock | undefined {
   return blocks.find((b) => b.id === id);
 }
+
+/* ---------------- participant hygiene ---------------- */
+
+/**
+ * A participant counts as present when their client has talked to the server
+ * recently. Students poll while their screen is open, so this quietly drops
+ * abandoned tabs and stale test joins without any tracking.
+ */
+export const PARTICIPANT_ACTIVE_WINDOW_MS = 15 * 60 * 1000;
+
+export function activeParticipants(
+  list: SessionParticipant[],
+  session?: Pick<StudentSession, "status"> | null,
+): SessionParticipant[] {
+  if (session?.status === "ended") return list;
+  const cutoff = Date.now() - PARTICIPANT_ACTIVE_WINDOW_MS;
+  const fresh = list.filter((p) => {
+    const t = new Date(p.last_seen_at ?? p.joined_at).getTime();
+    return Number.isFinite(t) && t >= cutoff;
+  });
+  return fresh;
+}

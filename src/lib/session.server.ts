@@ -246,7 +246,11 @@ async function sessionById(id: string) {
 
 /* ---------------- join ---------------- */
 
-export async function joinSessionByCode(input: { code: string; display_name: string }) {
+export async function joinSessionByCode(input: {
+  code: string;
+  display_name: string;
+  participant_token?: string | null | undefined;
+}) {
   const code = normalizeCode(input.code);
   const name = input.display_name.trim().slice(0, 60);
   if (!code) throw new Error("Indtast koden fra din underviser.");
@@ -260,6 +264,31 @@ export async function joinSessionByCode(input: { code: string; display_name: str
   if (error) throw new Error(error.message);
   if (!session) throw new Error("Koden findes ikke. Tjek den igen.");
   if (session.status === "ended") throw new Error("Aktiviteten er afsluttet.");
+
+  // Re-join from the same device keeps the same participant row, so a refresh
+  // or a lost tab never inflates the participant count.
+  if (input.participant_token) {
+    const { data: existing } = await supabaseAdmin
+      .from("session_participants")
+      .select("*")
+      .eq("participant_token", input.participant_token)
+      .eq("session_id", session.id)
+      .maybeSingle();
+    if (existing) {
+      const { data: updated } = await supabaseAdmin
+        .from("session_participants")
+        .update({ display_name: name, last_seen_at: new Date().toISOString() })
+        .eq("id", existing.id)
+        .select()
+        .single();
+      return {
+        participant_token: input.participant_token,
+        code: session.join_code,
+        participant_id: existing.id,
+        display_name: updated?.display_name ?? name,
+      };
+    }
+  }
 
   const participant_token = token();
   const { data: participant, error: pErr } = await supabaseAdmin

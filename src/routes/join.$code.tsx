@@ -37,7 +37,8 @@ function JoinCode() {
   }, [code, navigate]);
 
   const join = useMutation({
-    mutationFn: () => joinSessionFn({ data: { code, display_name: name } }),
+    mutationFn: () =>
+      joinSessionFn({ data: { code, display_name: name, participant_token: readToken(code) } }),
     onSuccess: (res) => {
       saveToken(code, res.participant_token);
       void navigate({ to: "/student/$code", params: { code }, replace: true });
