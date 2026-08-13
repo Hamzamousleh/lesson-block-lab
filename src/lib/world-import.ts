@@ -246,15 +246,31 @@ export async function importEpisodePackage(
       "Episoden indeholder en lektion. Knyt dit World til en klasse, før du importerer.",
     );
   }
-  const episode = opts?.asCopy
-    ? { ...pkg.episode, title: `${pkg.episode.title} (kopi)`, episode_number: episodeNumber }
-    : pkg.episode;
+
+  /* Authoritative guard — the UI check can be stale or bypassed. */
+  const existing = await fetchWorldEpisodes(world.id);
+  const clash = episodeConflict(existing, pkg.episode);
+  if (clash && !opts?.asCopy) throw new Error(clash);
+
+  const nextNumber =
+    existing.reduce((max, e) => Math.max(max, e.episode_number), 0) + 1 > episodeNumber
+      ? existing.reduce((max, e) => Math.max(max, e.episode_number), 0) + 1
+      : episodeNumber;
+
+  let episode = pkg.episode;
+  if (opts?.asCopy) {
+    let title = pkg.episode.title.trim();
+    if (existing.some((e) => normTitle(e.title) === normTitle(title))) title = `${title} (kopi)`;
+    episode = { ...pkg.episode, title, episode_number: nextNumber };
+  }
+
   return persistEpisode(
     world.id,
     world.subject,
     world.class_id,
     episode,
     teacher_id,
-    episodeNumber,
+    nextNumber,
   );
+
 }
