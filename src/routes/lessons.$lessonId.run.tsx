@@ -35,9 +35,8 @@ import { correctOptionIndex, timerLabel, toPreviewBlock, workMode } from "@/lib/
 
 export const Route = createFileRoute("/lessons/$lessonId/run")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>) => ({
-    session: typeof search["session"] === "string" ? (search["session"] as string) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { session?: string } =>
+    typeof search["session"] === "string" ? { session: search["session"] } : {},
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });

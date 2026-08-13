@@ -249,7 +249,7 @@ async function sessionById(id: string) {
 export async function joinSessionByCode(input: {
   code: string;
   display_name: string;
-  participant_token?: string | null;
+  participant_token?: string | null | undefined;
 }) {
   const code = normalizeCode(input.code);
   const name = input.display_name.trim().slice(0, 60);
