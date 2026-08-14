@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { blockDef } from "@/lib/blocks";
+import { blockMaterialFilesQuery } from "@/lib/materials";
 import type { LessonBlock } from "@/lib/types";
+import { MaterialPicker } from "@/components/materials/MaterialPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,17 +31,22 @@ export function BlockEditor({
   onClose,
   onSave,
   saving,
+  materialContext,
 }: {
   block: LessonBlock | null;
   onClose: () => void;
-  onSave: (patch: BlockDraft) => void;
+  onSave: (patch: BlockDraft, materialFileIds: string[]) => void;
   saving: boolean;
+  materialContext?: { classId?: string | null; unitId?: string | null; lessonId?: string | null };
 }) {
   const [draft, setDraft] = useState<BlockDraft | null>(null);
+  const [materialFileIds, setMaterialFileIds] = useState<string[]>([]);
+  const materialLinks = useQuery(blockMaterialFilesQuery(block?.id ?? ""));
 
   useEffect(() => {
     if (!block) {
       setDraft(null);
+      setMaterialFileIds([]);
       return;
     }
     setDraft({
@@ -49,6 +57,11 @@ export function BlockEditor({
       content: { ...(block.content ?? {}) },
     });
   }, [block]);
+
+  useEffect(() => {
+    if (!block || !materialLinks.data) return;
+    setMaterialFileIds(materialLinks.data.map((link) => link.material_file_id));
+  }, [block, materialLinks.data]);
 
   const def = block ? blockDef(block.type) : null;
 
@@ -199,6 +212,18 @@ export function BlockEditor({
                 />
               </div>
 
+              <div className="rounded-2xl border border-border/70 p-4">
+                <MaterialPicker
+                  selectedIds={materialFileIds}
+                  onChange={setMaterialFileIds}
+                  {...(materialContext ? { context: materialContext } : {})}
+                  inlineUpload
+                />
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Filerne bliver kun vist for elever, mens denne aktivitet er aktiv.
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="b-notes">Lærernoter</Label>
                 <Textarea
@@ -211,8 +236,8 @@ export function BlockEditor({
               <div className="flex gap-3">
                 <Button
                   className="rounded-full"
-                  disabled={saving}
-                  onClick={() => onSave(draft)}
+                  disabled={saving || materialLinks.isLoading}
+                  onClick={() => onSave(draft, materialFileIds)}
                 >
                   Gem aktivitet
                 </Button>

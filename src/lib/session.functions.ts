@@ -30,6 +30,20 @@ export const studentStateFn = createServerFn({ method: "POST" })
     return getStudentState(data.participant_token);
   });
 
+export const studentMaterialsFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        participant_token: z.string().min(10).max(120),
+        block_id: z.string().uuid(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { getStudentMaterials } = await import("./session.server");
+    return getStudentMaterials(data);
+  });
+
 export const submitResponseFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z

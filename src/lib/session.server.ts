@@ -21,6 +21,16 @@ export interface StudentBlockDTO {
   interactive: boolean;
 }
 
+export interface StudentMaterialDTO {
+  id: string;
+  title: string;
+  file_name: string;
+  mime_type: string;
+  file_size: number;
+  download_url: string;
+  expires_in_seconds: number;
+}
+
 /** Sanitized World context — the ONLY World data an anonymous student ever receives. */
 export interface WorldSessionContextDTO {
   world_title: string;
@@ -454,6 +464,71 @@ export async function getStudentState(participant_token: string): Promise<Studen
 
 
   };
+}
+
+/**
+ * Issue private, short-lived links only for the activity this participant may
+ * currently see. Storage paths and the service-role key never reach the client.
+ */
+export async function getStudentMaterials(input: {
+  participant_token: string;
+  block_id: string;
+}): Promise<StudentMaterialDTO[]> {
+  const participant = await participantByToken(input.participant_token);
+  const session = await sessionById(participant.session_id);
+  if (session.status === "ended") return [];
+
+  const blocks = await loadBlocks(
+    session.lesson_id,
+    (session as { variant_label?: string | null }).variant_label ?? null,
+  );
+  const allowedBlockId =
+    session.mode === "live"
+      ? session.current_block_id
+      : (blocks[participant.progress_index]?.id ?? null);
+  if (allowedBlockId !== input.block_id) {
+    throw new Error("Materialet er ikke tilgængeligt i den aktuelle aktivitet.");
+  }
+
+  const block = blocks.find((item) => item.id === input.block_id);
+  if (!block) throw new Error("Aktiviteten findes ikke i denne session.");
+
+  const { data: links, error: linkError } = await supabaseAdmin
+    .from("block_material_files")
+    .select("material_file_id")
+    .eq("lesson_block_id", block.id)
+    .order("created_at", { ascending: true });
+  if (linkError) throw new Error(linkError.message);
+  const ids = (links ?? []).map((link) => link.material_file_id);
+  if (ids.length === 0) return [];
+
+  const { data: files, error: fileError } = await supabaseAdmin
+    .from("material_files")
+    .select("id,title,file_name,mime_type,file_size,storage_path")
+    .in("id", ids);
+  if (fileError) throw new Error(fileError.message);
+
+  const byId = new Map((files ?? []).map((file) => [file.id, file]));
+  const ordered = ids.map((id) => byId.get(id)).filter((file): file is NonNullable<typeof file> => !!file);
+  const expiresInSeconds = 5 * 60;
+
+  return Promise.all(
+    ordered.map(async (file) => {
+      const { data, error } = await supabaseAdmin.storage
+        .from("material-files")
+        .createSignedUrl(file.storage_path, expiresInSeconds, { download: file.file_name });
+      if (error || !data) throw new Error(`Filen ${file.file_name} kunne ikke åbnes.`);
+      return {
+        id: file.id,
+        title: file.title,
+        file_name: file.file_name,
+        mime_type: file.mime_type,
+        file_size: file.file_size,
+        download_url: data.signedUrl,
+        expires_in_seconds: expiresInSeconds,
+      };
+    }),
+  );
 }
 
 /* ---------------- submit ---------------- */

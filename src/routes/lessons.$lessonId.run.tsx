@@ -7,7 +7,9 @@ import {
   ArrowRight,
   Check,
   Clock,
+  Download,
   Eye,
+  FileText,
   Loader2,
   Maximize2,
   Pause,
@@ -32,6 +34,13 @@ import {
 import { summarize } from "@/lib/results";
 import { ResultBars, StudentBlock } from "@/components/student/StudentBlock";
 import { correctOptionIndex, timerLabel, toPreviewBlock, workMode } from "@/lib/cockpit";
+import {
+  blockMaterialFilesQuery,
+  formatFileSize,
+  materialFilesQuery,
+  materialFileUrl,
+  materialKindLabel,
+} from "@/lib/materials";
 
 export const Route = createFileRoute("/lessons/$lessonId/run")({
   ssr: false,
@@ -119,6 +128,11 @@ function RunMode() {
 
   const current: LessonBlock | undefined = active[index];
   const totalSteps = current ? revealSteps(current) : 1;
+  const materialLinks = useQuery(blockMaterialFilesQuery(current?.id ?? ""));
+  const materialFiles = useQuery(materialFilesQuery());
+  const currentMaterials = (materialLinks.data ?? [])
+    .map((link) => (materialFiles.data ?? []).find((file) => file.id === link.material_file_id))
+    .filter((file): file is NonNullable<typeof file> => !!file);
 
   const plannedTotal = active.reduce((s, b) => s + b.duration_minutes, 0);
   const plannedStart = active.slice(0, index).reduce((s, b) => s + b.duration_minutes, 0);
@@ -518,14 +532,48 @@ function RunMode() {
               </div>
               <div className="mt-6 rounded-2xl border border-border bg-background p-5 sm:p-6">
                 {current ? (
-                  <StudentBlock
-                    key={current.id}
-                    block={toPreviewBlock(current)}
-                    saved={undefined}
-                    submitting={false}
-                    disabled
-                    preview
-                  />
+                  <>
+                    {currentMaterials.length > 0 && (
+                      <div className="mb-6 rounded-2xl border border-primary/25 bg-accent/60 p-5">
+                        <p className="flex items-center gap-2 font-semibold">
+                          <FileText className="size-5 text-primary" /> Materialer til denne aktivitet
+                        </p>
+                        <div className="mt-3 space-y-2">
+                          {currentMaterials.map((file) => (
+                            <button
+                              key={file.id}
+                              type="button"
+                              className="flex w-full min-w-0 items-center gap-3 rounded-xl border border-border/70 bg-card px-4 py-3 text-left transition-colors hover:border-primary/50"
+                              onClick={async () => {
+                                try {
+                                  window.open(await materialFileUrl(file), "_blank", "noopener,noreferrer");
+                                } catch (error) {
+                                  toast.error(error instanceof Error ? error.message : "Filen kunne ikke åbnes.");
+                                }
+                              }}
+                            >
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate font-medium">{file.title}</span>
+                                <span className="block truncate text-sm text-muted-foreground">
+                                  {file.file_name} · {materialKindLabel(file.mime_type, file.file_name)} ·{" "}
+                                  {formatFileSize(file.file_size)}
+                                </span>
+                              </span>
+                              <Download className="size-5 shrink-0 text-primary" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <StudentBlock
+                      key={current.id}
+                      block={toPreviewBlock(current)}
+                      saved={undefined}
+                      submitting={false}
+                      disabled
+                      preview
+                    />
+                  </>
                 ) : (
                   <p className="text-muted-foreground">Ingen aktiv aktivitet.</p>
                 )}

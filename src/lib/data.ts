@@ -220,7 +220,7 @@ export async function deleteBlock(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-export async function duplicateBlock(block: LessonBlock, allBlocks: LessonBlock[]): Promise<void> {
+export async function duplicateBlock(block: LessonBlock, allBlocks: LessonBlock[]): Promise<LessonBlock> {
   const teacher_id = await currentUserId();
   const copy = unwrap(
     await supabase
@@ -246,6 +246,7 @@ export async function duplicateBlock(block: LessonBlock, allBlocks: LessonBlock[
     ...allBlocks.slice(allBlocks.findIndex((b) => b.id === block.id) + 1),
   ];
   await persistOrder(reordered.map((b) => b.id));
+  return copy;
 }
 
 export async function persistOrder(orderedIds: string[]): Promise<void> {

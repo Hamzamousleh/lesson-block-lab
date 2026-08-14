@@ -1,8 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Loader2, Timer, WifiOff } from "lucide-react";
-import { setProgressFn, studentStateFn, submitResponseFn } from "@/lib/session.functions";
+import { Check, Download, FileText, Loader2, Timer, WifiOff } from "lucide-react";
+import {
+  setProgressFn,
+  studentMaterialsFn,
+  studentStateFn,
+  submitResponseFn,
+} from "@/lib/session.functions";
+import { formatFileSize, materialKindLabel } from "@/lib/materials";
 import { clearToken, readToken } from "@/lib/participant";
 import { StudentBlock, type SaveState } from "@/components/student/StudentBlock";
 import { StudentWorldHeader, StudentWorldRecap } from "@/components/student/StudentWorldHeader";
@@ -60,6 +66,49 @@ function StudentTimer({ endsAt, paused }: { endsAt: string | null; paused: numbe
   );
 }
 
+function StudentMaterials({
+  materials,
+}: {
+  materials: Array<{
+    id: string;
+    title: string;
+    file_name: string;
+    mime_type: string;
+    file_size: number;
+    download_url: string;
+  }>;
+}) {
+  if (materials.length === 0) return null;
+  return (
+    <section className="mb-6 rounded-2xl border border-primary/25 bg-accent/60 p-5">
+      <div className="flex items-center gap-2">
+        <FileText className="size-5 text-primary" />
+        <h2 className="font-semibold">Materialer til denne aktivitet</h2>
+      </div>
+      <div className="mt-3 space-y-2">
+        {materials.map((file) => (
+          <a
+            key={file.id}
+            href={file.download_url}
+            target="_blank"
+            rel="noreferrer"
+            className="flex min-w-0 items-center gap-3 rounded-xl border border-border/70 bg-card px-4 py-3 transition-colors hover:border-primary/50"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-medium">{file.title}</span>
+              <span className="block truncate text-sm text-muted-foreground">
+                {file.file_name} · {materialKindLabel(file.mime_type, file.file_name)} ·{" "}
+                {formatFileSize(file.file_size)}
+              </span>
+            </span>
+            <Download className="size-5 shrink-0 text-primary" aria-hidden="true" />
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function StudentSession() {
   const { code } = Route.useParams();
   const navigate = useNavigate();
@@ -95,6 +144,18 @@ function StudentSession() {
   const index = s?.participant.progress_index ?? 0;
   const currentBlock = selfPaced ? s?.blocks[index] : s?.blocks[0];
   const currentId = currentBlock?.id ?? null;
+
+  const materials = useQuery({
+    queryKey: ["student-materials", code, currentId],
+    enabled: !!token && !!currentId,
+    queryFn: () =>
+      studentMaterialsFn({
+        data: { participant_token: token as string, block_id: currentId as string },
+      }),
+    staleTime: 4 * 60 * 1000,
+    refetchInterval: 4 * 60 * 1000,
+    retry: 1,
+  });
 
   /* Reset the save indicator when the activity changes, not on every poll. */
   const lastBlock = useRef<string | null>(null);
@@ -260,17 +321,20 @@ function StudentSession() {
         </div>
 
         {currentBlock && (
-          <StudentBlock
-            key={currentBlock.id}
-            block={currentBlock}
-            saved={s.responses[currentBlock.id]}
-            submitting={submit.isPending}
-            saveState={saveState}
-            disabled={false}
-            feedback={feedback}
-            answerKey={answerKey}
-            onSubmit={(data) => submit.mutate({ block_id: currentBlock.id, response_data: data })}
-          />
+          <>
+            <StudentMaterials materials={materials.data ?? []} />
+            <StudentBlock
+              key={currentBlock.id}
+              block={currentBlock}
+              saved={s.responses[currentBlock.id]}
+              submitting={submit.isPending}
+              saveState={saveState}
+              disabled={false}
+              feedback={feedback}
+              answerKey={answerKey}
+              onSubmit={(data) => submit.mutate({ block_id: currentBlock.id, response_data: data })}
+            />
+          </>
         )}
 
         <div className="mt-10 flex gap-3">
@@ -321,6 +385,7 @@ function StudentSession() {
   return (
     <Shell>
       {header}
+      <StudentMaterials materials={materials.data ?? []} />
       <StudentBlock
         key={currentBlock.id}
         block={currentBlock}

@@ -20,6 +20,14 @@ export interface MaterialFile {
   updated_at: string;
 }
 
+export interface BlockMaterialFile {
+  id: string;
+  teacher_id: string;
+  lesson_block_id: string;
+  material_file_id: string;
+  created_at: string;
+}
+
 /** V1 whitelist — PDF, PPTX, DOCX and common images. */
 export const ALLOWED_MATERIAL_TYPES: Record<string, string> = {
   "application/pdf": "PDF",
@@ -89,6 +97,68 @@ export const materialFilesQuery = () =>
       return (data ?? []) as MaterialFile[];
     },
   });
+
+export const blockMaterialFilesQuery = (blockId: string) =>
+  queryOptions({
+    queryKey: ["block-material-files", blockId],
+    enabled: !!blockId,
+    queryFn: async (): Promise<BlockMaterialFile[]> => {
+      const { data, error } = await supabase
+        .from("block_material_files")
+        .select("*")
+        .eq("lesson_block_id", blockId)
+        .order("created_at", { ascending: true });
+      if (error) throw new Error(error.message);
+      return (data ?? []) as BlockMaterialFile[];
+    },
+  });
+
+/** Replace one activity's material links while leaving the files themselves untouched. */
+export async function setBlockMaterialFiles(blockId: string, materialFileIds: string[]): Promise<void> {
+  const teacher_id = await currentUserId();
+  const wanted = Array.from(new Set(materialFileIds));
+  const { data, error } = await supabase
+    .from("block_material_files")
+    .select("material_file_id")
+    .eq("lesson_block_id", blockId);
+  if (error) throw new Error("Materialerne kunne ikke hentes.");
+
+  const existing = new Set((data ?? []).map((row) => row.material_file_id));
+  const remove = [...existing].filter((id) => !wanted.includes(id));
+  const add = wanted.filter((id) => !existing.has(id));
+
+  if (remove.length > 0) {
+    const { error: removeError } = await supabase
+      .from("block_material_files")
+      .delete()
+      .eq("lesson_block_id", blockId)
+      .in("material_file_id", remove);
+    if (removeError) throw new Error("Materialerne kunne ikke fjernes fra aktiviteten.");
+  }
+
+  if (add.length > 0) {
+    const { error: addError } = await supabase.from("block_material_files").insert(
+      add.map((material_file_id) => ({
+        teacher_id,
+        lesson_block_id: blockId,
+        material_file_id,
+      })),
+    );
+    if (addError) throw new Error("Materialerne kunne ikke knyttes til aktiviteten.");
+  }
+}
+
+export async function copyBlockMaterialFiles(sourceBlockId: string, targetBlockId: string): Promise<void> {
+  const { data, error } = await supabase
+    .from("block_material_files")
+    .select("material_file_id")
+    .eq("lesson_block_id", sourceBlockId);
+  if (error) throw new Error("Aktivitetens materialer kunne ikke kopieres.");
+  await setBlockMaterialFiles(
+    targetBlockId,
+    (data ?? []).map((link) => link.material_file_id),
+  );
+}
 
 function safeName(name: string): string {
   return name

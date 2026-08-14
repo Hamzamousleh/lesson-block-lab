@@ -31,6 +31,7 @@ import {
 import { saveBlockToLibrary, saveLessonToLibrary } from "@/lib/library";
 import { blockDef } from "@/lib/blocks";
 import { lessonToText } from "@/lib/prompt";
+import { copyBlockMaterialFiles, setBlockMaterialFiles } from "@/lib/materials";
 import { LESSON_STATUS_LABEL, type LessonBlock, type LessonStatus } from "@/lib/types";
 import { ActivityPicker } from "@/components/editor/ActivityPicker";
 import { BlockEditor, type BlockDraft } from "@/components/editor/BlockEditor";
@@ -97,16 +98,28 @@ function LessonEditor() {
   });
 
   const save = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: BlockDraft }) =>
-      updateBlock(id, {
+    mutationFn: async ({
+      id,
+      patch,
+      materialFileIds,
+    }: {
+      id: string;
+      patch: BlockDraft;
+      materialFileIds: string[];
+    }) => {
+      const updated = await updateBlock(id, {
         title: patch.title,
         duration_minutes: patch.duration_minutes,
         student_instructions: patch.student_instructions || null,
         teacher_notes: patch.teacher_notes || null,
         content: patch.content,
-      }),
+      });
+      await setBlockMaterialFiles(id, materialFileIds);
+      return updated;
+    },
     onSuccess: async () => {
       await invalidateBlocks();
+      await queryClient.invalidateQueries({ queryKey: ["block-material-files"] });
       setEditing(null);
       toast.success("Aktiviteten er gemt");
     },
@@ -123,8 +136,15 @@ function LessonEditor() {
   });
 
   const dup = useMutation({
-    mutationFn: (b: LessonBlock) => duplicateBlock(b, list),
-    onSuccess: invalidateBlocks,
+    mutationFn: async (b: LessonBlock) => {
+      const copy = await duplicateBlock(b, list);
+      await copyBlockMaterialFiles(b.id, copy.id);
+      return copy;
+    },
+    onSuccess: async () => {
+      await invalidateBlocks();
+      await queryClient.invalidateQueries({ queryKey: ["block-material-files"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -503,8 +523,15 @@ function LessonEditor() {
       <BlockEditor
         block={editing}
         saving={save.isPending}
+        materialContext={{
+          classId: lesson.data.class_id,
+          unitId: lesson.data.unit_id,
+          lessonId,
+        }}
         onClose={() => setEditing(null)}
-        onSave={(patch) => editing && save.mutate({ id: editing.id, patch })}
+        onSave={(patch, materialFileIds) =>
+          editing && save.mutate({ id: editing.id, patch, materialFileIds })
+        }
       />
     </div>
   );

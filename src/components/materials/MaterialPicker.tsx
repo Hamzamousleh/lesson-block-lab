@@ -13,10 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-/**
- * Lets the teacher pick uploaded files to attach in ChatGPT.
- * CaseLab never reads the file contents — only the filenames enter the prompt.
- */
+/** Shared teacher picker for reusable material files and inline uploads. */
 export function MaterialPicker({
   selectedIds,
   onChange,
