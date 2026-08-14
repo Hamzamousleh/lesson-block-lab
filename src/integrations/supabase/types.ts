@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      block_material_files: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_block_id: string
+          material_file_id: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_block_id: string
+          material_file_id: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_block_id?: string
+          material_file_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "block_material_files_lesson_block_id_fkey"
+            columns: ["lesson_block_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "block_material_files_material_file_id_fkey"
+            columns: ["material_file_id"]
+            isOneToOne: false
+            referencedRelation: "material_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_insight_notes: {
         Row: {
           body: string
