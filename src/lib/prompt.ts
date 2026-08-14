@@ -107,6 +107,7 @@ export interface LessonPromptInput {
   priorKnowledge?: string | undefined;
   feels: string[];
   material: string;
+  attachedFiles?: string[] | undefined;
 }
 
 export function buildLessonPrompt(i: LessonPromptInput): string {
@@ -125,7 +126,7 @@ export function buildLessonPrompt(i: LessonPromptInput): string {
 
 Opgave: Lav én samlet lektion.
 
-${lines.join("\n")}${materialSection(i.material)}
+${lines.join("\n")}${materialSection(i.material)}${attachedFilesSection(i.attachedFiles ?? [])}
 
 Returnér præcis denne struktur:
 ${CASELAB_V2_LESSON_OUTPUT_CONTRACT({ duration: i.duration })}
@@ -140,6 +141,7 @@ export interface BlocksPromptInput {
   minutes: number;
   needs: string[];
   material: string;
+  attachedFiles?: string[] | undefined;
 }
 
 export function buildBlocksPrompt(i: BlocksPromptInput): string {
@@ -154,7 +156,7 @@ export function buildBlocksPrompt(i: BlocksPromptInput): string {
 
 Opgave: Lav en eller flere aktiviteter, der kan indsættes i en eksisterende lektion.
 
-${lines.join("\n")}${materialSection(i.material)}
+${lines.join("\n")}${materialSection(i.material)}${attachedFilesSection(i.attachedFiles ?? [])}
 
 Returnér præcis denne struktur:
 ${CASELAB_V2_BLOCK_OUTPUT_CONTRACT}

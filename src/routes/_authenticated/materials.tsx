@@ -2,14 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download, FileText, Loader2, Trash2, Upload } from "lucide-react";
-import { classesQuery, unitsQuery } from "@/lib/data";
+import { Download, FileText, Loader2, Pencil, Trash2, Upload } from "lucide-react";
+import { classesQuery, lessonsQuery, unitsQuery } from "@/lib/data";
 import {
   deleteMaterialFile,
   formatFileSize,
   materialFileUrl,
   materialFilesQuery,
   materialKindLabel,
+  updateMaterialFile,
   uploadMaterialFile,
   validateMaterialFile,
   type MaterialFile,
@@ -35,6 +36,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/materials")({
   head: () => ({
@@ -60,6 +69,7 @@ function MaterialsPage() {
   const files = useQuery(materialFilesQuery());
   const classes = useQuery(classesQuery());
   const units = useQuery(unitsQuery());
+  const lessons = useQuery(lessonsQuery());
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -68,8 +78,16 @@ function MaterialsPage() {
   const [note, setNote] = useState("");
   const [classId, setClassId] = useState(NONE);
   const [unitId, setUnitId] = useState(NONE);
+  const [lessonId, setLessonId] = useState(NONE);
   const [dragging, setDragging] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<MaterialFile | null>(null);
+  const [editing, setEditing] = useState<MaterialFile | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editSubject, setEditSubject] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [editClassId, setEditClassId] = useState(NONE);
+  const [editUnitId, setEditUnitId] = useState(NONE);
+  const [editLessonId, setEditLessonId] = useState(NONE);
 
   function pick(f: File | null | undefined) {
     if (!f) return;
@@ -92,6 +110,7 @@ function MaterialsPage() {
         subject: subject.trim() || null,
         class_id: classId === NONE ? null : classId,
         unit_id: unitId === NONE ? null : unitId,
+        lesson_id: lessonId === NONE ? null : lessonId,
       });
     },
     onSuccess: () => {
@@ -102,6 +121,7 @@ function MaterialsPage() {
       setSubject("");
       setClassId(NONE);
       setUnitId(NONE);
+      setLessonId(NONE);
       if (inputRef.current) inputRef.current.value = "";
       void qc.invalidateQueries({ queryKey: ["material-files"] });
     },
@@ -118,6 +138,37 @@ function MaterialsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const saveEdit = useMutation({
+    mutationFn: async () => {
+      if (!editing) throw new Error("Vælg et materiale.");
+      if (!editTitle.trim()) throw new Error("Skriv en titel.");
+      return updateMaterialFile(editing.id, {
+        title: editTitle.trim(),
+        subject: editSubject.trim() || null,
+        note: editNote.trim() || null,
+        class_id: editClassId === NONE ? null : editClassId,
+        unit_id: editUnitId === NONE ? null : editUnitId,
+        lesson_id: editLessonId === NONE ? null : editLessonId,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Materialet er opdateret.");
+      setEditing(null);
+      void qc.invalidateQueries({ queryKey: ["material-files"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function edit(f: MaterialFile) {
+    setEditing(f);
+    setEditTitle(f.title);
+    setEditSubject(f.subject ?? "");
+    setEditNote(f.note ?? "");
+    setEditClassId(f.class_id ?? NONE);
+    setEditUnitId(f.unit_id ?? NONE);
+    setEditLessonId(f.lesson_id ?? NONE);
+  }
+
   async function open(f: MaterialFile) {
     try {
       window.open(await materialFileUrl(f), "_blank", "noopener");
@@ -128,7 +179,20 @@ function MaterialsPage() {
 
   const classById = new Map((classes.data ?? []).map((c) => [c.id, c]));
   const unitById = new Map((units.data ?? []).map((u) => [u.id, u]));
+  const lessonById = new Map((lessons.data ?? []).map((l) => [l.id, l]));
   const unitOptions = (units.data ?? []).filter((u) => classId === NONE || u.class_id === classId);
+  const lessonOptions = (lessons.data ?? []).filter(
+    (l) =>
+      (classId === NONE || l.class_id === classId) && (unitId === NONE || l.unit_id === unitId),
+  );
+  const editUnitOptions = (units.data ?? []).filter(
+    (u) => editClassId === NONE || u.class_id === editClassId,
+  );
+  const editLessonOptions = (lessons.data ?? []).filter(
+    (l) =>
+      (editClassId === NONE || l.class_id === editClassId) &&
+      (editUnitId === NONE || l.unit_id === editUnitId),
+  );
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-14">
@@ -212,6 +276,7 @@ function MaterialsPage() {
               onValueChange={(v) => {
                 setClassId(v);
                 setUnitId(NONE);
+                setLessonId(NONE);
               }}
             >
               <SelectTrigger>
@@ -229,7 +294,13 @@ function MaterialsPage() {
           </div>
           <div className="space-y-2">
             <Label>Forløb (valgfri)</Label>
-            <Select value={unitId} onValueChange={setUnitId}>
+            <Select
+              value={unitId}
+              onValueChange={(v) => {
+                setUnitId(v);
+                setLessonId(NONE);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Ingen" />
               </SelectTrigger>
@@ -238,6 +309,22 @@ function MaterialsPage() {
                 {unitOptions.map((u) => (
                   <SelectItem key={u.id} value={u.id}>
                     {u.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Lektion (valgfri)</Label>
+            <Select value={lessonId} onValueChange={setLessonId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Ingen" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Ingen</SelectItem>
+                {lessonOptions.map((l) => (
+                  <SelectItem key={l.id} value={l.id}>
+                    {l.title}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -295,7 +382,12 @@ function MaterialsPage() {
                   {f.class_id && classById.get(f.class_id)
                     ? ` · ${classById.get(f.class_id)?.name}`
                     : ""}
-                  {f.unit_id && unitById.get(f.unit_id) ? ` · ${unitById.get(f.unit_id)?.title}` : ""}
+                  {f.unit_id && unitById.get(f.unit_id)
+                    ? ` · ${unitById.get(f.unit_id)?.title}`
+                    : ""}
+                  {f.lesson_id && lessonById.get(f.lesson_id)
+                    ? ` · ${lessonById.get(f.lesson_id)?.title}`
+                    : ""}
                 </p>
               </div>
               <Button
@@ -305,6 +397,15 @@ function MaterialsPage() {
                 onClick={() => void open(f)}
               >
                 <Download className="size-4" /> Åbn
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                aria-label={`Redigér ${f.title}`}
+                onClick={() => edit(f)}
+              >
+                <Pencil className="size-4" />
               </Button>
               <Button
                 variant="ghost"
@@ -340,6 +441,118 @@ function MaterialsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Redigér materiale</DialogTitle>
+            <DialogDescription>
+              Opdatér metadata og tilknytninger. Selve filen ændres ikke.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="edit-material-title">Titel</Label>
+              <Input
+                id="edit-material-title"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-material-subject">Fag (valgfri)</Label>
+              <Input
+                id="edit-material-subject"
+                value={editSubject}
+                onChange={(e) => setEditSubject(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Klasse (valgfri)</Label>
+              <Select
+                value={editClassId}
+                onValueChange={(v) => {
+                  setEditClassId(v);
+                  setEditUnitId(NONE);
+                  setEditLessonId(NONE);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Ingen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Ingen</SelectItem>
+                  {(classes.data ?? []).map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name} · {c.subject}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Forløb (valgfri)</Label>
+              <Select
+                value={editUnitId}
+                onValueChange={(v) => {
+                  setEditUnitId(v);
+                  setEditLessonId(NONE);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Ingen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Ingen</SelectItem>
+                  {editUnitOptions.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Lektion (valgfri)</Label>
+              <Select value={editLessonId} onValueChange={setEditLessonId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Ingen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Ingen</SelectItem>
+                  {editLessonOptions.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="edit-material-note">Note (valgfri)</Label>
+              <Textarea
+                id="edit-material-note"
+                value={editNote}
+                onChange={(e) => setEditNote(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>
+              Annullér
+            </Button>
+            <Button
+              onClick={() => saveEdit.mutate()}
+              disabled={saveEdit.isPending || !editTitle.trim()}
+            >
+              {saveEdit.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              Gem ændringer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

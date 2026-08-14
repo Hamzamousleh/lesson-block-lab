@@ -1468,11 +1468,12 @@ When complete, provide a short implementation report containing:
 
 Do not claim functionality was tested unless the flow was actually executed.
 
-This project was built with [Lovable](https://lovable.dev).
+This project was originally built with [Lovable](https://lovable.dev), but Lovable is not required
+to run, build, host, authenticate, or store data for CaseLab.
 
 **Live app**: https://lesson-block-lab.lovable.app
 
-## Build with Lovable
+## Optional Lovable workflow
 
 Continue developing this project in the [Lovable editor](https://lovable.dev/projects/f1e2c2c2-abc2-43c0-8ea6-bf12577046dc).
 
@@ -1480,13 +1481,34 @@ Continue developing this project in the [Lovable editor](https://lovable.dev/pro
 - **Stay in sync**: every change made in Lovable is committed straight to this repository.
 - **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
-## Development
+## Local development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+CaseLab uses Node.js and npm. `package-lock.json` is the canonical dependency lockfile.
 
 ```sh
 git clone <this-repository-url>
 cd <repository-name>
-npm i
+npm ci
+cp .env.example .env
 npm run dev
 ```
+
+Fill in `.env` with values from your Supabase project settings:
+
+- `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are used by server-side authenticated flows.
+- `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are browser-safe values embedded by Vite.
+- `SUPABASE_SERVICE_ROLE_KEY` is server-only. Never prefix it with `VITE_`, expose it to client code,
+  or commit it. Anonymous student session server functions require it.
+
+`SUPABASE_PROJECT_ID` and `VITE_SUPABASE_PROJECT_ID` are not used by the application.
+
+Build the production bundle with:
+
+```sh
+npm run build
+```
+
+Supabase schema changes live in `supabase/migrations`. Apply them with the Supabase CLI, for
+example `supabase db push`; use `supabase db reset` only against a local development database.
+The private `material-files` bucket is created by migration. Optional manual development fixtures
+live under `supabase/fixtures` and are not part of normal migration replay.

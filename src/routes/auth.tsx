@@ -2,7 +2,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { useSession } from "@/lib/use-session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,16 +65,16 @@ function AuthPage() {
 
   async function google() {
     setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
     });
-    if (result.error) {
+    if (error) {
       setBusy(false);
       toast.error("Google-login mislykkedes");
-      return;
     }
-    if (result.redirected) return;
-    navigate({ to: "/home", replace: true });
   }
 
   return (
@@ -132,7 +131,8 @@ function AuthPage() {
           </form>
 
           <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> eller <span className="h-px flex-1 bg-border" />
+            <span className="h-px flex-1 bg-border" /> eller{" "}
+            <span className="h-px flex-1 bg-border" />
           </div>
 
           <Button
@@ -157,7 +157,9 @@ function AuthPage() {
         </div>
 
         <div className="surface-card mt-6 p-6">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Elev</p>
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            Elev
+          </p>
           <h2 className="mt-1 text-lg font-semibold">Skal du deltage i undervisningen?</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Du skal ikke oprette en konto — brug bare koden fra din underviser.

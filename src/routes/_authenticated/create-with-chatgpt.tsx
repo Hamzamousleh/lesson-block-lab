@@ -2,9 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Paperclip } from "lucide-react";
 import { classesQuery, lessonsQuery, unitsQuery } from "@/lib/data";
 import { buildBlocksPrompt, buildLessonPrompt } from "@/lib/prompt";
+import { materialFilesQuery } from "@/lib/materials";
+import { MaterialPicker, selectedFileNames } from "@/components/materials/MaterialPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,6 +83,7 @@ function PromptGenerator() {
   const classes = useQuery(classesQuery());
   const units = useQuery(unitsQuery());
   const lessons = useQuery(lessonsQuery());
+  const materials = useQuery(materialFilesQuery());
 
   const [kind, setKind] = useState<"lesson" | "blocks" | null>(null);
 
@@ -99,6 +102,8 @@ function PromptGenerator() {
   const [needs, setNeeds] = useState<string[]>([]);
 
   const [material, setMaterial] = useState("");
+  const [fileIds, setFileIds] = useState<string[]>([]);
+  const [promptFiles, setPromptFiles] = useState<string[]>([]);
   const [prompt, setPrompt] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -108,6 +113,7 @@ function PromptGenerator() {
   const klass = classes.data?.find((c) => c.id === classId);
   const unit = units.data?.find((u) => u.id === unitId);
   const lesson = lessons.data?.find((l) => l.id === lessonId);
+  const attachedFiles = selectedFileNames(materials.data ?? [], fileIds);
 
   const generate = () => {
     if (!topic.trim()) {
@@ -127,6 +133,7 @@ function PromptGenerator() {
           priorKnowledge: prior,
           feels,
           material,
+          attachedFiles,
         }),
       );
     } else {
@@ -138,9 +145,11 @@ function PromptGenerator() {
           minutes: mins,
           needs,
           material,
+          attachedFiles,
         }),
       );
     }
+    setPromptFiles(attachedFiles);
     setCopied(false);
   };
 
@@ -345,6 +354,16 @@ function PromptGenerator() {
               onChange={(e) => setMaterial(e.target.value)}
               className="min-h-40 rounded-xl"
             />
+            <MaterialPicker
+              selectedIds={fileIds}
+              onChange={setFileIds}
+              context={{
+                classId: classId || null,
+                unitId: unitId === "none" ? null : unitId,
+                lessonId: lessonId === "none" ? null : lessonId,
+              }}
+              inlineUpload
+            />
           </section>
 
           <Button className="mt-6 rounded-full" onClick={generate}>
@@ -356,11 +375,19 @@ function PromptGenerator() {
       {prompt && (
         <section className="surface-card mt-6 space-y-4 p-8">
           <h2 className="text-xl font-semibold">Din prompt</h2>
-          <Textarea
-            readOnly
-            value={prompt}
-            className="min-h-72 rounded-xl font-mono text-xs"
-          />
+          {promptFiles.length > 0 && (
+            <div className="rounded-xl border border-primary/40 bg-accent p-4 text-sm">
+              <p className="flex items-center gap-2 font-medium">
+                <Paperclip className="size-4" /> Husk at vedhæfte disse filer i ChatGPT
+              </p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {promptFiles.map((fileName) => (
+                  <li key={fileName}>{fileName}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <Textarea readOnly value={prompt} className="min-h-72 rounded-xl font-mono text-xs" />
           <Button className="rounded-full" onClick={copy}>
             {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
             {copied ? "Kopieret ✓" : "Kopiér prompt"}
