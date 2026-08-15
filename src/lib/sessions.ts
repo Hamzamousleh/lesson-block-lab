@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { queryOptions } from "@tanstack/react-query";
 import type { LessonBlock } from "./types";
+import { isSessionOwnershipValid } from "./session-security";
 
 export type SessionMode = "live" | "self_paced";
 export type SessionStatus = "draft" | "active" | "ended";
@@ -68,7 +69,10 @@ function unwrap<T>(res: { data: T | null; error: { message: string } | null }): 
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 function randomCode(): string {
-  return Array.from({ length: 6 }, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join("");
+  return Array.from(
+    { length: 6 },
+    () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)],
+  ).join("");
 }
 
 /* ---------------- queries ---------------- */
@@ -105,7 +109,9 @@ export const sessionQuery = (sessionId: string) =>
   queryOptions({
     queryKey: ["session", sessionId],
     queryFn: async (): Promise<StudentSession> =>
-      unwrap(await supabase.from("sessions").select("*").eq("id", sessionId).single()) as StudentSession,
+      unwrap(
+        await supabase.from("sessions").select("*").eq("id", sessionId).single(),
+      ) as StudentSession,
   });
 
 export const participantsQuery = (sessionId: string, poll = false) =>
@@ -148,6 +154,48 @@ export async function createSession(input: {
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) throw new Error("Du er ikke logget ind.");
 
+  const [lessonResult, classResult, episodeResult] = await Promise.all([
+    supabase.from("lessons").select("id,teacher_id").eq("id", input.lesson_id).maybeSingle(),
+    input.class_id
+      ? supabase.from("classes").select("id,teacher_id").eq("id", input.class_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    input.episode_id
+      ? supabase
+          .from("world_episodes")
+          .select("id,teacher_id,world_id,lesson_id")
+          .eq("id", input.episode_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+  const worldResult = episodeResult.data
+    ? await supabase
+        .from("worlds")
+        .select("id,teacher_id")
+        .eq("id", episodeResult.data.world_id)
+        .maybeSingle()
+    : { data: null, error: null };
+
+  if (
+    lessonResult.error ||
+    classResult.error ||
+    episodeResult.error ||
+    worldResult.error ||
+    !isSessionOwnershipValid({
+      session: {
+        teacher_id: auth.user.id,
+        lesson_id: input.lesson_id,
+        class_id: input.class_id,
+        episode_id: input.episode_id ?? null,
+      },
+      lesson: lessonResult.data,
+      teacherClass: classResult.data,
+      episode: episodeResult.data,
+      world: worldResult.data,
+    })
+  ) {
+    throw new Error("Sessionen kan kun oprettes fra din egen lektion og dit eget World.");
+  }
+
   let lastError = "Sessionen kunne ikke oprettes.";
   for (let attempt = 0; attempt < 6; attempt++) {
     const { data, error } = await supabase
@@ -188,13 +236,43 @@ export async function updateSession(
     >
   >,
 ): Promise<StudentSession> {
+  if (patch.current_block_id) {
+    const { data: session, error: sessionError } = await supabase
+      .from("sessions")
+      .select("lesson_id,teacher_id")
+      .eq("id", id)
+      .maybeSingle();
+    const { data: block, error: blockError } = await supabase
+      .from("lesson_blocks")
+      .select("id,lesson_id,teacher_id")
+      .eq("id", patch.current_block_id)
+      .maybeSingle();
+    if (
+      sessionError ||
+      blockError ||
+      !session ||
+      !block ||
+      block.lesson_id !== session.lesson_id ||
+      block.teacher_id !== session.teacher_id
+    ) {
+      throw new Error("Aktiviteten hører ikke til denne session.");
+    }
+  }
 
   return unwrap(
-    await supabase.from("sessions").update(patch as never).eq("id", id).select().single(),
+    await supabase
+      .from("sessions")
+      .update(patch as never)
+      .eq("id", id)
+      .select()
+      .single(),
   ) as StudentSession;
 }
 
-export async function startSession(id: string, firstBlockId: string | null): Promise<StudentSession> {
+export async function startSession(
+  id: string,
+  firstBlockId: string | null,
+): Promise<StudentSession> {
   return updateSession(id, {
     status: "active",
     started_at: new Date().toISOString(),

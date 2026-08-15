@@ -2,11 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { LessonBlock } from "./types";
 import type { SessionParticipant, SessionResponse } from "./sessions";
 import { aliasMap, nameMap, questionOf } from "./response-insight";
-
-function cell(value: string): string {
-  const v = value.replace(/\r?\n/g, " ").trim();
-  return `"${v.replace(/"/g, '""')}"`;
-}
+import { csvCell } from "./csv-safety";
 
 function answerText(data: Record<string, unknown>, block?: LessonBlock): string {
   const parts: string[] = [];
@@ -36,7 +32,9 @@ export function responsesToCsv(input: {
   const names = nameMap(input.participants);
   const aliases = aliasMap(input.participants);
   const blockById = new Map(input.blocks.map((b) => [b.id, b]));
-  const header = ["Elev", "Aktivitet", "Type", "Spørgsmål", "Svar", "Tidspunkt"].map(cell).join(",");
+  const header = ["Elev", "Aktivitet", "Type", "Spørgsmål", "Svar", "Tidspunkt"]
+    .map(csvCell)
+    .join(",");
   const rows = input.responses.map((r) => {
     const block = blockById.get(r.block_id);
     const who = input.anonymized
@@ -50,7 +48,7 @@ export function responsesToCsv(input: {
       answerText(r.response_data ?? {}, block),
       new Date(r.submitted_at).toLocaleString("da-DK"),
     ]
-      .map(cell)
+      .map(csvCell)
       .join(",");
   });
   return `\uFEFF${[header, ...rows].join("\r\n")}`;
