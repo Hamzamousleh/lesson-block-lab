@@ -212,6 +212,13 @@ export function BlockEditor({
                 />
               </div>
 
+              <ResourceLinksEditor
+                resources={draftResources}
+                onChange={(next) =>
+                  setDraft((d) => (d ? { ...d, content: withResources(d.content, next) } : d))
+                }
+              />
+
               <div className="rounded-2xl border border-border/70 p-4">
                 <MaterialPicker
                   selectedIds={materialFileIds}
