@@ -111,6 +111,20 @@ export function resourcePreview(resource: BlockResource): ResourcePreviewInfo | 
   };
 }
 
+/** Editing view: keeps rows as typed (including incomplete URLs). */
+export function readDraftResources(content: unknown): BlockResource[] {
+  const raw = (content as Record<string, unknown> | null | undefined)?.["resources"];
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item): item is Record<string, unknown> =>
+      !!item && typeof item === "object" && !Array.isArray(item),
+    )
+    .map((item) => ({
+      title: typeof item["title"] === "string" ? item["title"] : "",
+      url: typeof item["url"] === "string" ? item["url"] : "",
+    }));
+}
+
 /** Reads resources out of a block's content, ignoring anything malformed. */
 export function readResources(content: unknown): BlockResource[] {
   const raw = (content as Record<string, unknown> | null | undefined)?.["resources"];
@@ -135,8 +149,14 @@ export function normalizeResources(raw: unknown): BlockResource[] {
 export function withResources(
   content: Record<string, unknown>,
   resources: BlockResource[],
+  { validate = true }: { validate?: boolean } = {},
 ): Record<string, unknown> {
   const next = { ...content };
+  if (!validate) {
+    if (resources.length) next["resources"] = resources;
+    else delete next["resources"];
+    return next;
+  }
   const clean = resources
     .map((r) => ({ title: (r.title ?? "").trim(), url: (r.url ?? "").trim() }))
     .filter((r) => isSafeUrl(r.url))

@@ -4,7 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import {
   INVALID_URL_MESSAGE,
   isSafeUrl,
-  readResources,
+  readDraftResources,
   withResources,
   type BlockResource,
 } from "@/lib/resources";
@@ -143,7 +143,7 @@ export function BlockEditor({
   }, [block, materialLinks.data]);
 
   const def = block ? blockDef(block.type) : null;
-  const draftResources = readResources(draft?.content);
+  const draftResources = readDraftResources(draft?.content);
 
   const setContent = (key: string, value: unknown) =>
     setDraft((d) => (d ? { ...d, content: { ...d.content, [key]: value } } : d));
@@ -295,7 +295,9 @@ export function BlockEditor({
               <ResourceLinksEditor
                 resources={draftResources}
                 onChange={(next) =>
-                  setDraft((d) => (d ? { ...d, content: withResources(d.content, next) } : d))
+                  setDraft((d) =>
+                    d ? { ...d, content: withResources(d.content, next, { validate: false }) } : d,
+                  )
                 }
               />
 
@@ -324,7 +326,12 @@ export function BlockEditor({
                 <Button
                   className="rounded-full"
                   disabled={saving || materialLinks.isLoading}
-                  onClick={() => onSave(draft, materialFileIds)}
+                  onClick={() =>
+                    onSave(
+                      { ...draft, content: withResources(draft.content, draftResources) },
+                      materialFileIds,
+                    )
+                  }
                 >
                   Gem aktivitet
                 </Button>
