@@ -3,6 +3,8 @@ import { Loader2, Check, ArrowDown, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { ResultSummary } from "@/lib/results";
+import { ResourceList } from "@/components/ResourcePreview";
+import { readResources } from "@/lib/resources";
 
 export interface StudentBlockData {
   id: string;
@@ -331,6 +333,7 @@ export function StudentBlock({
           {block.student_instructions}
         </p>
       )}
+      <ResourceList resources={readResources(block.content)} className="pt-1" />
     </div>
   );
 

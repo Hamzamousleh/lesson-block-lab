@@ -64,6 +64,9 @@ Regler:
 - Brug kun disse aktivitetstyper: ${TYPE_LIST}.
 - Følg de præcise indholdsskemaer for hver type.
 - Hver aktivitet har felterne: type, title, duration_minutes, student_instructions, teacher_notes, content.
+- En aktivitet må valgfrit have "resources": [{ "title": "...", "url": "https://..." }].
+- Opfind ALDRIG links. Medtag kun URL'er, som brugeren selv har skrevet i denne samtale.
+- Hvis brugeren kun nævner et materiale uden URL (fx "Læs kapitel 5.2 i Systime"): behold aktiviteten, beskriv materialet i teksten, og udelad "resources" helt.
 - Undervisningen er til dansk gymnasieundervisning (stx/hhx/htx).
 - Skriv på dansk, medmindre andet er angivet.
 

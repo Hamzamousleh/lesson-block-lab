@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
+import {
+  INVALID_URL_MESSAGE,
+  isSafeUrl,
+  readDraftResources,
+  withResources,
+  type BlockResource,
+} from "@/lib/resources";
+import { ResourcePreview } from "@/components/ResourcePreview";
 import { blockDef } from "@/lib/blocks";
 import { blockMaterialFilesQuery } from "@/lib/materials";
 import type { LessonBlock } from "@/lib/types";
@@ -24,6 +32,77 @@ export interface BlockDraft {
   student_instructions: string;
   teacher_notes: string;
   content: Record<string, unknown>;
+}
+
+function ResourceLinksEditor({
+  resources,
+  onChange,
+}: {
+  resources: BlockResource[];
+  onChange: (next: BlockResource[]) => void;
+}) {
+  const update = (i: number, patch: Partial<BlockResource>) =>
+    onChange(resources.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-border/70 p-4">
+      <div>
+        <p className="text-sm font-medium">Materialer og links</p>
+        <p className="text-xs text-muted-foreground">
+          Fx et kapitel i en iBog, en artikel eller en video. Eleverne ser linket i aktiviteten.
+        </p>
+      </div>
+
+      {resources.map((r, i) => {
+        const invalid = r.url.trim().length > 0 && !isSafeUrl(r.url);
+        return (
+          <div key={i} className="space-y-2 rounded-xl border border-border/60 p-3">
+            <div className="flex items-start gap-2">
+              <div className="flex-1 space-y-2">
+                <Input
+                  value={r.title}
+                  placeholder="Titel, fx Kapitel 5.2 i iBog"
+                  aria-label={`Titel på link ${i + 1}`}
+                  onChange={(e) => update(i, { title: e.target.value })}
+                />
+                <Input
+                  value={r.url}
+                  placeholder="https://…"
+                  inputMode="url"
+                  aria-label={`URL på link ${i + 1}`}
+                  aria-invalid={invalid}
+                  onChange={(e) => update(i, { url: e.target.value })}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Fjern link"
+                onClick={() => onChange(resources.filter((_, idx) => idx !== i))}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+            {invalid ? (
+              <p className="text-xs text-destructive">{INVALID_URL_MESSAGE}</p>
+            ) : isSafeUrl(r.url) ? (
+              <ResourcePreview resource={r} />
+            ) : null}
+          </div>
+        );
+      })}
+
+      <Button
+        type="button"
+        variant="outline"
+        className="rounded-full"
+        onClick={() => onChange([...resources, { title: "", url: "" }])}
+      >
+        <Plus className="size-4" /> Tilføj link
+      </Button>
+    </div>
+  );
 }
 
 export function BlockEditor({
@@ -64,6 +143,7 @@ export function BlockEditor({
   }, [block, materialLinks.data]);
 
   const def = block ? blockDef(block.type) : null;
+  const draftResources = readDraftResources(draft?.content);
 
   const setContent = (key: string, value: unknown) =>
     setDraft((d) => (d ? { ...d, content: { ...d.content, [key]: value } } : d));
@@ -212,6 +292,15 @@ export function BlockEditor({
                 />
               </div>
 
+              <ResourceLinksEditor
+                resources={draftResources}
+                onChange={(next) =>
+                  setDraft((d) =>
+                    d ? { ...d, content: withResources(d.content, next, { validate: false }) } : d,
+                  )
+                }
+              />
+
               <div className="rounded-2xl border border-border/70 p-4">
                 <MaterialPicker
                   selectedIds={materialFileIds}
@@ -237,7 +326,12 @@ export function BlockEditor({
                 <Button
                   className="rounded-full"
                   disabled={saving || materialLinks.isLoading}
-                  onClick={() => onSave(draft, materialFileIds)}
+                  onClick={() =>
+                    onSave(
+                      { ...draft, content: withResources(draft.content, draftResources) },
+                      materialFileIds,
+                    )
+                  }
                 >
                   Gem aktivitet
                 </Button>

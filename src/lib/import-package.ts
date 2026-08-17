@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { BlocksPackage, LessonPackage, PackageBlock } from "./caselab-package";
 import type { Lesson, LessonBlock } from "./types";
+import { withResources } from "./resources";
 
 async function currentUserId(): Promise<string> {
   const { data, error } = await supabase.auth.getUser();
@@ -24,7 +25,7 @@ function blockRow(
     duration_minutes: b.duration_minutes,
     student_instructions: b.student_instructions ?? null,
     teacher_notes: b.teacher_notes ?? null,
-    content: b.content as never,
+    content: withResources(b.content, b.resources ?? []) as never,
     is_fallback: isFallback,
     variant_group: b.variant_group ?? null,
     variant_label: b.variant_label ?? null,

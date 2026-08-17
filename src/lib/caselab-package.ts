@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BLOCK_TYPE_MAP, blockDef } from "./blocks";
+import { normalizeResources, type BlockResource } from "./resources";
 
 /* ---------------- types ---------------- */
 
@@ -14,6 +15,8 @@ export interface PackageBlock {
   variant_group?: string | null;
   /** Neutral level label, e.g. "Støtte", "Standard", "Udfordring". */
   variant_label?: string | null;
+  /** Optional external links (iBog chapter, article, video). */
+  resources?: BlockResource[];
 }
 
 export interface LessonPackage {
@@ -155,6 +158,11 @@ export function validateBlock(raw: unknown, index: number, errors: string[]): Pa
 
   if (errors.length) return null;
 
+  // Optional and backwards compatible: resources may sit on the block or in content.
+  const resources = normalizeResources(
+    Array.isArray(raw["resources"]) ? raw["resources"] : (content?.["resources"] ?? null),
+  );
+
   return {
     type,
     title,
@@ -165,6 +173,7 @@ export function validateBlock(raw: unknown, index: number, errors: string[]): Pa
     content: content as Record<string, unknown>,
     variant_group: typeof raw["variant_group"] === "string" ? raw["variant_group"].trim() || null : null,
     variant_label: typeof raw["variant_label"] === "string" ? raw["variant_label"].trim() || null : null,
+    ...(resources.length ? { resources } : {}),
   };
 }
 
