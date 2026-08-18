@@ -985,7 +985,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      world_apply_consequence: {
+        Args: {
+          p_changes: Json
+          p_consequence_id: string
+          p_reason_text?: string
+        }
+        Returns: Json
+      }
+      world_release_consequences: {
+        Args: {
+          p_consequence_ids: string[]
+          p_episode_id: string
+        }
+        Returns: Json
+      }
+      world_rollback_event: {
+        Args: { p_event_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       lesson_mode: "standard" | "rescue"

@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test:cockpit": "node --experimental-strip-types --test tests/cockpit-sync.test.mjs",
     "test:security": "node --experimental-strip-types --test tests/security-stabilization.test.mjs",
+    "test:worlds": "node --test tests/world-transactions.test.mjs",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

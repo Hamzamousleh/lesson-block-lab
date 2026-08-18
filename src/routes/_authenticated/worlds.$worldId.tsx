@@ -45,7 +45,9 @@ import {
   type UnlockCondition,
   type WorldConsequence,
   type WorldEpisode,
+  type WorldEvent,
   type WorldStateVar,
+  type WorldTransactionResult,
 } from "@/lib/worlds";
 import { blocksQuery } from "@/lib/data";
 import { ConsequenceEditor } from "@/components/worlds/ConsequenceEditor";
@@ -102,7 +104,7 @@ function ConsequenceCard({
   consequence: WorldConsequence;
   states: WorldStateVar[];
   episode: WorldEpisode;
-  onApplied: () => void;
+  onApplied: (result: WorldTransactionResult) => void | Promise<void>;
   onEdit: () => void;
 }) {
   const changes = pendingChangesOf(consequence);
@@ -122,13 +124,13 @@ function ConsequenceCard({
           ? `${evaluation.reason} (${evaluation.detail})`
           : evaluation.reason,
       }),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       toast.success(
         res.deferred
           ? "Konsekvensen er planlagt og mærkes i næste episode."
           : "Konsekvensen er anvendt på World-tilstanden.",
       );
-      onApplied();
+      await onApplied(res.transaction);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -222,6 +224,7 @@ function EpisodeCard({
   worldId,
   worldClassId,
   refresh,
+  onWorldTransaction,
   tone,
 }: {
   episode: WorldEpisode;
@@ -229,7 +232,8 @@ function EpisodeCard({
   states: WorldStateVar[];
   worldId: string;
   worldClassId: string | null;
-  refresh: () => void;
+  refresh: () => void | Promise<void>;
+  onWorldTransaction: (result: WorldTransactionResult) => void | Promise<void>;
   tone: "now" | "past" | "next";
 }) {
   const consequences = useQuery(consequencesQuery(worldId, episode.id));
@@ -248,8 +252,8 @@ function EpisodeCard({
 
   const setStatus = useMutation({
     mutationFn: (status: WorldEpisode["status"]) => updateEpisode(episode.id, { status }),
-    onSuccess: () => {
-      refresh();
+    onSuccess: async () => {
+      await refresh();
       toast.success("Episoden er opdateret.");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -349,7 +353,7 @@ function EpisodeCard({
             consequence={c}
             states={states}
             episode={episode}
-            onApplied={refresh}
+            onApplied={onWorldTransaction}
             onEdit={() => {
               setEditing(c);
               setEditorOpen(true);
@@ -436,23 +440,66 @@ function WorldDetail() {
   const events = useQuery(worldEventsQuery(worldId));
   const allConsequences = useQuery(consequencesQuery(worldId));
 
-  function refresh() {
-    void queryClient.invalidateQueries({ queryKey: ["world", worldId] });
-    void queryClient.invalidateQueries({ queryKey: ["world-state", worldId] });
-    void queryClient.invalidateQueries({ queryKey: ["world-episodes", worldId] });
-    void queryClient.invalidateQueries({ queryKey: ["world-events", worldId] });
-    void queryClient.invalidateQueries({ queryKey: ["world-consequences", worldId] });
-    void queryClient.invalidateQueries({ queryKey: ["world-decision"] });
+  async function refresh() {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["world", worldId] }),
+      queryClient.invalidateQueries({ queryKey: ["world-state", worldId] }),
+      queryClient.invalidateQueries({ queryKey: ["world-episodes", worldId] }),
+      queryClient.invalidateQueries({ queryKey: ["world-events", worldId] }),
+      queryClient.invalidateQueries({ queryKey: ["world-consequences", worldId] }),
+      queryClient.invalidateQueries({ queryKey: ["world-decision"] }),
+    ]);
+  }
+
+  async function reconcileTransaction(result: WorldTransactionResult) {
+    queryClient.setQueryData(["world-state", worldId], result.state);
+
+    const confirmedConsequences = [
+      ...(result.consequence ? [result.consequence] : []),
+      ...(result.consequences ?? []),
+    ];
+    if (confirmedConsequences.length > 0) {
+      queryClient.setQueriesData<WorldConsequence[]>(
+        { queryKey: ["world-consequences", worldId] },
+        (existing) =>
+          existing?.map(
+            (current) =>
+              confirmedConsequences.find((confirmed) => confirmed.id === current.id) ?? current,
+          ),
+      );
+    }
+
+    queryClient.setQueryData<WorldEvent[]>(["world-events", worldId], (existing) => {
+      if (!existing) return existing;
+      let next = result.reverted_event
+        ? existing.map((event) =>
+            event.id === result.reverted_event?.id ? result.reverted_event : event,
+          )
+        : existing;
+      if (!result.duplicate) {
+        const confirmedEvents = [
+          ...(result.event ? [result.event] : []),
+          ...(result.events ?? []),
+        ];
+        next = [
+          ...confirmedEvents.filter((event) => !next.some((current) => current.id === event.id)),
+          ...next,
+        ];
+      }
+      return next;
+    });
+
+    await refresh();
   }
 
   const undo = useMutation({
     mutationFn: async () => {
       const latest = (events.data ?? []).find((e) => !e.reverted_at && e.state_changes.length > 0);
       if (!latest) throw new Error("Der er ingen ændring at fortryde.");
-      return rollbackEvent(latest, states.data ?? []);
+      return rollbackEvent(latest);
     },
-    onSuccess: () => {
-      refresh();
+    onSuccess: async (result) => {
+      await reconcileTransaction(result);
       toast.success("Den seneste ændring er fortrudt.");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -463,8 +510,8 @@ function WorldDetail() {
 
   const checkLocks = useMutation({
     mutationFn: () => syncEpisodeLocks(list, stateList),
-    onSuccess: (n) => {
-      refresh();
+    onSuccess: async (n) => {
+      await refresh();
       toast.success(n ? `${n} episode(r) blev låst op.` : "Ingen episoder kunne låses op endnu.");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -487,8 +534,8 @@ function WorldDetail() {
         buildWorldSummary(list, stateList, events.data ?? []),
       );
     },
-    onSuccess: () => {
-      refresh();
+    onSuccess: async () => {
+      await refresh();
       toast.success("Worldet er afsluttet.");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -498,10 +545,10 @@ function WorldDetail() {
     mutationFn: async (eligible: WorldConsequence[]) => {
       const active = list.find((e) => e.status === "active") ?? list[0];
       if (!active) throw new Error("Der er ingen aktiv episode.");
-      return releasePendingConsequences(eligible, stateList, active.id);
+      return releasePendingConsequences(eligible, active.id);
     },
-    onSuccess: () => {
-      refresh();
+    onSuccess: async (result) => {
+      await reconcileTransaction(result);
       toast.success("De planlagte konsekvenser er nu synlige i World-tilstanden.");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -623,6 +670,7 @@ function WorldDetail() {
             worldId={worldId}
             worldClassId={w.class_id}
             refresh={refresh}
+            onWorldTransaction={reconcileTransaction}
             tone="now"
           />
         </section>
@@ -638,6 +686,7 @@ function WorldDetail() {
             worldId={worldId}
             worldClassId={w.class_id}
             refresh={refresh}
+            onWorldTransaction={reconcileTransaction}
             tone="past"
           />
         </section>
@@ -655,6 +704,7 @@ function WorldDetail() {
               worldId={worldId}
               worldClassId={w.class_id}
               refresh={refresh}
+              onWorldTransaction={reconcileTransaction}
               tone="next"
             />
           ))}
@@ -673,6 +723,7 @@ function WorldDetail() {
               worldId={worldId}
               worldClassId={w.class_id}
               refresh={refresh}
+              onWorldTransaction={reconcileTransaction}
               tone="past"
             />
           ))}

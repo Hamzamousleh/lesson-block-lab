@@ -169,7 +169,7 @@ export interface WorldConsequence {
   student_explanation: string | null;
   academic_rationale: string | null;
   status: ConsequenceStatus;
-  pending_changes: AppliedChange[] | null;
+  pending_changes: StateChange[] | AppliedChange[] | null;
   applied_at: string | null;
   created_at: string;
   updated_at: string;
@@ -214,6 +214,10 @@ async function currentUserId(): Promise<string> {
 
 const db = supabase as unknown as {
   from: (t: string) => any;
+  rpc: (fn: string, args: Record<string, unknown>) => Promise<{
+    data: unknown;
+    error: { message: string } | null;
+  }>;
 };
 
 /* ---------------- queries ---------------- */
@@ -544,6 +548,50 @@ export async function markEventReverted(id: string): Promise<void> {
     .update({ reverted_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw new Error(error.message);
+}
+
+export interface WorldTransactionResult {
+  duplicate: boolean;
+  deferred?: boolean;
+  applied?: AppliedChange[];
+  consequence?: WorldConsequence | null;
+  consequences?: WorldConsequence[];
+  event?: WorldEvent | null;
+  events?: WorldEvent[];
+  reverted_event?: WorldEvent;
+  state: WorldStateVar[];
+}
+
+export async function applyWorldConsequence(input: {
+  consequenceId: string;
+  changes: StateChange[];
+  reasonText: string;
+}): Promise<WorldTransactionResult> {
+  return unwrap(
+    await db.rpc("world_apply_consequence", {
+      p_consequence_id: input.consequenceId,
+      p_changes: input.changes,
+      p_reason_text: input.reasonText,
+    }),
+  ) as WorldTransactionResult;
+}
+
+export async function releaseWorldConsequences(
+  consequenceIds: string[],
+  episodeId: string,
+): Promise<WorldTransactionResult> {
+  return unwrap(
+    await db.rpc("world_release_consequences", {
+      p_consequence_ids: consequenceIds,
+      p_episode_id: episodeId,
+    }),
+  ) as WorldTransactionResult;
+}
+
+export async function rollbackWorldEvent(eventId: string): Promise<WorldTransactionResult> {
+  return unwrap(
+    await db.rpc("world_rollback_event", { p_event_id: eventId }),
+  ) as WorldTransactionResult;
 }
 
 /* ------------------------------------------------------------------ *

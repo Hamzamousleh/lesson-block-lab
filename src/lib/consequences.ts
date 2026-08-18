@@ -1,14 +1,14 @@
 import type { ResultSummary } from "./results";
 import {
-  logEvent,
-  markEventReverted,
-  updateConsequence,
-  updateStateVar,
+  applyWorldConsequence,
+  releaseWorldConsequences,
+  rollbackWorldEvent,
   type AppliedChange,
   type StateChange,
   type WorldConsequence,
   type WorldEvent,
   type WorldStateVar,
+  type WorldTransactionResult,
 } from "./worlds";
 
 /* ------------------------------------------------------------------ *
@@ -208,17 +208,12 @@ export function describeChange(s: WorldStateVar | undefined, c: StateChange): st
 
 /* ---------------- applying ---------------- */
 
-async function writeState(states: WorldStateVar[], applied: AppliedChange[]) {
-  for (const change of applied) {
-    const s = states.find((x) => x.state_key === change.state_key);
-    if (!s) continue;
-    await updateStateVar(s.id, { value: change.after as never });
-  }
-}
-
 export interface ApplyResult {
   applied: AppliedChange[];
   deferred: boolean;
+  duplicate: boolean;
+  state: WorldStateVar[];
+  transaction: WorldTransactionResult;
 }
 
 /**
@@ -242,91 +237,29 @@ export async function applyConsequence(opts: {
   if (errors.length) throw new Error(errors[0]);
   if (!applied.length) throw new Error("Konsekvensen ændrer ingenting.");
 
-  const deferred = consequence.reveal_timing === "next_episode";
-
-  if (deferred) {
-    await updateConsequence(consequence.id, {
-      status: "pending",
-      pending_changes: changes as never,
-    });
-    await logEvent({
-      world_id: consequence.world_id,
-      episode_id: consequence.episode_id,
-      consequence_id: consequence.id,
-      event_type: "consequence_scheduled",
-      title: consequence.title || "Konsekvens planlagt",
-      description: `${opts.reasonText} Effekten mærkes først i næste episode.`,
-      academic_rationale: consequence.academic_rationale,
-      state_changes: [],
-      source: "teacher",
-      student_visible: false,
-    });
-    return { applied, deferred: true };
-  }
-
-  await writeState(states, applied);
-  await updateConsequence(consequence.id, {
-    status: "applied",
-    applied_at: new Date().toISOString(),
-    pending_changes: null,
+  const result = await applyWorldConsequence({
+    consequenceId: consequence.id,
+    changes,
+    reasonText: opts.reasonText,
   });
-  await logEvent({
-    world_id: consequence.world_id,
-    episode_id: consequence.episode_id,
-    consequence_id: consequence.id,
-    event_type: "consequence",
-    title: consequence.title || "Konsekvens",
-    description: [opts.reasonText, consequence.student_explanation].filter(Boolean).join(" "),
-    academic_rationale: consequence.academic_rationale,
-    state_changes: applied,
-    source: "student_decision",
-  });
-  return { applied, deferred: false };
+  return {
+    applied: result.applied ?? applied,
+    deferred: result.deferred === true,
+    duplicate: result.duplicate,
+    state: result.state,
+    transaction: result,
+  };
 }
 
 /** Runs every consequence that was scheduled for the next episode. */
 export async function releasePendingConsequences(
   pending: WorldConsequence[],
-  states: WorldStateVar[],
   episodeId: string,
-): Promise<AppliedChange[]> {
-  let working = states;
-  const all: AppliedChange[] = [];
-  for (const c of pending) {
-    const changes = (c.pending_changes ?? c.consequence_config?.changes ?? []) as unknown;
-    const list = Array.isArray(changes)
-      ? (changes as (StateChange | AppliedChange)[]).map((x) =>
-          "operation" in x ? (x as StateChange) : ({ state_key: x.state_key, operation: "set", value: x.after as never } as StateChange),
-        )
-      : [];
-    const { applied, errors } = previewChanges(working, list);
-    if (errors.length || !applied.length) continue;
-    await writeState(working, applied);
-    working = working.map((s) => {
-      const hit = applied.find((a) => a.state_key === s.state_key);
-      return hit ? { ...s, value: hit.after } : s;
-    });
-    await updateConsequence(c.id, {
-      status: "applied",
-      applied_at: new Date().toISOString(),
-      pending_changes: null,
-    });
-    await logEvent({
-      world_id: c.world_id,
-      episode_id: episodeId,
-      consequence_id: c.id,
-      event_type: "delayed_consequence",
-      title: c.title || "Forsinket konsekvens",
-      description:
-        c.student_explanation ??
-        "En tidligere beslutning viser først sin virkning nu.",
-      academic_rationale: c.academic_rationale,
-      state_changes: applied,
-      source: "student_decision",
-    });
-    all.push(...applied);
-  }
-  return all;
+): Promise<WorldTransactionResult> {
+  return releaseWorldConsequences(
+    pending.map((consequence) => consequence.id),
+    episodeId,
+  );
 }
 
 /** Changes stored on a pending (delayed) consequence, normalised to StateChange. */
@@ -358,32 +291,9 @@ export function eligiblePendingConsequences(
 }
 
 /** Reverses the newest non-reverted event that changed state. */
-export async function rollbackEvent(event: WorldEvent, states: WorldStateVar[]): Promise<void> {
+export async function rollbackEvent(event: WorldEvent): Promise<WorldTransactionResult> {
   if (!event.state_changes.length) throw new Error("Denne hændelse ændrede ikke World-tilstanden.");
-  for (const change of event.state_changes) {
-    const s = states.find((x) => x.state_key === change.state_key);
-    if (!s) continue;
-    await updateStateVar(s.id, { value: change.before as never });
-  }
-  await markEventReverted(event.id);
-  if (event.consequence_id) {
-    await updateConsequence(event.consequence_id, { status: "idle", applied_at: null });
-  }
-  await logEvent({
-    world_id: event.world_id,
-    episode_id: event.episode_id,
-    event_type: "rollback",
-    title: `Fortrudt: ${event.title}`,
-    description: "Læreren fortrød den seneste ændring af World-tilstanden.",
-    state_changes: event.state_changes.map((c) => ({
-      state_key: c.state_key,
-      label: c.label,
-      before: c.after,
-      after: c.before,
-    })),
-    source: "teacher",
-    student_visible: false,
-  });
+  return rollbackWorldEvent(event.id);
 }
 
 /* ---------------- unlocking ---------------- */
