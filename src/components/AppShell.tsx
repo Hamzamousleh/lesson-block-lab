@@ -27,9 +27,12 @@ import {
   isNavigationItemActive,
   TEACHER_NAVIGATION,
 } from "@/lib/teacher-navigation";
+import { useDesignMode } from "@/lib/design-mode";
+import { DesignSwitch } from "@/components/design/DesignSwitch";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useSession();
+  const mode = useDesignMode();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -102,7 +105,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             </SheetContent>
           </Sheet>
           <Link to="/home" className="font-display text-xl font-semibold tracking-tight">
-            Case<span className="text-primary">Lab</span>
+            {mode === "v2" ? (
+              <>
+                Didakt<span className="text-primary">iva</span>
+              </>
+            ) : (
+              <>
+                Case<span className="text-primary">Lab</span>
+              </>
+            )}
           </Link>
           <nav aria-label="Hovednavigation" className="hidden items-center gap-1 lg:flex">
             {TEACHER_NAVIGATION.map((entry) =>
@@ -163,6 +174,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
                   {user?.email ?? "Lærer"}
                 </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DesignSwitch />
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => void signOut()}>
                   <LogOut className="size-4" /> Log ud
