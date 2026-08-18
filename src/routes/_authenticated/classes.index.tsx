@@ -41,7 +41,9 @@ function ClassesPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold">Mine klasser</h1>
-          <p className="mt-2 text-muted-foreground">Dit udgangspunkt for forløb og lektioner.</p>
+          <p className="mt-2 text-muted-foreground">
+            En klasse er dit undervisningshold. Her samler du forløb og lektioner.
+          </p>
         </div>
         <Button className="rounded-full" onClick={() => setOpen(true)}>
           <Plus className="size-4" /> Ny klasse
@@ -133,7 +135,10 @@ export function NewClassDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Ny klasse</DialogTitle>
-          <DialogDescription>Fx 2.X i Psykologi.</DialogDescription>
+          <DialogDescription>
+            Opret et undervisningshold, fx 2.X i Psykologi. Du kan tilføje forløb og lektioner
+            bagefter.
+          </DialogDescription>
         </DialogHeader>
         <form
           className="space-y-4"

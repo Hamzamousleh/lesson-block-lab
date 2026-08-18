@@ -28,11 +28,13 @@ function LessonsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold">Lektioner</h1>
-          <p className="mt-2 text-muted-foreground">Alt hvad du har bygget, samlet ét sted.</p>
+          <p className="mt-2 text-muted-foreground">
+            En lektion er en konkret undervisningsgang, som du kan redigere eller køre live.
+          </p>
         </div>
         <Button asChild className="rounded-full">
           <Link to="/lessons/new">
-            <Plus className="size-4" /> Ny lektion
+            <Plus className="size-4" /> Opret lektion
           </Link>
         </Button>
       </div>
@@ -46,9 +48,11 @@ function LessonsPage() {
       {lessons.data?.length === 0 && (
         <div className="surface-card mt-10 p-10 text-center">
           <h2 className="text-xl font-semibold">Ingen lektioner endnu</h2>
-          <p className="mt-2 text-muted-foreground">Byg din første lektion af aktiviteter.</p>
+          <p className="mt-2 text-muted-foreground">
+            Opret din første undervisningsgang, og byg den af aktiviteter.
+          </p>
           <Button asChild className="mt-6 rounded-full">
-            <Link to="/lessons/new">Ny lektion</Link>
+            <Link to="/lessons/new">Opret lektion</Link>
           </Button>
         </div>
       )}
@@ -70,12 +74,12 @@ function LessonsPage() {
               </div>
               <Button asChild className="rounded-full">
                 <Link to="/lessons/$lessonId/run" params={{ lessonId: l.id }}>
-                  Start undervisning
+                  Kør lektion
                 </Link>
               </Button>
               <Button asChild variant="outline" className="rounded-full">
                 <Link to="/lessons/$lessonId/edit" params={{ lessonId: l.id }}>
-                  Åbn lektion
+                  Redigér
                 </Link>
               </Button>
             </div>

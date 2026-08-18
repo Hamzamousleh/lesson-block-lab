@@ -17,13 +17,15 @@ import {
 } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/lessons/new")({
-  validateSearch: (search: Record<string, unknown>): { classId?: string } =>
-    typeof search["classId"] === "string" ? { classId: search["classId"] } : {},
+  validateSearch: (search: Record<string, unknown>): { classId?: string; unitId?: string } => ({
+    ...(typeof search["classId"] === "string" ? { classId: search["classId"] } : {}),
+    ...(typeof search["unitId"] === "string" ? { unitId: search["unitId"] } : {}),
+  }),
   head: () => ({
     meta: [
-      { title: "Ny lektion — CaseLab" },
+      { title: "Opret lektion — CaseLab" },
       { name: "description", content: "Opret en ny lektion og byg den op af aktiviteter." },
-      { property: "og:title", content: "Ny lektion — CaseLab" },
+      { property: "og:title", content: "Opret lektion — CaseLab" },
       { property: "og:description", content: "Opret en ny lektion og byg den op af aktiviteter." },
       { name: "robots", content: "noindex" },
     ],
@@ -39,7 +41,7 @@ function NewLesson() {
   const units = useQuery({ ...unitsQuery(classId || undefined), enabled: !!classId });
 
   const [title, setTitle] = useState("");
-  const [unitId, setUnitId] = useState("none");
+  const [unitId, setUnitId] = useState(search.unitId ?? "none");
   const [duration, setDuration] = useState(90);
   const [goal, setGoal] = useState("");
 
@@ -66,9 +68,9 @@ function NewLesson() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-14">
-      <h1 className="text-3xl font-semibold">Ny lektion</h1>
+      <h1 className="text-3xl font-semibold">Opret lektion</h1>
       <p className="mt-2 text-muted-foreground">
-        Sæt rammen — aktiviteterne bygger du i editoren bagefter.
+        En lektion er en konkret undervisningsgang. Sæt rammen, og byg aktiviteterne bagefter.
       </p>
 
       {noClasses ? (

@@ -283,7 +283,7 @@ export function ClassInsight({
               )
             }
           >
-            Lav prompt
+            Klargør til ChatGPT
           </Button>
         </div>
       </section>

@@ -26,6 +26,7 @@ import {
   duplicateLesson,
   lessonQuery,
   persistOrder,
+  unitsQuery,
   updateBlock,
   updateLesson,
 } from "@/lib/data";
@@ -80,6 +81,11 @@ function LessonEditor() {
     ...classQuery(lesson.data?.class_id ?? ""),
     enabled: !!lesson.data?.class_id,
   });
+  const units = useQuery({
+    ...unitsQuery(lesson.data?.class_id),
+    enabled: !!lesson.data?.class_id,
+  });
+  const unit = units.data?.find((item) => item.id === lesson.data?.unit_id);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editing, setEditing] = useState<LessonBlock | null>(null);
@@ -382,7 +388,7 @@ function LessonEditor() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-        <div className="flex flex-wrap items-center gap-2">
+        <nav aria-label="Brødkrummer" className="flex flex-wrap items-center gap-2">
           <Link to="/classes" className="hover:text-foreground">
             Klasser
           </Link>
@@ -398,11 +404,25 @@ function LessonEditor() {
               </Link>
             </>
           )}
-        </div>
+          {unit && (
+            <>
+              <span aria-hidden="true">/</span>
+              <span>{unit.title}</span>
+            </>
+          )}
+          {lesson.data && (
+            <>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page" className="text-foreground">
+                {lesson.data.title}
+              </span>
+            </>
+          )}
+        </nav>
         <div className="flex flex-wrap gap-2">
           <Button asChild className="rounded-full">
             <Link to="/lessons/$lessonId/run" params={{ lessonId }}>
-              <Play className="size-4" /> Start undervisning
+              <Play className="size-4" /> Kør lektion
             </Link>
           </Button>
           <Button variant="outline" className="rounded-full" onClick={() => setSessionOpen(true)}>

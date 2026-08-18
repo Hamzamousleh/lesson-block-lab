@@ -53,8 +53,7 @@ function WorldsPage() {
         <div>
           <h1 className="text-3xl font-semibold">Worlds</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            Vedvarende læringsuniverser, hvor eleverne anvender teori igen og igen på de samme
-            personer, samfund eller organisationer — og møder konsekvenserne af deres beslutninger.
+            Worlds er længere undervisningsforløb, hvor elevernes valg kan påvirke næste episode.
           </p>
         </div>
         <Button asChild className="rounded-full">
@@ -88,12 +87,7 @@ function WorldsPage() {
         {worlds.data?.map((w) => {
           const c = w.class_id ? classById.get(w.class_id) : undefined;
           return (
-            <Link
-              key={w.id}
-              to="/worlds/$worldId"
-              params={{ worldId: w.id }}
-              className="surface-card flex flex-wrap items-center gap-4 px-6 py-5 transition-colors hover:bg-secondary/40"
-            >
+            <div key={w.id} className="surface-card flex flex-wrap items-center gap-4 px-6 py-5">
               <div className="min-w-0 flex-1">
                 <p className="text-lg font-medium">{w.title}</p>
                 <p className="text-sm text-muted-foreground">
@@ -102,10 +96,12 @@ function WorldsPage() {
                 </p>
                 <WorldCard worldId={w.id} />
               </div>
-              <Button variant="outline" className="rounded-full">
-                Åbn World
+              <Button asChild className="rounded-full">
+                <Link to="/worlds/$worldId" params={{ worldId: w.id }}>
+                  Åbn World
+                </Link>
               </Button>
-            </Link>
+            </div>
           );
         })}
       </div>

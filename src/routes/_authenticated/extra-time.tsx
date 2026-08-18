@@ -174,11 +174,11 @@ function ExtraTimePage() {
             )
           }
         >
-          Lav prompt til ChatGPT
+          Klargør til ChatGPT
         </Button>
         {!canGenerate && (
           <p className="text-sm text-muted-foreground">
-            Vælg en lektion eller skriv et emne for at lave prompten.
+            Vælg en lektion eller skriv et emne for at fortsætte.
           </p>
         )}
       </section>

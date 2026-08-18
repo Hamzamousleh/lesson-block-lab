@@ -379,12 +379,12 @@ function EpisodeCard({
           <>
             <Button asChild variant="outline" size="sm" className="rounded-full">
               <Link to="/lessons/$lessonId/edit" params={{ lessonId: episode.lesson_id }}>
-                Åbn lektion
+                Redigér
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm" className="rounded-full">
               <Link to="/lessons/$lessonId/run" params={{ lessonId: episode.lesson_id }}>
-                Start undervisning
+                Kør lektion
               </Link>
             </Button>
             <Button size="sm" className="rounded-full" onClick={() => setSessionOpen(true)}>

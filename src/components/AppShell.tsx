@@ -1,6 +1,6 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, Menu, User } from "lucide-react";
+import { ChevronDown, LogOut, Menu, User } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/use-session";
@@ -22,23 +22,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-
-const navLinks = [
-  { to: "/home", label: "Hjem" },
-  { to: "/classes", label: "Klasser" },
-  { to: "/units", label: "Forløb" },
-  { to: "/lessons", label: "Lektioner" },
-  { to: "/worlds", label: "Worlds" },
-  { to: "/library", label: "Bibliotek" },
-  { to: "/materials", label: "Materialer" },
-  { to: "/sessions", label: "Sessioner" },
-] as const;
+import {
+  isNavigationGroupActive,
+  isNavigationItemActive,
+  TEACHER_NAVIGATION,
+} from "@/lib/teacher-navigation";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -68,18 +63,41 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <SheetTitle>Navigation</SheetTitle>
                 <SheetDescription>Gå til et område i CaseLab.</SheetDescription>
               </SheetHeader>
-              <nav aria-label="Mobilnavigation" className="mt-6 flex flex-col gap-1">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    onClick={() => setMenuOpen(false)}
-                    activeProps={{ className: "bg-accent text-accent-foreground" }}
-                    className="flex min-h-11 items-center rounded-xl px-4 py-2.5 font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+              <nav aria-label="Mobilnavigation" className="mt-6 flex flex-col gap-5">
+                {TEACHER_NAVIGATION.map((entry) =>
+                  entry.kind === "link" ? (
+                    <Link
+                      key={entry.to}
+                      to={entry.to}
+                      onClick={() => setMenuOpen(false)}
+                      aria-current={isNavigationItemActive(pathname, entry.to) ? "page" : undefined}
+                      className="flex min-h-11 items-center rounded-xl px-4 py-2.5 font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground"
+                    >
+                      {entry.label}
+                    </Link>
+                  ) : (
+                    <div key={entry.label}>
+                      <p className="px-4 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        {entry.label}
+                      </p>
+                      <div className="mt-1 flex flex-col gap-1">
+                        {entry.items.map((item) => (
+                          <Link
+                            key={item.to}
+                            to={item.to}
+                            onClick={() => setMenuOpen(false)}
+                            aria-current={
+                              isNavigationItemActive(pathname, item.to) ? "page" : undefined
+                            }
+                            className="flex min-h-11 items-center rounded-xl px-4 py-2.5 font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground"
+                          >
+                            {item.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ),
+                )}
               </nav>
             </SheetContent>
           </Sheet>
@@ -87,16 +105,47 @@ export function AppShell({ children }: { children: ReactNode }) {
             Case<span className="text-primary">Lab</span>
           </Link>
           <nav aria-label="Hovednavigation" className="hidden items-center gap-1 lg:flex">
-            {navLinks.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                activeProps={{ className: "bg-accent text-accent-foreground" }}
-                className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {l.label}
-              </Link>
-            ))}
+            {TEACHER_NAVIGATION.map((entry) =>
+              entry.kind === "link" ? (
+                <Link
+                  key={entry.to}
+                  to={entry.to}
+                  aria-current={isNavigationItemActive(pathname, entry.to) ? "page" : undefined}
+                  className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground"
+                >
+                  {entry.label}
+                </Link>
+              ) : (
+                <DropdownMenu key={entry.label}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={`rounded-full px-4 text-sm font-medium ${
+                        isNavigationGroupActive(pathname, entry.items)
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {entry.label} <ChevronDown aria-hidden="true" className="size-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {entry.items.map((item) => (
+                      <DropdownMenuItem key={item.to} asChild>
+                        <Link
+                          to={item.to}
+                          aria-current={
+                            isNavigationItemActive(pathname, item.to) ? "page" : undefined
+                          }
+                        >
+                          {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ),
+            )}
           </nav>
           <div className="ml-auto">
             <DropdownMenu>

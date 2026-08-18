@@ -23,7 +23,8 @@ test("mobile navigation exposes open/close and active-route semantics", () => {
   assert.match(source, /aria-label="Åbn navigation"/);
   assert.match(source, /aria-expanded=\{menuOpen\}/);
   assert.match(source, /onClick=\{\(\) => setMenuOpen\(false\)\}/);
-  assert.match(source, /activeProps=/);
+  assert.match(source, /aria-current=/);
+  assert.match(source, /TEACHER_NAVIGATION\.map/);
   assert.match(source, /min-h-11/);
 });
 

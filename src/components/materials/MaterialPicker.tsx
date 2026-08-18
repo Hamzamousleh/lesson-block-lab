@@ -84,7 +84,7 @@ export function MaterialPicker({
               className="rounded-full"
               onClick={() => setLibraryOpen((open) => !open)}
             >
-              <Library className="size-4" /> Vælg fra materialebibliotek
+              <Library className="size-4" /> Vælg fra dine materialer
             </Button>
             <Button
               type="button"

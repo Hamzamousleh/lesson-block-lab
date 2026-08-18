@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Play } from "lucide-react";
 import {
   SESSION_MODE_LABEL,
   SESSION_STATUS_LABEL,
@@ -70,9 +70,13 @@ function SessionsPage() {
             {SESSION_MODE_LABEL[s.mode]} · {SESSION_STATUS_LABEL[s.status]} · kode {s.join_code}
           </p>
         </div>
-        <Button asChild variant="outline" className="rounded-full">
+        <Button
+          asChild
+          variant={s.status === "ended" ? "outline" : "default"}
+          className="rounded-full"
+        >
           <Link to="/sessions/$sessionId" params={{ sessionId: s.id }}>
-            Åbn
+            {s.status === "ended" ? "Se resultater" : "Åbn undervisning"}
           </Link>
         </Button>
         {s.status !== "ended" && (
@@ -104,7 +108,8 @@ function SessionsPage() {
         <div>
           <h1 className="font-display text-4xl font-semibold">Elevsessioner</h1>
           <p className="mt-2 text-muted-foreground">
-            Sessioner startes fra en lektion med “Start elevsession”.
+            En session er en konkret gennemførsel af en lektion med elever. Start den fra en
+            lektion.
           </p>
         </div>
         <Button asChild variant="outline" className="rounded-full">
@@ -118,25 +123,41 @@ function SessionsPage() {
         </p>
       )}
 
-      <section className="mt-12">
-        <h2 className="text-xl font-semibold">Aktive</h2>
-        <div className="mt-4 space-y-3">
-          {active.length === 0 && !sessions.isLoading && (
-            <p className="text-muted-foreground">Ingen aktive sessioner.</p>
-          )}
-          {active.map(card)}
+      {all.length === 0 && !sessions.isLoading ? (
+        <div className="surface-card mt-10 p-10 text-center">
+          <h2 className="text-xl font-semibold">Ingen sessioner endnu</h2>
+          <p className="mx-auto mt-2 max-w-md text-muted-foreground">
+            Vælg en lektion, når du er klar til at gennemføre den live med eleverne.
+          </p>
+          <Button asChild className="mt-6 rounded-full">
+            <Link to="/lessons">
+              <Play className="size-4" /> Vælg en lektion
+            </Link>
+          </Button>
         </div>
-      </section>
+      ) : (
+        <>
+          <section className="mt-12">
+            <h2 className="text-xl font-semibold">Aktive</h2>
+            <div className="mt-4 space-y-3">
+              {active.length === 0 && (
+                <p className="text-muted-foreground">Ingen aktive sessioner.</p>
+              )}
+              {active.map(card)}
+            </div>
+          </section>
 
-      <section className="mt-12">
-        <h2 className="text-xl font-semibold">Tidligere</h2>
-        <div className="mt-4 space-y-3">
-          {past.length === 0 && !sessions.isLoading && (
-            <p className="text-muted-foreground">Ingen tidligere sessioner endnu.</p>
-          )}
-          {past.map(card)}
-        </div>
-      </section>
+          <section className="mt-12">
+            <h2 className="text-xl font-semibold">Tidligere</h2>
+            <div className="mt-4 space-y-3">
+              {past.length === 0 && (
+                <p className="text-muted-foreground">Ingen tidligere sessioner endnu.</p>
+              )}
+              {past.map(card)}
+            </div>
+          </section>
+        </>
+      )}
     </div>
   );
 }

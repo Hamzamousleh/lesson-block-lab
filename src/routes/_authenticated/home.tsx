@@ -1,6 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import {
   Activity,
   CalendarClock,
@@ -11,13 +10,13 @@ import {
   Library,
   ListChecks,
   Loader2,
+  Pencil,
   Play,
   Sparkles,
   Users,
   Zap,
 } from "lucide-react";
 import { blocksQuery, classesQuery, lessonsQuery } from "@/lib/data";
-import { loadDemoData } from "@/lib/demo";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -43,18 +42,18 @@ const primaryActions = [
     description: "Lav en lektion eller et forløb.",
     to: "/create-with-chatgpt",
   },
-  { icon: Zap, title: "Red mig", description: "Jeg skal undervise snart.", to: "/rescue" },
   {
     icon: FileText,
     title: "Brug mit materiale",
     description: "Lav undervisning ud fra dit eget materiale.",
     to: "/material-to-lesson",
   },
+  { icon: Zap, title: "Red mig", description: "Jeg skal undervise snart.", to: "/rescue" },
   {
     icon: Users,
-    title: "Elevsessioner",
-    description: "Lad eleverne svare fra deres egen enhed.",
-    to: "/sessions",
+    title: "Kør undervisning",
+    description: "Start en lektion live med eleverne.",
+    to: "/lessons",
   },
 ] as const;
 
@@ -99,22 +98,10 @@ const updatedDateFormatter = new Intl.DateTimeFormat("da-DK", {
 });
 
 function Home() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const classes = useQuery(classesQuery());
   const lessons = useQuery(lessonsQuery({ limit: 4 }));
   const lessonBlocks = useQueries({
     queries: (lessons.data ?? []).map((lesson) => blocksQuery(lesson.id)),
-  });
-
-  const demo = useMutation({
-    mutationFn: loadDemoData,
-    onSuccess: async (lessonId) => {
-      await queryClient.invalidateQueries();
-      toast.success("Demodata er indlæst");
-      navigate({ to: "/lessons/$lessonId/edit", params: { lessonId } });
-    },
-    onError: (e: Error) => toast.error(e.message),
   });
 
   const classById = new Map((classes.data ?? []).map((c) => [c.id, c]));
@@ -197,27 +184,12 @@ function Home() {
               <div>
                 <p className="text-lg font-medium">Du har ikke lavet en lektion endnu</p>
                 <p className="mt-1 text-muted-foreground">
-                  Start med en klasse, eller indlæs demodata for at se, hvordan CaseLab fungerer.
+                  Planlæg din første lektion med ChatGPT, og importér den bagefter til din klasse.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <Button asChild className="rounded-full">
-                  <Link to="/lessons/new">Opret din første lektion</Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="rounded-full"
-                  disabled={demo.isPending}
-                  onClick={() => demo.mutate()}
-                >
-                  {demo.isPending ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="size-4" />
-                  )}
-                  Indlæs demo
-                </Button>
-              </div>
+              <Button asChild className="rounded-full">
+                <Link to="/create-with-chatgpt">Planlæg din første lektion</Link>
+              </Button>
             </div>
           )}
           {lessons.data?.map((l) => {
@@ -250,14 +222,14 @@ function Home() {
                   </div>
                 </div>
                 <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
-                  <Button asChild variant="ghost" className="rounded-full">
+                  <Button asChild className="rounded-full">
                     <Link to="/lessons/$lessonId/run" params={{ lessonId: l.id }}>
                       <Play aria-hidden="true" className="size-4" /> Kør lektion
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="rounded-full">
                     <Link to="/lessons/$lessonId/edit" params={{ lessonId: l.id }}>
-                      Åbn lektion
+                      <Pencil aria-hidden="true" className="size-4" /> Redigér
                     </Link>
                   </Button>
                 </div>

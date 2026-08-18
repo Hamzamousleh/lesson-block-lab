@@ -47,7 +47,7 @@ function ResourceLinksEditor({
   return (
     <div className="space-y-3 rounded-2xl border border-border/70 p-4">
       <div>
-        <p className="text-sm font-medium">Materialer og links</p>
+        <p className="text-sm font-medium">Links til eleverne</p>
         <p className="text-xs text-muted-foreground">
           Fx et kapitel i en iBog, en artikel eller en video. Eleverne ser linket i aktiviteten.
         </p>

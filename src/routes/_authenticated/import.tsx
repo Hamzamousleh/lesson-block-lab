@@ -31,10 +31,10 @@ export const Route = createFileRoute("/_authenticated/import")({
       { title: "Importér fra ChatGPT — CaseLab" },
       {
         name: "description",
-        content: "Indsæt en CaseLab-pakke fra ChatGPT og gør den klar til undervisning.",
+        content: "Indsæt svaret fra ChatGPT, gennemgå det, og gør undervisningen klar.",
       },
       { property: "og:title", content: "Importér fra ChatGPT — CaseLab" },
-      { property: "og:description", content: "Indsæt en CaseLab-pakke og importér den." },
+      { property: "og:description", content: "Indsæt og gennemgå svaret fra ChatGPT." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -126,7 +126,7 @@ function ImportPage() {
     <div className="mx-auto max-w-3xl px-6 py-14">
       <h1 className="font-display text-4xl font-semibold">Importér fra ChatGPT</h1>
       <p className="mt-3 text-lg text-muted-foreground">
-        Indsæt en CaseLab-pakke og gør den klar til undervisning.
+        Indsæt hele svaret fra ChatGPT. Du får en forhåndsvisning, før noget gemmes.
       </p>
 
       {/* step 1 */}
@@ -135,7 +135,7 @@ function ImportPage() {
         <div className="flex flex-wrap gap-3">
           {(
             [
-              { key: "new", label: "Ny lektion" },
+              { key: "new", label: "Opret ny lektion" },
               { key: "existing", label: "Eksisterende lektion" },
             ] as { key: Target; label: string }[]
           ).map((o) => (
@@ -218,7 +218,12 @@ function ImportPage() {
 
       {/* json input */}
       <section className="surface-card mt-6 space-y-4 p-8">
-        <h2 className="text-xl font-semibold">CaseLab-pakke</h2>
+        <div>
+          <h2 className="text-xl font-semibold">Svar fra ChatGPT</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Teknisk format: CaseLab 2.0 JSON. Du behøver ikke redigere koden manuelt.
+          </p>
+        </div>
         <Textarea
           value={json}
           onChange={(e) => {
@@ -229,7 +234,7 @@ function ImportPage() {
             const text = e.clipboardData.getData("text");
             if (text) setTimeout(() => setResult(validatePackage(text)), 0);
           }}
-          placeholder="Indsæt CaseLab JSON fra ChatGPT her…"
+          placeholder="Indsæt hele svaret fra ChatGPT her …"
           className="min-h-56 rounded-xl font-mono text-xs"
         />
         <div className="flex flex-wrap gap-3">
@@ -265,7 +270,7 @@ function ImportPage() {
         {result && !result.ok && (
           <div className="rounded-xl bg-destructive/10 p-5 text-destructive">
             <p className="flex items-center gap-2 font-medium">
-              <AlertCircle className="size-4" /> Pakken kan ikke importeres endnu
+              <AlertCircle className="size-4" /> Svaret kan ikke importeres endnu
             </p>
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm">
               {result.errors.map((e, i) => (
@@ -276,7 +281,7 @@ function ImportPage() {
         )}
         {result?.ok && (
           <p className="flex items-center gap-2 font-medium text-primary">
-            <CheckCircle2 className="size-4" /> Gyldig CaseLab-pakke
+            <CheckCircle2 className="size-4" /> Svaret er klar til import
           </p>
         )}
       </section>

@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Copy } from "lucide-react";
 import { classesQuery, lessonsQuery, unitsQuery } from "@/lib/data";
 import { buildBlocksPrompt, buildLessonPrompt } from "@/lib/prompt";
+import { PromptResult } from "@/components/PromptResult";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,7 +76,7 @@ function PromptGenerator() {
   const units = useQuery(unitsQuery());
   const lessons = useQuery(lessonsQuery());
 
-  const [kind, setKind] = useState<"lesson" | "blocks" | null>(null);
+  const [kind, setKind] = useState<"lesson" | "blocks">("lesson");
 
   const [classId, setClassId] = useState("");
   const [unitId, setUnitId] = useState("none");
@@ -94,7 +94,6 @@ function PromptGenerator() {
 
   const [material, setMaterial] = useState("");
   const [prompt, setPrompt] = useState("");
-  const [copied, setCopied] = useState(false);
 
   const toggle = (arr: string[], set: (v: string[]) => void, v: string) =>
     set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
@@ -135,24 +134,14 @@ function PromptGenerator() {
         }),
       );
     }
-    setCopied(false);
-  };
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(prompt);
-      setCopied(true);
-      toast.success("Kopieret ✓");
-    } catch {
-      toast.error("Prompten kunne ikke kopieres. Markér teksten og kopiér manuelt.");
-    }
   };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-14">
       <h1 className="font-display text-4xl font-semibold">Planlæg med ChatGPT</h1>
       <p className="mt-3 text-lg text-muted-foreground">
-        CaseLab samler det vigtigste, så ChatGPT kan lave undervisningen i det rigtige format.
+        Fortæl hvad du skal undervise i. CaseLab klargør instruktionen, som du selv tager med til
+        ChatGPT.
       </p>
 
       <section className="surface-card mt-8 space-y-5 p-4 sm:mt-10 sm:p-8">
@@ -243,36 +232,42 @@ function PromptGenerator() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="planning-goal">Læringsmål (valgfrit)</Label>
-            <Textarea
-              id="planning-goal"
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
-              className="rounded-xl"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Hvad ved eleverne allerede? (valgfrit)</Label>
-            <Textarea
-              value={prior}
-              onChange={(e) => setPrior(e.target.value)}
-              className="rounded-xl"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Hvordan skal undervisningen føles?</Label>
-            <div className="flex flex-wrap gap-2">
-              {FEELS.map((f) => (
-                <Chip
-                  key={f}
-                  label={f}
-                  active={feels.includes(f)}
-                  onClick={() => toggle(feels, setFeels, f)}
+          <details className="rounded-xl border border-border p-4">
+            <summary className="cursor-pointer font-medium">Tilpas lektionen (valgfrit)</summary>
+            <div className="mt-5 space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="planning-goal">Læringsmål</Label>
+                <Textarea
+                  id="planning-goal"
+                  value={goal}
+                  onChange={(e) => setGoal(e.target.value)}
+                  className="rounded-xl"
                 />
-              ))}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="planning-prior">Hvad ved eleverne allerede?</Label>
+                <Textarea
+                  id="planning-prior"
+                  value={prior}
+                  onChange={(e) => setPrior(e.target.value)}
+                  className="rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Hvordan skal undervisningen føles?</Label>
+                <div className="flex flex-wrap gap-2">
+                  {FEELS.map((f) => (
+                    <Chip
+                      key={f}
+                      label={f}
+                      active={feels.includes(f)}
+                      onClick={() => toggle(feels, setFeels, f)}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          </details>
         </section>
       )}
 
@@ -346,7 +341,7 @@ function PromptGenerator() {
           <section className="surface-card mt-6 space-y-3 p-8">
             <h2 className="text-xl font-semibold">Fagligt materiale</h2>
             <p className="text-muted-foreground">
-              Indsæt tekst fra iBog, egne noter eller andet materiale.
+              Indsæt tekst eller egne noter. Indholdet bruges kun i den instruktion, du kopierer.
             </p>
             <Textarea
               value={material}
@@ -356,34 +351,12 @@ function PromptGenerator() {
           </section>
 
           <Button className="mt-6 rounded-full" onClick={generate}>
-            Lav ChatGPT-prompt
+            Klargør til ChatGPT
           </Button>
         </>
       )}
 
-      {prompt && (
-        <section className="surface-card mt-6 space-y-4 p-8">
-          <h2 className="text-xl font-semibold">Din prompt</h2>
-          <Textarea readOnly value={prompt} className="min-h-72 rounded-xl font-mono text-xs" />
-          <Button className="rounded-full" onClick={copy}>
-            {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-            {copied ? "Kopieret ✓" : "Kopiér prompt"}
-          </Button>
-
-          <div className="rounded-xl bg-secondary/40 p-6">
-            <h3 className="font-semibold">Sådan gør du</h3>
-            <ol className="mt-3 list-decimal space-y-1 pl-5 text-muted-foreground">
-              <li>Indsæt prompten i ChatGPT</li>
-              <li>Kopiér JSON-svaret</li>
-              <li>Vend tilbage til CaseLab</li>
-              <li>Importér pakken</li>
-            </ol>
-            <Button asChild variant="outline" className="mt-4 rounded-full">
-              <Link to="/import">Gå til import</Link>
-            </Button>
-          </div>
-        </section>
-      )}
+      {prompt && <PromptResult prompt={prompt} />}
     </div>
   );
 }

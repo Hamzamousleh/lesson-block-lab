@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Play, Plus } from "lucide-react";
 import { classQuery, createUnit, lessonsQuery, unitsQuery, updateUnit } from "@/lib/data";
 import { UNIT_STATUS_LABEL, type UnitStatus } from "@/lib/types";
 import { ClassInsight } from "@/components/class/ClassInsight";
@@ -70,14 +70,17 @@ function ClassPage() {
           {klass.data.school_year && (
             <p className="mt-1 text-sm text-muted-foreground">{klass.data.school_year}</p>
           )}
+          <p className="mt-3 max-w-xl text-sm text-muted-foreground">
+            Forløb samler et fagligt tema. Lektioner er de konkrete undervisningsgange.
+          </p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" className="rounded-full" onClick={() => setUnitOpen(true)}>
-            <Plus className="size-4" /> Nyt forløb
+            <Plus className="size-4" /> Opret forløb
           </Button>
           <Button asChild className="rounded-full">
             <Link to="/lessons/new" search={{ classId }}>
-              <Plus className="size-4" /> Ny lektion
+              <Plus className="size-4" /> Opret lektion
             </Link>
           </Button>
         </div>
@@ -110,7 +113,7 @@ function ClassPage() {
               </p>
               <Button asChild className="mt-5 rounded-full">
                 <Link to="/lessons/new" search={{ classId }}>
-                  <Plus className="size-4" /> Ny lektion
+                  <Plus className="size-4" /> Opret lektion i denne klasse
                 </Link>
               </Button>
             </div>
@@ -126,9 +129,14 @@ function ClassPage() {
                     : ""}
                 </p>
               </div>
+              <Button asChild className="rounded-full">
+                <Link to="/lessons/$lessonId/run" params={{ lessonId: l.id }}>
+                  <Play className="size-4" /> Kør lektion
+                </Link>
+              </Button>
               <Button asChild variant="outline" className="rounded-full">
                 <Link to="/lessons/$lessonId/edit" params={{ lessonId: l.id }}>
-                  Åbn lektion
+                  Redigér
                 </Link>
               </Button>
             </div>
@@ -139,7 +147,17 @@ function ClassPage() {
       <section className="mt-14">
         <h2 className="text-xl font-semibold">Forløb</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          {units.data?.length === 0 && <p className="text-muted-foreground">Ingen forløb endnu.</p>}
+          {units.data?.length === 0 && (
+            <div className="surface-card p-8 sm:col-span-2">
+              <p className="text-lg font-medium">Ingen forløb endnu</p>
+              <p className="mt-1 text-muted-foreground">
+                Opret et fagligt tema, så lektionerne får en tydelig sammenhæng.
+              </p>
+              <Button className="mt-5 rounded-full" onClick={() => setUnitOpen(true)}>
+                <Plus className="size-4" /> Opret forløb i denne klasse
+              </Button>
+            </div>
+          )}
           {units.data?.map((u) => (
             <UnitCard
               key={u.id}
@@ -196,6 +214,11 @@ function UnitCard({
           ))}
         </SelectContent>
       </Select>
+      <Button asChild variant="outline" className="mt-auto rounded-full">
+        <Link to="/lessons/new" search={{ classId, unitId }}>
+          <Plus className="size-4" /> Opret lektion i forløbet
+        </Link>
+      </Button>
     </div>
   );
 }
@@ -232,7 +255,9 @@ function NewUnitDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Nyt forløb</DialogTitle>
-          <DialogDescription>Fx Socialpsykologi eller Politik og demokrati.</DialogDescription>
+          <DialogDescription>
+            Et forløb er et fagligt tema med en eller flere lektioner, fx Socialpsykologi.
+          </DialogDescription>
         </DialogHeader>
         <form
           className="space-y-4"

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -128,7 +128,8 @@ function LibraryPage() {
     <div className="mx-auto max-w-4xl px-6 py-14">
       <h1 className="font-display text-4xl font-semibold">Mit bibliotek</h1>
       <p className="mt-3 text-lg text-muted-foreground">
-        Gem dine bedste aktiviteter og lektioner, og genbrug dem i andre klasser.
+        Gemte undervisningselementer, du kan genbruge: aktiviteter, lektioner og eksempler på
+        elevsvar. Dine filer ligger under Materialer.
       </p>
 
       <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -143,6 +144,7 @@ function LibraryPage() {
           <Button
             key={t.key}
             variant={filter === t.key ? "default" : "outline"}
+            aria-pressed={filter === t.key}
             className="rounded-full"
             onClick={() => setFilter(t.key)}
           >
@@ -173,6 +175,9 @@ function LibraryPage() {
             <p className="mt-1 text-muted-foreground">
               Gem en aktivitet fra lektionseditoren med “Gem i bibliotek”.
             </p>
+            <Button asChild className="mt-5 rounded-full">
+              <Link to="/lessons">Gå til lektioner</Link>
+            </Button>
           </div>
         )}
         {filtered.map((i) => (

@@ -68,8 +68,8 @@ function MaterialToLesson() {
     <div className="mx-auto max-w-3xl px-6 py-14">
       <h1 className="font-display text-4xl font-semibold">Brug mit materiale</h1>
       <p className="mt-2 text-muted-foreground">
-        Indsæt dine noter eller en tekst — eller vedhæft en uploadet fil — så laver ChatGPT
-        undervisning ud fra netop dét.
+        Brug tekst eller egne filer som grundlag. CaseLab klargør instruktionen; du sender selv det
+        valgte videre til ChatGPT.
       </p>
 
       <section className="surface-card mt-8 space-y-6 p-8">
@@ -162,6 +162,7 @@ function MaterialToLesson() {
                 key={o.v}
                 type="button"
                 variant={outputType === o.v ? "default" : "outline"}
+                aria-pressed={outputType === o.v}
                 className="rounded-full"
                 onClick={() => setOutputType(o.v)}
               >
@@ -171,24 +172,28 @@ function MaterialToLesson() {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label>Karakter (valgfri)</Label>
-          <div className="flex flex-wrap gap-2">
-            {FEELS.map((f) => (
-              <Button
-                key={f}
-                type="button"
-                variant={feels.includes(f) ? "default" : "outline"}
-                className="rounded-full"
-                onClick={() =>
-                  setFeels((cur) => (cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]))
-                }
-              >
-                {f}
-              </Button>
-            ))}
+        <details className="rounded-xl border border-border p-4">
+          <summary className="cursor-pointer font-medium">Tilpas resultatet (valgfrit)</summary>
+          <div className="mt-4 space-y-2">
+            <Label>Hvordan skal undervisningen føles?</Label>
+            <div className="flex flex-wrap gap-2">
+              {FEELS.map((f) => (
+                <Button
+                  key={f}
+                  type="button"
+                  variant={feels.includes(f) ? "default" : "outline"}
+                  aria-pressed={feels.includes(f)}
+                  className="rounded-full"
+                  onClick={() =>
+                    setFeels((cur) => (cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]))
+                  }
+                >
+                  {f}
+                </Button>
+              ))}
+            </div>
           </div>
-        </div>
+        </details>
 
         <Button
           size="lg"
@@ -211,7 +216,7 @@ function MaterialToLesson() {
             );
           }}
         >
-          Lav prompt
+          Klargør til ChatGPT
         </Button>
         {material.trim().length < 40 && attachedFiles.length === 0 && (
           <p className="text-sm text-muted-foreground">

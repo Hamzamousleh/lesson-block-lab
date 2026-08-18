@@ -51,8 +51,7 @@ export const Route = createFileRoute("/_authenticated/materials")({
       { title: "Materialer — CaseLab" },
       {
         name: "description",
-        content:
-          "Upload PowerPoints, PDF'er, Word-dokumenter og billeder, og brug dem i dine ChatGPT-prompts.",
+        content: "Saml dine egne undervisningsfiler og knyt dem til undervisningen.",
       },
       { property: "og:title", content: "Materialer — CaseLab" },
       { property: "og:description", content: "Dine egne undervisningsfiler samlet ét sted." },
@@ -198,8 +197,12 @@ function MaterialsPage() {
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-14">
       <h1 className="font-display text-4xl font-semibold">Materialer</h1>
       <p className="mt-2 text-muted-foreground">
-        Upload dine PowerPoints, PDF'er, Word-dokumenter og billeder — og vedhæft dem i ChatGPT, når
-        du laver undervisning.
+        Dine egne filer og kilder. Knyt dem til en klasse, et forløb, en lektion eller en konkret
+        aktivitet i lektionseditoren.
+      </p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Bruger du en fil til planlægning med ChatGPT, vedhæfter du den selv — platformen læser eller
+        sender ikke filen automatisk.
       </p>
 
       <section className="surface-card mt-8 space-y-6 p-4 sm:p-8">
@@ -379,7 +382,19 @@ function MaterialsPage() {
           </div>
         )}
         {files.data?.length === 0 && (
-          <p className="mt-4 text-muted-foreground">Du har ikke uploadet filer endnu.</p>
+          <div className="surface-card mt-4 border-dashed p-8 text-center">
+            <p className="text-lg font-medium">Ingen materialer endnu</p>
+            <p className="mt-1 text-muted-foreground">
+              Upload din første fil, så du kan knytte den til undervisningen.
+            </p>
+            <Button
+              type="button"
+              className="mt-5 rounded-full"
+              onClick={() => inputRef.current?.click()}
+            >
+              Vælg første fil
+            </Button>
+          </div>
         )}
         <ul className="mt-6 space-y-3">
           {(files.data ?? []).map((f) => (

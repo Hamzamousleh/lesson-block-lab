@@ -236,7 +236,7 @@ function DifferentiatePage() {
             );
           }}
         >
-          Lav prompt
+          Klargør til ChatGPT
         </Button>
       </section>
 

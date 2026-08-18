@@ -382,7 +382,7 @@ function FollowUpPage() {
               </p>
             </div>
             <Button className="rounded-full" onClick={generate}>
-              Lav prompt
+              Klargør til ChatGPT
             </Button>
           </section>
 

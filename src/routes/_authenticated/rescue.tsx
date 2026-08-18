@@ -58,8 +58,8 @@ function RescuePage() {
       <p className="text-sm font-medium text-primary">⚡ Red mig</p>
       <h1 className="mt-2 font-display text-4xl font-semibold">Nødundervisning på få minutter</h1>
       <p className="mt-3 text-lg text-muted-foreground">
-        Svar på det nødvendige. Så laver vi en prompt, der giver dig en lektion, du kan undervise
-        med det samme.
+        Svar på det nødvendige. Så klargør CaseLab en instruktion til ChatGPT, der giver dig en
+        lektion, du kan undervise med det samme.
       </p>
 
       <section className="surface-card mt-8 space-y-6 p-4 sm:mt-10 sm:p-8">
@@ -166,10 +166,10 @@ function RescuePage() {
             )
           }
         >
-          Lav nødprompt
+          Klargør til ChatGPT
         </Button>
         {!canGenerate && (
-          <p className="text-sm text-muted-foreground">Skriv et emne for at lave prompten.</p>
+          <p className="text-sm text-muted-foreground">Skriv et emne for at fortsætte.</p>
         )}
       </section>
 

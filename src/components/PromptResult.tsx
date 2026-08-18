@@ -20,7 +20,7 @@ export function PromptResult({
     try {
       await navigator.clipboard.writeText(prompt);
       setCopied(true);
-      toast.success("Prompten er kopieret ✓");
+      toast.success("Klar til ChatGPT ✓");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Kunne ikke kopiere automatisk. Markér teksten og kopiér manuelt.");
@@ -29,7 +29,13 @@ export function PromptResult({
 
   return (
     <section className="surface-card mt-6 space-y-4 p-8">
-      <h2 className="text-xl font-semibold">Din prompt</h2>
+      <div>
+        <h2 className="text-xl font-semibold">Klar til ChatGPT</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          CaseLab har klargjort instruktionen, men har ikke sendt noget. Du vælger selv, hvad du
+          kopierer til ChatGPT.
+        </p>
+      </div>
       {attachedFiles.length > 0 && (
         <div className="rounded-xl border border-primary/40 bg-accent p-4 text-sm">
           <p className="flex items-center gap-2 font-medium">
@@ -45,7 +51,7 @@ export function PromptResult({
       <Textarea readOnly value={prompt} className="min-h-64 rounded-xl font-mono text-xs" />
       <div className="flex flex-wrap gap-3">
         <Button className="rounded-full" onClick={() => void copy()}>
-          {copied ? <Check className="size-4" /> : <Copy className="size-4" />} Kopiér prompt
+          {copied ? <Check className="size-4" /> : <Copy className="size-4" />} Kopiér til ChatGPT
         </Button>
         <Button asChild variant="outline" className="rounded-full">
           <a href="https://chatgpt.com" target="_blank" rel="noreferrer">
@@ -59,10 +65,10 @@ export function PromptResult({
         </Button>
       </div>
       <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
-        <li>Kopiér prompten.</li>
-        <li>Indsæt den i ChatGPT{attachedFiles.length ? " — og vedhæft filerne ovenfor" : ""}.</li>
-        <li>Kopiér hele JSON-svaret.</li>
-        <li>Indsæt det under Importér, og gennemgå det.</li>
+        <li>Kopiér instruktionen, og åbn ChatGPT.</li>
+        <li>Indsæt den{attachedFiles.length ? " — og vedhæft selv filerne ovenfor" : ""}.</li>
+        <li>Kopiér hele svaret fra ChatGPT.</li>
+        <li>Gå til Importér fra ChatGPT, indsæt svaret, og gennemgå lektionen.</li>
       </ol>
     </section>
   );

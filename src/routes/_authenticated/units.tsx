@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authenticated/units")({
   head: () => ({
     meta: [
       { title: "Forløb — CaseLab" },
-      { name: "description", content: "Alle dine teaching sequences på tværs af klasser." },
+      { name: "description", content: "Dine faglige forløb på tværs af klasser." },
       { property: "og:title", content: "Forløb — CaseLab" },
       { property: "og:description", content: "Alle dine forløb på tværs af klasser." },
       { name: "robots", content: "noindex" },
@@ -27,7 +27,9 @@ function UnitsPage() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-14">
       <h1 className="text-3xl font-semibold">Forløb</h1>
-      <p className="mt-2 text-muted-foreground">Dine teaching sequences på tværs af klasser.</p>
+      <p className="mt-2 text-muted-foreground">
+        Et forløb er et fagligt tema, der samler flere lektioner i en klasse.
+      </p>
 
       {units.isLoading && (
         <div className="mt-10 flex items-center gap-2 text-muted-foreground">
