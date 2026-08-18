@@ -36,6 +36,8 @@ import { CockpitSyncCoordinator, type CockpitSyncState } from "@/lib/cockpit-syn
 import { summarize } from "@/lib/results";
 import { ResultBars, StudentBlock } from "@/components/student/StudentBlock";
 import { correctOptionIndex, timerLabel, toPreviewBlock, workMode } from "@/lib/cockpit";
+import { useDesignMode } from "@/lib/design-mode";
+import { CockpitFocusV2 } from "@/components/run/CockpitFocusV2";
 import {
   blockMaterialFilesQuery,
   formatFileSize,
@@ -140,6 +142,7 @@ function RunMode() {
   const [finished, setFinished] = useState(false);
   const [skipped, setSkipped] = useState<string[]>([]);
   const [showNames, setShowNames] = useState(false);
+  const mode = useDesignMode();
   const [syncState, setSyncState] = useState<CockpitSyncState>({ phase: "idle", label: null });
   const syncCoordinatorRef = useRef<CockpitSyncCoordinator<StudentSession> | null>(null);
   if (!syncCoordinatorRef.current) {
@@ -706,6 +709,29 @@ function RunMode() {
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           {/* ---------------- left: what students see + responses ---------------- */}
           <div className="space-y-6">
+            {mode === "v2" && current && (
+              <CockpitFocusV2
+                index={index}
+                total={active.length}
+                title={current.title}
+                type={current.type}
+                typeLabel={blockDef(current.type).label}
+                workModeLabel={workMode(current.type)}
+                durationMinutes={current.duration_minutes}
+                answered={
+                  liveSession
+                    ? liveAnswers.filter((a) => people.some((p) => p.id === a.participant_id)).length
+                    : null
+                }
+                participants={liveSession ? people.length : null}
+                nextTitle={active[index + 1]?.title ?? null}
+                nextTypeLabel={
+                  active[index + 1] ? blockDef(active[index + 1]!.type).label : null
+                }
+                onNext={next}
+                nextDisabled={syncPending}
+              />
+            )}
             <section className="surface-card p-4 sm:p-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold">Det eleverne ser</h2>

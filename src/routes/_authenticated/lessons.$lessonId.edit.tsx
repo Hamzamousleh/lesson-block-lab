@@ -35,6 +35,8 @@ import { blockDef } from "@/lib/blocks";
 import { lessonToText } from "@/lib/prompt";
 import { copyBlockMaterialFiles, setBlockMaterialFiles } from "@/lib/materials";
 import { LESSON_STATUS_LABEL, type LessonBlock, type LessonStatus } from "@/lib/types";
+import { useDesignMode } from "@/lib/design-mode";
+import { LessonSummaryV2, TimelineRowV2 } from "@/components/editor/LessonTimelineV2";
 import { ActivityPicker } from "@/components/editor/ActivityPicker";
 import { BlockEditor, type BlockDraft } from "@/components/editor/BlockEditor";
 import { StartSessionDialog } from "@/components/session/StartSessionDialog";
@@ -91,6 +93,7 @@ function LessonEditor() {
   const [editing, setEditing] = useState<LessonBlock | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [sessionOpen, setSessionOpen] = useState(false);
+  const mode = useDesignMode();
 
   const all = blocks.data ?? [];
   const list = all.filter((b) => !b.is_fallback);
@@ -257,6 +260,35 @@ function LessonEditor() {
 
   const blockRow = (b: LessonBlock, meta: string, draggable: boolean, index = 0) => {
     const def = blockDef(b.type);
+    if (mode === "v2") {
+      return (
+        <TimelineRowV2
+          key={b.id}
+          block={b}
+          position={draggable ? index + 1 : null}
+          meta={meta}
+          draggable={draggable}
+          index={index}
+          isFirst={index === 0}
+          isLast={index === list.length - 1}
+          isLastRow={!draggable || index === list.length - 1}
+          dragging={dragId === b.id}
+          reorderPending={reorder.isPending}
+          savePending={saveBlock.isPending}
+          onEdit={() => setEditing(b)}
+          onMove={(delta) => moveBy(b.id, delta)}
+          onDragStart={() => setDragId(b.id)}
+          onDrop={() => {
+            if (draggable && dragId) moveTo(dragId, b.id);
+            setDragId(null);
+          }}
+          onSaveToLibrary={() => saveBlock.mutate(b)}
+          onToggleFallback={() => toggleFallback.mutate(b)}
+          onDuplicate={() => dup.mutate(b)}
+          onDelete={() => remove.mutate(b.id)}
+        />
+      );
+    }
     return (
       <div
         key={b.id}
@@ -487,61 +519,108 @@ function LessonEditor() {
         </div>
       </div>
 
-      <div className="surface-card mt-6 p-4 sm:p-8">
-        <Input
-          value={lesson.data.title}
-          onChange={(e) =>
-            queryClient.setQueryData(["lesson", lessonId], {
-              ...lesson.data,
-              title: e.target.value,
-            })
+      {mode === "v2" ? (
+        <LessonSummaryV2
+          contextLabel={klass.data ? `${klass.data.name} · ${klass.data.subject}` : ""}
+          planned={planned}
+          target={target}
+          over={over}
+          activityCount={list.length}
+          learningGoal={lesson.data.learning_goal ?? null}
+          rescue={lesson.data.mode === "rescue"}
+          titleInput={
+            <Input
+              value={lesson.data.title}
+              onChange={(e) =>
+                queryClient.setQueryData(["lesson", lessonId], {
+                  ...lesson.data,
+                  title: e.target.value,
+                })
+              }
+              onBlur={(e) => patchLesson.mutate({ title: e.target.value })}
+              className="h-auto border-0 bg-transparent px-0 font-display !text-3xl font-semibold shadow-none focus-visible:ring-0"
+            />
           }
-          onBlur={(e) => patchLesson.mutate({ title: e.target.value })}
-          className="h-auto border-0 bg-transparent px-0 font-display !text-3xl font-semibold shadow-none focus-visible:ring-0"
+          statusSelect={
+            <>
+              <Label id="lesson-status-label" className="sr-only">
+                Lektionsstatus
+              </Label>
+              <Select
+                value={lesson.data.status}
+                onValueChange={(v) => patchLesson.mutate({ status: v as LessonStatus })}
+              >
+                <SelectTrigger aria-labelledby="lesson-status-label" className="w-36 rounded-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(LESSON_STATUS_LABEL) as LessonStatus[]).map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {LESSON_STATUS_LABEL[s]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          }
         />
-        <div className="mt-5 flex flex-wrap items-center gap-4 text-sm">
-          <span className="text-muted-foreground">
-            {klass.data ? `${klass.data.name} · ${klass.data.subject}` : ""}
-          </span>
-          {lesson.data.mode === "rescue" && (
-            <span className="rounded-full bg-accent-warm px-3 py-1 font-medium text-accent-warm-foreground">
-              ⚡ Nødlektion
-            </span>
-          )}
-          <span
-            className={
-              over
-                ? "rounded-full bg-destructive/10 px-3 py-1 font-medium text-destructive"
-                : "rounded-full bg-secondary px-3 py-1 font-medium text-secondary-foreground"
+      ) : (
+        <div className="surface-card mt-6 p-4 sm:p-8">
+          <Input
+            value={lesson.data.title}
+            onChange={(e) =>
+              queryClient.setQueryData(["lesson", lessonId], {
+                ...lesson.data,
+                title: e.target.value,
+              })
             }
-          >
-            {planned} / {target} min
-          </span>
-          <Label id="lesson-status-label" className="sr-only">
-            Lektionsstatus
-          </Label>
-          <Select
-            value={lesson.data.status}
-            onValueChange={(v) => patchLesson.mutate({ status: v as LessonStatus })}
-          >
-            <SelectTrigger aria-labelledby="lesson-status-label" className="w-36 rounded-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.keys(LESSON_STATUS_LABEL) as LessonStatus[]).map((s) => (
-                <SelectItem key={s} value={s}>
-                  {LESSON_STATUS_LABEL[s]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onBlur={(e) => patchLesson.mutate({ title: e.target.value })}
+            className="h-auto border-0 bg-transparent px-0 font-display !text-3xl font-semibold shadow-none focus-visible:ring-0"
+          />
+          <div className="mt-5 flex flex-wrap items-center gap-4 text-sm">
+            <span className="text-muted-foreground">
+              {klass.data ? `${klass.data.name} · ${klass.data.subject}` : ""}
+            </span>
+            {lesson.data.mode === "rescue" && (
+              <span className="rounded-full bg-accent-warm px-3 py-1 font-medium text-accent-warm-foreground">
+                ⚡ Nødlektion
+              </span>
+            )}
+            <span
+              className={
+                over
+                  ? "rounded-full bg-destructive/10 px-3 py-1 font-medium text-destructive"
+                  : "rounded-full bg-secondary px-3 py-1 font-medium text-secondary-foreground"
+              }
+            >
+              {planned} / {target} min
+            </span>
+            <Label id="lesson-status-label" className="sr-only">
+              Lektionsstatus
+            </Label>
+            <Select
+              value={lesson.data.status}
+              onValueChange={(v) => patchLesson.mutate({ status: v as LessonStatus })}
+            >
+              <SelectTrigger aria-labelledby="lesson-status-label" className="w-36 rounded-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(LESSON_STATUS_LABEL) as LessonStatus[]).map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {LESSON_STATUS_LABEL[s]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {lesson.data.learning_goal && (
+            <p className="mt-4 text-muted-foreground">{lesson.data.learning_goal}</p>
+          )}
         </div>
-        {lesson.data.learning_goal && (
-          <p className="mt-4 text-muted-foreground">{lesson.data.learning_goal}</p>
-        )}
-      </div>
+      )}
 
-      <div className="mt-10 space-y-3">
+      <div className={mode === "v2" ? "mt-10" : "mt-10 space-y-3"}>
         {list.length === 0 && (
           <div className="surface-card border-dashed p-10 text-center">
             <p className="text-lg font-medium">Tidslinjen er tom</p>

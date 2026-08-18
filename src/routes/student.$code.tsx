@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useDesignMode } from "@/lib/design-mode";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Download, FileText, Loader2, Timer, WifiOff } from "lucide-react";
@@ -30,9 +31,18 @@ export const Route = createFileRoute("/student/$code")({
 });
 
 function Shell({ children }: { children: React.ReactNode }) {
+  const mode = useDesignMode();
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto w-full max-w-2xl px-5 py-8 sm:px-8 sm:py-12">{children}</div>
+    <div className={mode === "v2" ? "min-h-screen bg-surface" : "min-h-screen bg-background"}>
+      <div
+        className={
+          mode === "v2"
+            ? "mx-auto w-full max-w-xl px-5 py-10 sm:px-8 sm:py-14"
+            : "mx-auto w-full max-w-2xl px-5 py-8 sm:px-8 sm:py-12"
+        }
+      >
+        {children}
+      </div>
     </div>
   );
 }
