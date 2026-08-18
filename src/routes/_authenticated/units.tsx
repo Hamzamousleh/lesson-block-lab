@@ -41,9 +41,9 @@ function UnitsPage() {
           <p className="mt-2 text-muted-foreground">
             Forløb oprettes inde på en klasse — vælg en klasse for at komme i gang.
           </p>
-          <Link to="/classes">
-            <Button className="mt-6 rounded-full">Gå til klasser</Button>
-          </Link>
+          <Button asChild className="mt-6 rounded-full">
+            <Link to="/classes">Gå til klasser</Link>
+          </Button>
         </div>
       )}
 
@@ -61,11 +61,11 @@ function UnitsPage() {
                 </p>
               </div>
               {c && (
-                <Link to="/classes/$classId" params={{ classId: c.id }}>
-                  <Button variant="outline" className="rounded-full">
+                <Button asChild variant="outline" className="rounded-full">
+                  <Link to="/classes/$classId" params={{ classId: c.id }}>
                     Åbn klasse
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               )}
             </div>
           );

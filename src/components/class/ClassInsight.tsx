@@ -105,11 +105,9 @@ export function ClassInsight({
       <section className="mt-14">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl font-semibold">Fagligt overblik</h2>
-          <Link to="/sessions/compare">
-            <Button variant="ghost" className="rounded-full">
-              Sammenlign sessioner
-            </Button>
-          </Link>
+          <Button asChild variant="ghost" className="rounded-full">
+            <Link to="/sessions/compare">Sammenlign sessioner</Link>
+          </Button>
         </div>
 
         {list.length === 0 ? (
@@ -157,11 +155,11 @@ export function ClassInsight({
                             ? ` · ${st.correctPercent}% korrekte`
                             : ""}
                         </span>
-                        <Link to="/sessions/$sessionId/follow-up" params={{ sessionId: s.id }}>
-                          <Button variant="outline" size="sm" className="rounded-full">
+                        <Button asChild variant="outline" size="sm" className="rounded-full">
+                          <Link to="/sessions/$sessionId/follow-up" params={{ sessionId: s.id }}>
                             Arbejd videre
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                       </li>
                     );
                   })}

@@ -55,7 +55,10 @@ export const Route = createFileRoute("/lessons/$lessonId/run")({
   head: () => ({
     meta: [
       { title: "Undervis — CaseLab" },
-      { name: "description", content: "Kør lektionen live med elevvisning, tid og svar i ét billede." },
+      {
+        name: "description",
+        content: "Kør lektionen live med elevvisning, tid og svar i ét billede.",
+      },
       { property: "og:title", content: "Undervis — CaseLab" },
       { property: "og:description", content: "Lærercockpit til live undervisning." },
       { name: "robots", content: "noindex" },
@@ -256,7 +259,8 @@ function RunMode() {
       const raw = window.localStorage.getItem(timerKey);
       if (raw) {
         const parsed = JSON.parse(raw) as { blockId?: string } & TimerState;
-        if (parsed.blockId === current.id) next = { endsAt: parsed.endsAt, remaining: parsed.remaining };
+        if (parsed.blockId === current.id)
+          next = { endsAt: parsed.endsAt, remaining: parsed.remaining };
       }
     } catch {
       /* ignore */
@@ -298,16 +302,20 @@ function RunMode() {
     [current, liveSession, persistTimer, syncSession],
   );
 
-  const startTimer = () => applyTimer({ endsAt: Date.now() + timer.remaining * 1000, remaining: timer.remaining });
+  const startTimer = () =>
+    applyTimer({ endsAt: Date.now() + timer.remaining * 1000, remaining: timer.remaining });
   const pauseTimer = () => applyTimer({ endsAt: null, remaining: seconds });
-  const resetTimer = () => applyTimer({ endsAt: null, remaining: (current?.duration_minutes ?? 0) * 60 });
+  const resetTimer = () =>
+    applyTimer({ endsAt: null, remaining: (current?.duration_minutes ?? 0) * 60 });
   const addMinutes = (m: number) =>
     timer.endsAt !== null
       ? applyTimer({ endsAt: timer.endsAt + m * 60000, remaining: timer.remaining })
       : applyTimer({ endsAt: null, remaining: timer.remaining + m * 60 });
 
   /* ---------- live responses ---------- */
-  const liveAnswers = current ? (responses.data ?? []).filter((a) => a.block_id === current.id) : [];
+  const liveAnswers = current
+    ? (responses.data ?? []).filter((a) => a.block_id === current.id)
+    : [];
   const people = activeParticipants(participants.data ?? [], liveSession);
   const liveNames = new Map(people.map((p) => [p.id, p.display_name]));
   const liveSummary =
@@ -445,7 +453,8 @@ function RunMode() {
         setProjector((v) => {
           const nextVal = !v;
           try {
-            if (nextVal && !document.fullscreenElement) void document.documentElement.requestFullscreen();
+            if (nextVal && !document.fullscreenElement)
+              void document.documentElement.requestFullscreen();
             if (!nextVal && document.fullscreenElement) void document.exitFullscreen();
           } catch {
             /* fullscreen is optional */
@@ -484,10 +493,14 @@ function RunMode() {
   if (main.length === 0) {
     return (
       <div className="mx-auto max-w-xl px-6 py-28 text-center">
-        <h1 className="font-display text-3xl font-semibold">Lektionen har endnu ingen aktiviteter.</h1>
-        <Link to="/lessons/$lessonId/edit" params={{ lessonId }} className="mt-8 inline-block">
-          <Button className="rounded-full">Tilføj aktivitet</Button>
-        </Link>
+        <h1 className="font-display text-3xl font-semibold">
+          Lektionen har endnu ingen aktiviteter.
+        </h1>
+        <Button asChild className="mt-8 rounded-full">
+          <Link to="/lessons/$lessonId/edit" params={{ lessonId }}>
+            Tilføj aktivitet
+          </Link>
+        </Button>
       </div>
     );
   }
@@ -499,7 +512,9 @@ function RunMode() {
         <p className="text-lg text-muted-foreground">
           {klass.data ? `${klass.data.name} · ${klass.data.subject}` : (l.subject ?? "Lektion")}
         </p>
-        <h1 className="mt-3 font-display text-4xl font-semibold text-balance sm:text-5xl">{l.title}</h1>
+        <h1 className="mt-3 font-display text-4xl font-semibold text-balance sm:text-5xl">
+          {l.title}
+        </h1>
         <p className="mt-4 text-lg text-muted-foreground">
           {l.duration_minutes} min · {main.length} aktiviteter
           {fallback.length > 0 ? ` · ${fallback.length} ekstra i baghånden` : ""}
@@ -514,11 +529,11 @@ function RunMode() {
           <Button size="lg" className="rounded-full px-8" onClick={() => setStarted(true)}>
             Start undervisning
           </Button>
-          <Link to="/lessons/$lessonId/edit" params={{ lessonId }}>
-            <Button size="lg" variant="outline" className="rounded-full">
+          <Button asChild size="lg" variant="outline" className="rounded-full">
+            <Link to="/lessons/$lessonId/edit" params={{ lessonId }}>
               Tilbage til redigering
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
         <p className="mt-10 text-sm text-muted-foreground">
           Genveje: ← → skift aktivitet · Mellemrum næste · F projektor
@@ -537,12 +552,16 @@ function RunMode() {
           Planlagt {plannedTotal} min · {main.length} aktiviteter · brugt {elapsed} min
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
-          <Link to="/lessons/$lessonId/edit" params={{ lessonId }}>
-            <Button variant="outline" className="rounded-full">
+          <Button asChild variant="outline" className="rounded-full">
+            <Link to="/lessons/$lessonId/edit" params={{ lessonId }}>
               Tilbage til lektionen
-            </Button>
-          </Link>
-          <Button className="rounded-full" disabled={complete.isPending} onClick={() => complete.mutate()}>
+            </Link>
+          </Button>
+          <Button
+            className="rounded-full"
+            disabled={complete.isPending}
+            onClick={() => complete.mutate()}
+          >
             {complete.isPending && <Loader2 className="size-4 animate-spin" />}
             Markér som afsluttet
           </Button>
@@ -606,8 +625,8 @@ function RunMode() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="flex flex-wrap items-center gap-3 border-b border-border/70 px-6 py-3 text-sm">
-        <div className="min-w-0 flex-1 truncate">
+      <header className="flex flex-wrap items-center gap-2 border-b border-border/70 px-4 py-3 text-sm sm:gap-3 sm:px-6">
+        <div className="min-w-0 basis-full break-words sm:flex-1 sm:basis-auto">
           <span className="font-medium">{l.title}</span>
           {klass.data && <span className="text-muted-foreground"> · {klass.data.name}</span>}
           {useFallback && <span className="ml-2 text-primary">· Ekstra aktivitet</span>}
@@ -658,38 +677,50 @@ function RunMode() {
             )}
           </div>
         )}
-        <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setProjector(true)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="rounded-full"
+          onClick={() => setProjector(true)}
+        >
           <Maximize2 className="size-4" /> Projektor
         </Button>
-        <Link to="/lessons/$lessonId/edit" params={{ lessonId }}>
-          <Button variant="ghost" size="sm" className="rounded-full" aria-label="Afslut visning">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="rounded-full"
+          aria-label="Afslut visning"
+        >
+          <Link to="/lessons/$lessonId/edit" params={{ lessonId }}>
             <X className="size-4" />
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </header>
 
       <div className="h-1 w-full bg-secondary">
         <div className="h-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
       </div>
 
-      <main className="flex-1 px-5 py-8 sm:px-8">
+      <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           {/* ---------------- left: what students see + responses ---------------- */}
           <div className="space-y-6">
-            <section className="surface-card p-6 sm:p-8">
+            <section className="surface-card p-4 sm:p-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold">Det eleverne ser</h2>
                 <span className="text-xs tracking-widest text-muted-foreground uppercase">
                   {blockDef(current?.type ?? "").label} · {workMode(current?.type ?? "")}
                 </span>
               </div>
-              <div className="mt-6 rounded-2xl border border-border bg-background p-5 sm:p-6">
+              <div className="mt-6 rounded-2xl border border-border bg-background p-4 sm:p-6">
                 {current ? (
                   <>
                     {currentMaterials.length > 0 && (
                       <div className="mb-6 rounded-2xl border border-primary/25 bg-accent/60 p-5">
                         <p className="flex items-center gap-2 font-semibold">
-                          <FileText className="size-5 text-primary" /> Materialer til denne aktivitet
+                          <FileText className="size-5 text-primary" /> Materialer til denne
+                          aktivitet
                         </p>
                         <div className="mt-3 space-y-2">
                           {currentMaterials.map((file) => (
@@ -699,16 +730,25 @@ function RunMode() {
                               className="flex w-full min-w-0 items-center gap-3 rounded-xl border border-border/70 bg-card px-4 py-3 text-left transition-colors hover:border-primary/50"
                               onClick={async () => {
                                 try {
-                                  window.open(await materialFileUrl(file), "_blank", "noopener,noreferrer");
+                                  window.open(
+                                    await materialFileUrl(file),
+                                    "_blank",
+                                    "noopener,noreferrer",
+                                  );
                                 } catch (error) {
-                                  toast.error(error instanceof Error ? error.message : "Filen kunne ikke åbnes.");
+                                  toast.error(
+                                    error instanceof Error
+                                      ? error.message
+                                      : "Filen kunne ikke åbnes.",
+                                  );
                                 }
                               }}
                             >
                               <span className="min-w-0 flex-1">
                                 <span className="block truncate font-medium">{file.title}</span>
                                 <span className="block truncate text-sm text-muted-foreground">
-                                  {file.file_name} · {materialKindLabel(file.mime_type, file.file_name)} ·{" "}
+                                  {file.file_name} ·{" "}
+                                  {materialKindLabel(file.mime_type, file.file_name)} ·{" "}
                                   {formatFileSize(file.file_size)}
                                 </span>
                               </span>
@@ -732,19 +772,28 @@ function RunMode() {
                 )}
               </div>
               {step < totalSteps - 1 && (
-                <Button variant="outline" className="mt-6 rounded-full" onClick={next} disabled={syncPending}>
+                <Button
+                  variant="outline"
+                  className="mt-6 rounded-full"
+                  onClick={next}
+                  disabled={syncPending}
+                >
                   <Eye className="size-4" /> Vis næste trin
                 </Button>
               )}
             </section>
 
             {liveSession && liveSummary && (
-              <section className="surface-card p-6 sm:p-8">
+              <section className="surface-card p-4 sm:p-8">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-lg font-semibold">Elevsvar</h2>
                   <span className="text-sm tabular-nums text-muted-foreground">
-                    Svar: {liveAnswers.filter((a) => people.some((p) => p.id === a.participant_id)).length} /{" "}
-                    {people.length}
+                    Svar:{" "}
+                    {
+                      liveAnswers.filter((a) => people.some((p) => p.id === a.participant_id))
+                        .length
+                    }{" "}
+                    / {people.length}
                   </span>
                 </div>
                 <div className="mt-5">
@@ -794,15 +843,15 @@ function RunMode() {
                       {showNames ? "Skjul navne" : "Vis navne"}
                     </Button>
                   )}
-                  <Link
-                    to="/sessions/$sessionId/follow-up"
-                    params={{ sessionId: liveSession.id }}
-                    target="_blank"
-                  >
-                    <Button variant="ghost" size="sm" className="rounded-full">
+                  <Button asChild variant="ghost" size="sm" className="rounded-full">
+                    <Link
+                      to="/sessions/$sessionId/follow-up"
+                      params={{ sessionId: liveSession.id }}
+                      target="_blank"
+                    >
                       Reagér på svarene
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               </section>
             )}
@@ -810,7 +859,7 @@ function RunMode() {
 
           {/* ---------------- right: time, plan, notes ---------------- */}
           <aside className="space-y-6">
-            <section className="surface-card p-6">
+            <section className="surface-card p-4 sm:p-6">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-sm font-semibold">Tid til aktiviteten</h2>
                 <span className="text-sm text-muted-foreground">
@@ -836,7 +885,12 @@ function RunMode() {
                     <Pause className="size-4" /> Pause
                   </Button>
                 ) : (
-                  <Button size="sm" className="rounded-full" onClick={startTimer} disabled={syncPending}>
+                  <Button
+                    size="sm"
+                    className="rounded-full"
+                    onClick={startTimer}
+                    disabled={syncPending}
+                  >
                     <Play className="size-4" /> Start timer
                   </Button>
                 )}
@@ -885,7 +939,9 @@ function RunMode() {
                     })
                   }
                 >
-                  {liveSession.timer_show_students ? "Skjul tiden for elever" : "Vis tiden for elever"}
+                  {liveSession.timer_show_students
+                    ? "Skjul tiden for elever"
+                    : "Vis tiden for elever"}
                 </Button>
               )}
             </section>
@@ -931,7 +987,9 @@ function RunMode() {
               )}
               {answerKeyIndex !== null && (
                 <p className="mt-5 text-sm">
-                  <span className="text-xs tracking-widest text-muted-foreground uppercase">Facit</span>
+                  <span className="text-xs tracking-widest text-muted-foreground uppercase">
+                    Facit
+                  </span>
                   <br />
                   Korrekt svar: {String.fromCharCode(65 + answerKeyIndex)}
                 </p>
@@ -986,33 +1044,33 @@ function RunMode() {
         </div>
       </main>
 
-      <footer className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-border/70 bg-background/90 px-6 py-4 backdrop-blur">
+      <footer className="sticky bottom-0 grid grid-cols-2 gap-2 border-t border-border/70 bg-background/95 px-4 py-3 backdrop-blur sm:flex sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-4">
         <Button
           variant="outline"
-          className="rounded-full"
+          className="min-h-11 rounded-full"
           onClick={prev}
           disabled={syncPending || (index === 0 && step === 0)}
         >
           <ArrowLeft className="size-4" /> Forrige
         </Button>
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="min-w-0 truncate text-center text-sm text-muted-foreground">
+        <Button className="min-h-11 rounded-full sm:order-3" onClick={next} disabled={syncPending}>
+          {index === active.length - 1 && step === totalSteps - 1 ? "Afslut" : "Næste"}
+          <ArrowRight className="size-4" />
+        </Button>
+        <div className="col-span-2 flex min-w-0 flex-wrap items-center justify-center gap-2 sm:order-2 sm:col-span-1 sm:flex-nowrap sm:gap-3">
+          <span className="min-w-0 basis-full break-words text-center text-sm text-muted-foreground sm:basis-auto">
             {current ? `${blockDef(current.type).icon} ${current.title}` : ""}
           </span>
           <Button
             variant="ghost"
             size="sm"
-            className="rounded-full"
+            className="min-h-11 shrink-0 rounded-full sm:min-h-8"
             onClick={skipCurrent}
             disabled={syncPending}
           >
             <SkipForward className="size-4" /> Spring over
           </Button>
         </div>
-        <Button className="rounded-full" onClick={next} disabled={syncPending}>
-          {index === active.length - 1 && step === totalSteps - 1 ? "Afslut" : "Næste"}
-          <ArrowRight className="size-4" />
-        </Button>
       </footer>
     </div>
   );

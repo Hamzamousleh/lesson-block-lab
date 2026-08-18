@@ -69,6 +69,7 @@ function OptionButton({
       type="button"
       disabled={disabled}
       onClick={onSelect}
+      aria-pressed={selected}
       className={`flex w-full items-start gap-4 rounded-2xl border px-5 py-4 text-left text-lg transition-colors ${tone} ${
         disabled ? "opacity-90" : ""
       }`}
@@ -86,7 +87,6 @@ function OptionButton({
     </button>
   );
 }
-
 
 export function ResultBars({ summary }: { summary: ResultSummary }) {
   if (summary.kind === "options") {
@@ -119,12 +119,15 @@ export function ResultBars({ summary }: { summary: ResultSummary }) {
     return (
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          {summary.total} svar · gennemsnit <span className="font-medium text-foreground">{summary.average}</span>
+          {summary.total} svar · gennemsnit{" "}
+          <span className="font-medium text-foreground">{summary.average}</span>
         </p>
         <div className="space-y-1">
           {summary.counts.map((count, i) => (
             <div key={i} className="flex items-center gap-3 text-sm">
-              <span className="w-6 shrink-0 tabular-nums text-muted-foreground">{summary.min + i}</span>
+              <span className="w-6 shrink-0 tabular-nums text-muted-foreground">
+                {summary.min + i}
+              </span>
               <div className="h-2.5 flex-1 rounded-full bg-secondary">
                 <div
                   className="h-full rounded-full bg-primary"
@@ -178,7 +181,10 @@ export interface StudentBlockProps {
 }
 
 /** shallow compare of the fields we are about to submit against what is stored */
-function samePayload(data: Record<string, unknown>, saved: Record<string, unknown> | undefined): boolean {
+function samePayload(
+  data: Record<string, unknown>,
+  saved: Record<string, unknown> | undefined,
+): boolean {
   if (!saved) return false;
   return Object.keys(data).every((k) => JSON.stringify(data[k]) === JSON.stringify(saved[k]));
 }
@@ -197,9 +203,13 @@ export function StudentBlock({
 }: StudentBlockProps) {
   const c = block.content ?? {};
   const [option, setOption] = useState<number | null>(
-    typeof saved?.["selected_option_index"] === "number" ? (saved["selected_option_index"] as number) : null,
+    typeof saved?.["selected_option_index"] === "number"
+      ? (saved["selected_option_index"] as number)
+      : null,
   );
-  const [text, setText] = useState<string>(typeof saved?.["text"] === "string" ? (saved["text"] as string) : "");
+  const [text, setText] = useState<string>(
+    typeof saved?.["text"] === "string" ? (saved["text"] as string) : "",
+  );
   const [justification, setJustification] = useState<string>(
     typeof saved?.["justification"] === "string" ? (saved["justification"] as string) : "",
   );
@@ -210,7 +220,9 @@ export function StudentBlock({
     Array.isArray(saved?.["answers"]) ? (saved["answers"] as string[]) : [],
   );
   const [order, setOrder] = useState<string[]>(
-    Array.isArray(saved?.["ordered_items"]) ? (saved["ordered_items"] as string[]) : arr(c, "items"),
+    Array.isArray(saved?.["ordered_items"])
+      ? (saved["ordered_items"] as string[])
+      : arr(c, "items"),
   );
 
   /*
@@ -219,12 +231,22 @@ export function StudentBlock({
    * is currently typing, reset scroll or steal focus.
    */
   useEffect(() => {
-    setOption(typeof saved?.["selected_option_index"] === "number" ? (saved["selected_option_index"] as number) : null);
+    setOption(
+      typeof saved?.["selected_option_index"] === "number"
+        ? (saved["selected_option_index"] as number)
+        : null,
+    );
     setText(typeof saved?.["text"] === "string" ? (saved["text"] as string) : "");
-    setJustification(typeof saved?.["justification"] === "string" ? (saved["justification"] as string) : "");
+    setJustification(
+      typeof saved?.["justification"] === "string" ? (saved["justification"] as string) : "",
+    );
     setValue(typeof saved?.["value"] === "number" ? (saved["value"] as number) : num(c, "min", 1));
     setAnswers(Array.isArray(saved?.["answers"]) ? (saved["answers"] as string[]) : []);
-    setOrder(Array.isArray(saved?.["ordered_items"]) ? (saved["ordered_items"] as string[]) : arr(c, "items"));
+    setOrder(
+      Array.isArray(saved?.["ordered_items"])
+        ? (saved["ordered_items"] as string[])
+        : arr(c, "items"),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [block.id]);
 
@@ -304,7 +326,9 @@ export function StudentBlock({
         {feedback && (
           <div
             className={`rounded-2xl p-4 text-base ${
-              feedback.correct ? "bg-primary/10 text-foreground" : "bg-accent-warm text-accent-warm-foreground"
+              feedback.correct
+                ? "bg-primary/10 text-foreground"
+                : "bg-accent-warm text-accent-warm-foreground"
             }`}
           >
             <p className="font-medium">{feedback.correct ? "Korrekt ✓" : "Ikke helt"}</p>
@@ -320,7 +344,6 @@ export function StudentBlock({
       </div>
     );
   };
-
 
   const header = (kicker: string) => (
     <div className="space-y-3">
@@ -420,7 +443,6 @@ export function StudentBlock({
                 disabled={lock || !!answerKey}
                 state={optionState(i)}
                 onSelect={() => setOption(i)}
-
               />
             ))}
           </div>
@@ -449,8 +471,11 @@ export function StudentBlock({
           </div>
           {requireJust && (
             <div className="space-y-2">
-              <label className="text-base font-medium">Begrund dit valg</label>
+              <label className="text-base font-medium" htmlFor={`${block.id}-justification`}>
+                Begrund dit valg
+              </label>
               <Textarea
+                id={`${block.id}-justification`}
                 value={justification}
                 disabled={lock}
                 onChange={(e) => setJustification(e.target.value)}
@@ -481,10 +506,13 @@ export function StudentBlock({
                 <button
                   key={v}
                   type="button"
+                  aria-pressed={value === v}
                   disabled={lock}
                   onClick={() => setValue(v)}
                   className={`h-14 min-w-14 flex-1 rounded-2xl border text-lg font-medium transition-colors ${
-                    value === v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"
+                    value === v
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card"
                   }`}
                 >
                   {v}
@@ -526,8 +554,11 @@ export function StudentBlock({
           </div>
           {str(c, "follow_up_question") && (
             <div className="space-y-2">
-              <label className="text-base font-medium">{str(c, "follow_up_question")}</label>
+              <label className="text-base font-medium" htmlFor={`${block.id}-follow-up`}>
+                {str(c, "follow_up_question")}
+              </label>
               <Textarea
+                id={`${block.id}-follow-up`}
                 value={justification}
                 disabled={lock}
                 onChange={(e) => setJustification(e.target.value)}
@@ -547,6 +578,7 @@ export function StudentBlock({
           {header("Kort svar")}
           <Prose>{str(c, "question")}</Prose>
           <Textarea
+            aria-label="Dit korte svar"
             value={text}
             disabled={lock}
             placeholder={str(c, "placeholder")}
@@ -563,8 +595,11 @@ export function StudentBlock({
           {header("Find fejlen")}
           <Prose>{str(c, "material")}</Prose>
           <div className="space-y-2">
-            <label className="text-base font-medium">Hvilke fejl finder du?</label>
+            <label className="text-base font-medium" htmlFor={`${block.id}-errors`}>
+              Hvilke fejl finder du?
+            </label>
             <Textarea
+              id={`${block.id}-errors`}
               value={text}
               disabled={lock}
               onChange={(e) => setText(e.target.value)}
@@ -573,8 +608,11 @@ export function StudentBlock({
           </div>
           {str(c, "follow_up_question") && (
             <div className="space-y-2">
-              <label className="text-base font-medium">{str(c, "follow_up_question")}</label>
+              <label className="text-base font-medium" htmlFor={`${block.id}-error-follow-up`}>
+                {str(c, "follow_up_question")}
+              </label>
               <Textarea
+                id={`${block.id}-error-follow-up`}
                 value={justification}
                 disabled={lock}
                 onChange={(e) => setJustification(e.target.value)}
@@ -590,7 +628,8 @@ export function StudentBlock({
     case "compare":
     case "exit_ticket": {
       const questions = arr(c, "questions");
-      const kicker = block.type === "case" ? "Case" : block.type === "compare" ? "Sammenlign" : "Exit ticket";
+      const kicker =
+        block.type === "case" ? "Case" : block.type === "compare" ? "Sammenlign" : "Exit ticket";
       return (
         <div className="space-y-6">
           {header(kicker)}
@@ -610,10 +649,11 @@ export function StudentBlock({
           <div className="space-y-5">
             {questions.map((q, i) => (
               <div key={i} className="space-y-2">
-                <label className="text-base font-medium">
+                <label className="text-base font-medium" htmlFor={`${block.id}-answer-${i}`}>
                   {i + 1}. {q}
                 </label>
                 <Textarea
+                  id={`${block.id}-answer-${i}`}
                   value={answers[i] ?? ""}
                   disabled={lock}
                   onChange={(e) => {

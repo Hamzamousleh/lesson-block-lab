@@ -37,14 +37,12 @@ function Landing() {
           Case<span className="text-primary">Lab</span>
         </span>
         <div className="ml-auto flex items-center gap-2">
-          <Link to="/join">
-            <Button variant="outline" className="rounded-full">
-              Deltag med kode
-            </Button>
-          </Link>
-          <Link to="/auth">
-            <Button variant="ghost">Log ind</Button>
-          </Link>
+          <Button asChild variant="outline" className="rounded-full">
+            <Link to="/join">Deltag med kode</Link>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link to="/auth">Log ind</Link>
+          </Button>
         </div>
       </header>
       <section className="mx-auto max-w-3xl px-6 pt-16 pb-24 text-center sm:pt-24">
@@ -59,16 +57,12 @@ function Landing() {
           genbruge dit materiale — uden at drukne i systemer.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
-          <Link to="/auth">
-            <Button size="lg" className="rounded-full px-8">
-              Kom i gang
-            </Button>
-          </Link>
-          <Link to="/join">
-            <Button size="lg" variant="outline" className="rounded-full px-8">
-              Jeg er elev — deltag med kode
-            </Button>
-          </Link>
+          <Button asChild size="lg" className="rounded-full px-8">
+            <Link to="/auth">Kom i gang</Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="rounded-full px-8">
+            <Link to="/join">Jeg er elev — deltag med kode</Link>
+          </Button>
         </div>
       </section>
     </div>

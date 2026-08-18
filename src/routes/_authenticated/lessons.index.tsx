@@ -30,11 +30,11 @@ function LessonsPage() {
           <h1 className="text-3xl font-semibold">Lektioner</h1>
           <p className="mt-2 text-muted-foreground">Alt hvad du har bygget, samlet ét sted.</p>
         </div>
-        <Link to="/lessons/new">
-          <Button className="rounded-full">
+        <Button asChild className="rounded-full">
+          <Link to="/lessons/new">
             <Plus className="size-4" /> Ny lektion
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       {lessons.isLoading && (
@@ -47,9 +47,9 @@ function LessonsPage() {
         <div className="surface-card mt-10 p-10 text-center">
           <h2 className="text-xl font-semibold">Ingen lektioner endnu</h2>
           <p className="mt-2 text-muted-foreground">Byg din første lektion af aktiviteter.</p>
-          <Link to="/lessons/new">
-            <Button className="mt-6 rounded-full">Ny lektion</Button>
-          </Link>
+          <Button asChild className="mt-6 rounded-full">
+            <Link to="/lessons/new">Ny lektion</Link>
+          </Button>
         </div>
       )}
 
@@ -68,14 +68,16 @@ function LessonsPage() {
                   {LESSON_STATUS_LABEL[l.status]}
                 </p>
               </div>
-              <Link to="/lessons/$lessonId/run" params={{ lessonId: l.id }}>
-                <Button className="rounded-full">Start undervisning</Button>
-              </Link>
-              <Link to="/lessons/$lessonId/edit" params={{ lessonId: l.id }}>
-                <Button variant="outline" className="rounded-full">
+              <Button asChild className="rounded-full">
+                <Link to="/lessons/$lessonId/run" params={{ lessonId: l.id }}>
+                  Start undervisning
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-full">
+                <Link to="/lessons/$lessonId/edit" params={{ lessonId: l.id }}>
                   Åbn lektion
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           );
         })}

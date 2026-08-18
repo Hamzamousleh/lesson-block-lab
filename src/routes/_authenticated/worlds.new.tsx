@@ -25,9 +25,15 @@ export const Route = createFileRoute("/_authenticated/worlds/new")({
   head: () => ({
     meta: [
       { title: "Nyt World — CaseLab" },
-      { name: "description", content: "Opret et vedvarende læringsunivers med faglige variabler og episoder." },
+      {
+        name: "description",
+        content: "Opret et vedvarende læringsunivers med faglige variabler og episoder.",
+      },
       { property: "og:title", content: "Nyt World — CaseLab" },
-      { property: "og:description", content: "Byg et World med faglige variabler, episoder og konsekvenser." },
+      {
+        property: "og:description",
+        content: "Byg et World med faglige variabler, episoder og konsekvenser.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -68,7 +74,8 @@ function NewWorldPage() {
     mutationFn: async () => {
       if (!title.trim()) throw new Error("Giv dit World en titel.");
       if (!effectiveSubject.trim()) throw new Error("Vælg et fag.");
-      if (!premise.trim()) throw new Error("Beskriv grundsituationen — hvem eller hvad møder eleverne?");
+      if (!premise.trim())
+        throw new Error("Beskriv grundsituationen — hvem eller hvad møder eleverne?");
       return createWorld({
         title: title.trim(),
         subject: effectiveSubject.trim(),
@@ -128,20 +135,20 @@ function NewWorldPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-14">
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-14">
       <h1 className="text-3xl font-semibold">Nyt World</h1>
       <p className="mt-2 text-muted-foreground">
-        Et World er en ramme, ikke et spil. Eleverne møder de samme personer eller institutioner igen
-        og igen og anvender fagteori på nye situationer.
+        Et World er en ramme, ikke et spil. Eleverne møder de samme personer eller institutioner
+        igen og igen og anvender fagteori på nye situationer.
       </p>
 
-      <section className="surface-card mt-8 space-y-5 p-8">
+      <section className="surface-card mt-8 space-y-5 p-4 sm:p-8">
         <h2 className="text-xl font-semibold">1 · Grundlaget</h2>
 
         <div className="space-y-2">
-          <Label>Udgangspunkt</Label>
+          <Label id="world-template-label">Udgangspunkt</Label>
           <Select value={templateKey} onValueChange={setTemplateKey}>
-            <SelectTrigger className="rounded-xl">
+            <SelectTrigger aria-labelledby="world-template-label" className="rounded-xl">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -178,9 +185,9 @@ function NewWorldPage() {
         </div>
 
         <div className="space-y-2">
-          <Label>Klasse (valgfri)</Label>
+          <Label id="world-class-label">Klasse (valgfri)</Label>
           <Select value={classId} onValueChange={setClassId}>
-            <SelectTrigger className="rounded-xl">
+            <SelectTrigger aria-labelledby="world-class-label" className="rounded-xl">
               <SelectValue placeholder="Ingen klasse" />
             </SelectTrigger>
             <SelectContent>
@@ -249,11 +256,11 @@ function NewWorldPage() {
           <Button variant="outline" className="rounded-full" onClick={() => void copyPrompt()}>
             {copied ? <Check className="size-4" /> : <Copy className="size-4" />} Kopiér prompt
           </Button>
-          <a href="https://chatgpt.com" target="_blank" rel="noreferrer">
-            <Button variant="outline" className="rounded-full">
+          <Button asChild variant="outline" className="rounded-full">
+            <a href="https://chatgpt.com" target="_blank" rel="noreferrer">
               Åbn ChatGPT
-            </Button>
-          </a>
+            </a>
+          </Button>
         </div>
 
         <Textarea

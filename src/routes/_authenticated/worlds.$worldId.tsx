@@ -58,9 +58,15 @@ export const Route = createFileRoute("/_authenticated/worlds/$worldId")({
   head: () => ({
     meta: [
       { title: "World — CaseLab" },
-      { name: "description", content: "Følg tilstand, episoder og konsekvenser i dit læringsunivers." },
+      {
+        name: "description",
+        content: "Følg tilstand, episoder og konsekvenser i dit læringsunivers.",
+      },
       { property: "og:title", content: "World — CaseLab" },
-      { property: "og:description", content: "Tilstand, episoder, konsekvenser og World-hukommelse." },
+      {
+        property: "og:description",
+        content: "Tilstand, episoder, konsekvenser og World-hukommelse.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -72,7 +78,11 @@ function StateBar({ s }: { s: WorldStateVar }) {
   const pct = isNumber
     ? Math.max(
         0,
-        Math.min(100, ((Number(s.value) - (s.min_value ?? 0)) / ((s.max_value ?? 100) - (s.min_value ?? 0))) * 100),
+        Math.min(
+          100,
+          ((Number(s.value) - (s.min_value ?? 0)) / ((s.max_value ?? 100) - (s.min_value ?? 0))) *
+            100,
+        ),
       )
     : 0;
   return (
@@ -87,7 +97,9 @@ function StateBar({ s }: { s: WorldStateVar }) {
         </div>
       )}
       {s.description && <p className="mt-2 text-xs text-muted-foreground">{s.description}</p>}
-      {!s.student_visible && <p className="mt-1 text-xs text-muted-foreground">Kun synlig for læreren</p>}
+      {!s.student_visible && (
+        <p className="mt-1 text-xs text-muted-foreground">Kun synlig for læreren</p>
+      )}
     </div>
   );
 }
@@ -206,9 +218,7 @@ function ConsequenceCard({
               : "Bekræft konsekvens"}
         </Button>
         {!isApplied && !canApply && (
-          <span className="text-xs text-muted-foreground">
-            {evaluation.reason}
-          </span>
+          <span className="text-xs text-muted-foreground">{evaluation.reason}</span>
         )}
       </div>
     </div>
@@ -262,7 +272,11 @@ function EpisodeCard({
   return (
     <div
       className={`surface-card p-6 ${
-        tone === "now" ? "border-primary/40 ring-1 ring-primary/20" : tone === "past" ? "opacity-90" : ""
+        tone === "now"
+          ? "border-primary/40 ring-1 ring-primary/20"
+          : tone === "past"
+            ? "opacity-90"
+            : ""
       }`}
     >
       <div className="flex flex-wrap items-center gap-3">
@@ -275,7 +289,9 @@ function EpisodeCard({
           </span>
         )}
         <p className="text-lg font-medium">{episode.title}</p>
-        <span className="text-xs text-muted-foreground">{complexityLabel(episode.complexity_level)}</span>
+        <span className="text-xs text-muted-foreground">
+          {complexityLabel(episode.complexity_level)}
+        </span>
         <span className="ml-auto rounded-full bg-secondary px-3 py-1 text-xs">
           {EPISODE_STATUS_LABEL[episode.status]}
         </span>
@@ -315,15 +331,11 @@ function EpisodeCard({
             {stats.data.participants} deltagere · {stats.data.responses} svar
             {stats.data.joinCode ? ` · kode ${stats.data.joinCode}` : ""}
           </span>
-          <Link
-            to="/sessions/$sessionId"
-            params={{ sessionId: stats.data.sessionId }}
-            className="ml-auto"
-          >
-            <Button size="sm" variant="outline" className="rounded-full">
+          <Button asChild size="sm" variant="outline" className="ml-auto rounded-full">
+            <Link to="/sessions/$sessionId" params={{ sessionId: stats.data.sessionId }}>
               Se elevsvar
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       )}
 
@@ -365,16 +377,16 @@ function EpisodeCard({
       <div className="mt-5 flex flex-wrap gap-3">
         {episode.lesson_id && !locked && (
           <>
-            <Link to="/lessons/$lessonId/edit" params={{ lessonId: episode.lesson_id }}>
-              <Button variant="outline" size="sm" className="rounded-full">
+            <Button asChild variant="outline" size="sm" className="rounded-full">
+              <Link to="/lessons/$lessonId/edit" params={{ lessonId: episode.lesson_id }}>
                 Åbn lektion
-              </Button>
-            </Link>
-            <Link to="/lessons/$lessonId/run" params={{ lessonId: episode.lesson_id }}>
-              <Button variant="outline" size="sm" className="rounded-full">
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-full">
+              <Link to="/lessons/$lessonId/run" params={{ lessonId: episode.lesson_id }}>
                 Start undervisning
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <Button size="sm" className="rounded-full" onClick={() => setSessionOpen(true)}>
               <Radio className="size-4" /> Start elevsession
             </Button>
@@ -477,10 +489,7 @@ function WorldDetail() {
           )
         : existing;
       if (!result.duplicate) {
-        const confirmedEvents = [
-          ...(result.event ? [result.event] : []),
-          ...(result.events ?? []),
-        ];
+        const confirmedEvents = [...(result.event ? [result.event] : []), ...(result.events ?? [])];
         next = [
           ...confirmedEvents.filter((event) => !next.some((current) => current.id === event.id)),
           ...next,
@@ -529,10 +538,7 @@ function WorldDetail() {
   const finish = useMutation({
     mutationFn: async () => {
       if (!world.data) throw new Error("Worldet blev ikke fundet.");
-      return completeWorld(
-        world.data,
-        buildWorldSummary(list, stateList, events.data ?? []),
-      );
+      return completeWorld(world.data, buildWorldSummary(list, stateList, events.data ?? []));
     },
     onSuccess: async () => {
       await refresh();
@@ -598,11 +604,11 @@ function WorldDetail() {
           >
             <Copy className="size-4" /> Kopiér til ny klasse
           </Button>
-          <Link to="/worlds/$worldId/episodes/new" params={{ worldId }}>
-            <Button className="rounded-full">
+          <Button asChild className="rounded-full">
+            <Link to="/worlds/$worldId/episodes/new" params={{ worldId }}>
               <Plus className="size-4" /> Ny episode
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -610,7 +616,8 @@ function WorldDetail() {
         <div className="mt-8 rounded-2xl border border-primary/40 bg-primary/5 p-5">
           <p className="font-medium">Planlagte konsekvenser er klar</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {eligible.length} konsekvens(er) fra en tidligere episode kan nu mærkes i World-tilstanden.
+            {eligible.length} konsekvens(er) fra en tidligere episode kan nu mærkes i
+            World-tilstanden.
           </p>
           <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
             {eligible.map((c) => (
@@ -747,7 +754,9 @@ function WorldDetail() {
         </div>
         <div className="mt-4 space-y-3">
           {events.data?.length === 0 && (
-            <p className="text-sm text-muted-foreground">Der er endnu ikke sket noget i dette World.</p>
+            <p className="text-sm text-muted-foreground">
+              Der er endnu ikke sket noget i dette World.
+            </p>
           )}
           {(events.data ?? []).map((ev) => (
             <div
@@ -761,7 +770,9 @@ function WorldDetail() {
                 </span>
                 {ev.reverted_at && <span className="text-xs text-muted-foreground">Fortrudt</span>}
               </div>
-              {ev.description && <p className="mt-1 text-sm text-muted-foreground">{ev.description}</p>}
+              {ev.description && (
+                <p className="mt-1 text-sm text-muted-foreground">{ev.description}</p>
+              )}
               {ev.state_changes.length > 0 && (
                 <p className="mt-2 text-sm text-muted-foreground">
                   {ev.state_changes

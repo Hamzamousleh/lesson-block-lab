@@ -49,8 +49,14 @@ function SessionDetail() {
   }
 
   const session = useQuery({ ...sessionQuery(sessionId), refetchInterval: 5000 });
-  const lesson = useQuery({ ...lessonQuery(session.data?.lesson_id ?? ""), enabled: !!session.data });
-  const blocks = useQuery({ ...blocksQuery(session.data?.lesson_id ?? ""), enabled: !!session.data });
+  const lesson = useQuery({
+    ...lessonQuery(session.data?.lesson_id ?? ""),
+    enabled: !!session.data,
+  });
+  const blocks = useQuery({
+    ...blocksQuery(session.data?.lesson_id ?? ""),
+    enabled: !!session.data,
+  });
   const participants = useQuery(participantsQuery(sessionId, true));
   const responses = useQuery(responsesQuery(sessionId, true));
 
@@ -114,7 +120,9 @@ function SessionDetail() {
           <p className="text-sm text-muted-foreground">
             {SESSION_MODE_LABEL[s.mode]} · {SESSION_STATUS_LABEL[s.status]}
           </p>
-          <h1 className="mt-1 font-display text-3xl font-semibold">{lesson.data?.title ?? "Lektion"}</h1>
+          <h1 className="mt-1 font-display text-3xl font-semibold">
+            {lesson.data?.title ?? "Lektion"}
+          </h1>
         </div>
         <div className="flex flex-wrap gap-2">
           {s.status === "draft" && (
@@ -129,16 +137,24 @@ function SessionDetail() {
                 )
               }
             >
-              {syncPending ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+              {syncPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Play className="size-4" />
+              )}
               Start session
             </Button>
           )}
           {s.status !== "ended" && s.mode === "live" && (
-            <Link to="/lessons/$lessonId/run" params={{ lessonId: s.lesson_id }} search={{ session: sessionId }}>
-              <Button className="rounded-full">
+            <Button asChild className="rounded-full">
+              <Link
+                to="/lessons/$lessonId/run"
+                params={{ lessonId: s.lesson_id }}
+                search={{ session: sessionId }}
+              >
                 <Monitor className="size-4" /> Åbn lærercockpit
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
           {s.status !== "ended" && (
             <Button
@@ -146,19 +162,21 @@ function SessionDetail() {
               className="rounded-full"
               disabled={syncPending}
               onClick={() =>
-                void syncSession("Sessionafslutning", () => endSession(sessionId), () =>
-                  toast.success("Sessionen er afsluttet"),
+                void syncSession(
+                  "Sessionafslutning",
+                  () => endSession(sessionId),
+                  () => toast.success("Sessionen er afsluttet"),
                 )
               }
             >
               Afslut session
             </Button>
           )}
-          <Link to="/sessions/$sessionId/follow-up" params={{ sessionId }}>
-            <Button variant="outline" className="rounded-full">
+          <Button asChild variant="outline" className="rounded-full">
+            <Link to="/sessions/$sessionId/follow-up" params={{ sessionId }}>
               <Sparkles className="size-4" /> Arbejd videre med svarene
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <Button
             variant="outline"
             className="rounded-full"
@@ -176,11 +194,9 @@ function SessionDetail() {
           >
             <Download className="size-4" /> Eksportér svar
           </Button>
-          <Link to="/sessions">
-            <Button variant="ghost" className="rounded-full">
-              Alle sessioner
-            </Button>
-          </Link>
+          <Button asChild variant="ghost" className="rounded-full">
+            <Link to="/sessions">Alle sessioner</Link>
+          </Button>
         </div>
       </div>
 
@@ -238,11 +254,11 @@ function SessionDetail() {
           >
             {copied ? <Check className="size-4" /> : <Copy className="size-4" />} Kopiér link
           </Button>
-          <a href={`/join/${s.join_code}`} target="_blank" rel="noreferrer">
-            <Button variant="outline" className="rounded-full">
+          <Button asChild variant="outline" className="rounded-full">
+            <a href={`/join/${s.join_code}`} target="_blank" rel="noreferrer">
               Åbn elevvisning
-            </Button>
-          </a>
+            </a>
+          </Button>
         </div>
         <p className="mt-6 text-lg">
           {people.length} {people.length === 1 ? "deltager" : "deltagere"} med i aktiviteten nu
@@ -275,10 +291,14 @@ function SessionDetail() {
                   )
                 }
                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors ${
-                  b.id === s.current_block_id ? "bg-accent text-accent-foreground" : "hover:bg-secondary"
+                  b.id === s.current_block_id
+                    ? "bg-accent text-accent-foreground"
+                    : "hover:bg-secondary"
                 }`}
               >
-                <span className="tabular-nums text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
+                <span className="tabular-nums text-muted-foreground">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 <span className="min-w-0 flex-1 truncate">
                   {blockDef(b.type).icon} {b.title}
                 </span>
@@ -326,7 +346,9 @@ function SessionDetail() {
       {/* participants */}
       <section className="surface-card mt-8 p-8">
         <h2 className="text-xl font-semibold">Deltagere</h2>
-        {people.length === 0 && <p className="mt-3 text-muted-foreground">Ingen er kommet ind endnu.</p>}
+        {people.length === 0 && (
+          <p className="mt-3 text-muted-foreground">Ingen er kommet ind endnu.</p>
+        )}
         <ul className="mt-4 space-y-2">
           {people.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-3 text-sm">

@@ -54,7 +54,7 @@ function RescuePage() {
   const canGenerate = topic.trim().length > 1;
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-14">
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-14">
       <p className="text-sm font-medium text-primary">⚡ Red mig</p>
       <h1 className="mt-2 font-display text-4xl font-semibold">Nødundervisning på få minutter</h1>
       <p className="mt-3 text-lg text-muted-foreground">
@@ -62,14 +62,14 @@ function RescuePage() {
         med det samme.
       </p>
 
-      <section className="surface-card mt-10 space-y-6 p-8">
+      <section className="surface-card mt-8 space-y-6 p-4 sm:mt-10 sm:p-8">
         <div>
           <h2 className="text-xl font-semibold">Hvad skal du undervise i?</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Klasse (valgfrit)</Label>
+              <Label id="rescue-class-label">Klasse (valgfrit)</Label>
               <Select value={classId} onValueChange={setClassId}>
-                <SelectTrigger className="rounded-xl">
+                <SelectTrigger aria-labelledby="rescue-class-label" className="rounded-xl">
                   <SelectValue placeholder="Vælg klasse" />
                 </SelectTrigger>
                 <SelectContent>
@@ -82,8 +82,9 @@ function RescuePage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Emne</Label>
+              <Label htmlFor="rescue-topic">Emne</Label>
               <Input
+                id="rescue-topic"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="Fx stress"
@@ -99,6 +100,7 @@ function RescuePage() {
             {DURATIONS.map((d) => (
               <Button
                 key={d}
+                aria-pressed={!customDuration && duration === d}
                 variant={!customDuration && duration === d ? "default" : "outline"}
                 className="rounded-full"
                 onClick={() => {

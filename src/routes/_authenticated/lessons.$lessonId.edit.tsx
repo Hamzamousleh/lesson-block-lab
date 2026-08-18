@@ -9,6 +9,7 @@ import {
   Copy,
   GripVertical,
   Loader2,
+  MoreHorizontal,
   Play,
   Plus,
   Timer,
@@ -47,6 +48,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/lessons/$lessonId/edit")({
   head: () => ({
@@ -77,7 +85,6 @@ function LessonEditor() {
   const [editing, setEditing] = useState<LessonBlock | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [sessionOpen, setSessionOpen] = useState(false);
-
 
   const all = blocks.data ?? [];
   const list = all.filter((b) => !b.is_fallback);
@@ -227,7 +234,6 @@ function LessonEditor() {
     moveTo(blockId, ids[to] as string);
   };
 
-
   if (lesson.isLoading) {
     return (
       <div className="mx-auto flex max-w-4xl items-center gap-2 px-6 py-20 text-muted-foreground">
@@ -236,7 +242,9 @@ function LessonEditor() {
     );
   }
   if (lesson.isError || !lesson.data) {
-    return <p className="mx-auto max-w-4xl px-6 py-20 text-destructive">Lektionen kunne ikke hentes.</p>;
+    return (
+      <p className="mx-auto max-w-4xl px-6 py-20 text-destructive">Lektionen kunne ikke hentes.</p>
+    );
   }
 
   let running = 0;
@@ -253,7 +261,7 @@ function LessonEditor() {
           if (draggable && dragId) moveTo(dragId, b.id);
           setDragId(null);
         }}
-        className={`surface-card flex items-center gap-4 px-5 py-4 transition-shadow ${
+        className={`surface-card flex flex-wrap items-center gap-3 px-4 py-4 transition-shadow sm:flex-nowrap sm:gap-4 sm:px-5 ${
           dragId === b.id ? "opacity-50" : ""
         }`}
       >
@@ -265,7 +273,7 @@ function LessonEditor() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-7"
+                className="size-10 sm:size-8"
                 aria-label={`Flyt "${b.title}" op`}
                 title="Flyt op"
                 disabled={index === 0 || reorder.isPending}
@@ -277,7 +285,7 @@ function LessonEditor() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-7"
+                className="size-10 sm:size-8"
                 aria-label={`Flyt "${b.title}" ned`}
                 title="Flyt ned"
                 disabled={index === list.length - 1 || reorder.isPending}
@@ -291,48 +299,88 @@ function LessonEditor() {
           <span className="w-4 shrink-0" />
         )}
 
-        <span className="w-14 shrink-0 text-sm tabular-nums text-muted-foreground">{meta}</span>
+        <span className="w-12 shrink-0 text-sm tabular-nums text-muted-foreground sm:w-14">
+          {meta}
+        </span>
         <span className="text-xl">{def.icon}</span>
-        <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setEditing(b)}>
-          <span className="block truncate font-medium">{b.title}</span>
+        <button
+          type="button"
+          className="min-h-11 min-w-0 flex-1 text-left focus-visible:rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={() => setEditing(b)}
+        >
+          <span className="block break-words font-medium">{b.title}</span>
           <span className="block text-sm text-muted-foreground">
             {def.label} · {b.duration_minutes} min
           </span>
         </button>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Gem i bibliotek"
-          disabled={saveBlock.isPending}
-          onClick={() => saveBlock.mutate(b)}
-        >
-          <BookmarkPlus className="size-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="rounded-full text-xs"
-          onClick={() => toggleFallback.mutate(b)}
-        >
-          {b.is_fallback ? "Gør aktiv" : "Gør til ekstra"}
-        </Button>
-        <Button variant="ghost" size="icon" aria-label="Dublér aktivitet" onClick={() => dup.mutate(b)}>
-          <Copy className="size-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Slet aktivitet"
-          onClick={() => remove.mutate(b.id)}
-        >
-          <Trash2 className="size-4" />
-        </Button>
+        <div className="hidden shrink-0 items-center sm:flex">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Gem "${b.title}" i bibliotek`}
+            disabled={saveBlock.isPending}
+            onClick={() => saveBlock.mutate(b)}
+          >
+            <BookmarkPlus className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-full text-xs"
+            onClick={() => toggleFallback.mutate(b)}
+          >
+            {b.is_fallback ? "Gør aktiv" : "Gør til ekstra"}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Dublér "${b.title}"`}
+            onClick={() => dup.mutate(b)}
+          >
+            <Copy className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Slet "${b.title}"`}
+            onClick={() => remove.mutate(b.id)}
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="ml-auto size-11 sm:hidden"
+              aria-label={`Flere handlinger for "${b.title}"`}
+            >
+              <MoreHorizontal className="size-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem disabled={saveBlock.isPending} onSelect={() => saveBlock.mutate(b)}>
+              <BookmarkPlus className="size-4" /> Gem i bibliotek
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => toggleFallback.mutate(b)}>
+              {b.is_fallback ? "Gør aktiv" : "Gør til ekstra"}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => dup.mutate(b)}>
+              <Copy className="size-4" /> Dublér
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive" onSelect={() => remove.mutate(b.id)}>
+              <Trash2 className="size-4" /> Slet
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     );
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-12">
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
         <div className="flex flex-wrap items-center gap-2">
           <Link to="/classes" className="hover:text-foreground">
@@ -352,30 +400,30 @@ function LessonEditor() {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link to="/lessons/$lessonId/run" params={{ lessonId }}>
-            <Button className="rounded-full">
+          <Button asChild className="rounded-full">
+            <Link to="/lessons/$lessonId/run" params={{ lessonId }}>
               <Play className="size-4" /> Start undervisning
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <Button variant="outline" className="rounded-full" onClick={() => setSessionOpen(true)}>
             <Smartphone className="size-4" /> Start elevsession
           </Button>
 
-          <Link to="/import" search={{ lessonId }}>
-            <Button variant="outline" className="rounded-full">
+          <Button asChild variant="outline" className="rounded-full">
+            <Link to="/import" search={{ lessonId }}>
               <Plus className="size-4" /> Importér aktiviteter
-            </Button>
-          </Link>
-          <Link to="/extra-time" search={{ lessonId }}>
-            <Button variant="outline" className="rounded-full">
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="rounded-full">
+            <Link to="/extra-time" search={{ lessonId }}>
               <Timer className="size-4" /> Jeg mangler tid
-            </Button>
-          </Link>
-          <Link to="/improve-lesson" search={{ lessonId }}>
-            <Button variant="outline" className="rounded-full">
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="rounded-full">
+            <Link to="/improve-lesson" search={{ lessonId }}>
               <Wand2 className="size-4" /> Gør den mere aktiv
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <Button
             variant="outline"
             className="rounded-full"
@@ -419,7 +467,7 @@ function LessonEditor() {
         </div>
       </div>
 
-      <div className="surface-card mt-6 p-8">
+      <div className="surface-card mt-6 p-4 sm:p-8">
         <Input
           value={lesson.data.title}
           onChange={(e) =>
@@ -449,11 +497,14 @@ function LessonEditor() {
           >
             {planned} / {target} min
           </span>
+          <Label id="lesson-status-label" className="sr-only">
+            Lektionsstatus
+          </Label>
           <Select
             value={lesson.data.status}
             onValueChange={(v) => patchLesson.mutate({ status: v as LessonStatus })}
           >
-            <SelectTrigger className="w-36 rounded-full">
+            <SelectTrigger aria-labelledby="lesson-status-label" className="w-36 rounded-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -515,7 +566,6 @@ function LessonEditor() {
         blocks={blocks.data ?? []}
       />
       <ActivityPicker
-
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         onPick={(type) => add.mutate(type)}

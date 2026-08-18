@@ -70,11 +70,11 @@ function SessionsPage() {
             {SESSION_MODE_LABEL[s.mode]} · {SESSION_STATUS_LABEL[s.status]} · kode {s.join_code}
           </p>
         </div>
-        <Link to="/sessions/$sessionId" params={{ sessionId: s.id }}>
-          <Button variant="outline" className="rounded-full">
+        <Button asChild variant="outline" className="rounded-full">
+          <Link to="/sessions/$sessionId" params={{ sessionId: s.id }}>
             Åbn
-          </Button>
-        </Link>
+          </Link>
+        </Button>
         {s.status !== "ended" && (
           <Button
             variant="ghost"
@@ -107,11 +107,9 @@ function SessionsPage() {
             Sessioner startes fra en lektion med “Start elevsession”.
           </p>
         </div>
-        <Link to="/sessions/compare">
-          <Button variant="outline" className="rounded-full">
-            Sammenlign sessioner
-          </Button>
-        </Link>
+        <Button asChild variant="outline" className="rounded-full">
+          <Link to="/sessions/compare">Sammenlign sessioner</Link>
+        </Button>
       </div>
 
       {sessions.isLoading && (

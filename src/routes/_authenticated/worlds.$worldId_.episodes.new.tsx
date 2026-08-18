@@ -35,9 +35,15 @@ export const Route = createFileRoute("/_authenticated/worlds/$worldId_/episodes/
   head: () => ({
     meta: [
       { title: "Ny episode — CaseLab" },
-      { name: "description", content: "Byg næste episode i dit World med World-hukommelsen som grundlag." },
+      {
+        name: "description",
+        content: "Byg næste episode i dit World med World-hukommelsen som grundlag.",
+      },
       { property: "og:title", content: "Ny episode — CaseLab" },
-      { property: "og:description", content: "Næste episode bygges oven på tilstand og tidligere beslutninger." },
+      {
+        property: "og:description",
+        content: "Næste episode bygges oven på tilstand og tidligere beslutninger.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -83,7 +89,9 @@ function NewEpisodePage() {
           worldTitle: w.title,
           subject: w.subject,
           premise: w.premise ?? "",
-          startLines: (states.data ?? []).map((s) => `${s.label}: ${formatStateValue(s, s.initial_value)}`),
+          startLines: (states.data ?? []).map(
+            (s) => `${s.label}: ${formatStateValue(s, s.initial_value)}`,
+          ),
           endLines: stateLines,
           decisionLines: historyLines,
           duration,
@@ -167,8 +175,8 @@ function NewEpisodePage() {
         {mode === "reflection" ? "Afslutning" : `Episode ${nextNumber}`}
       </h1>
       <p className="mt-2 text-muted-foreground">
-        {w.title} · CaseLab sender World-hukommelsen med, så ChatGPT bygger videre på det, der faktisk
-        er sket — og ikke opfinder en ny fortid.
+        {w.title} · CaseLab sender World-hukommelsen med, så ChatGPT bygger videre på det, der
+        faktisk er sket — og ikke opfinder en ny fortid.
       </p>
 
       <section className="surface-card mt-8 space-y-5 p-8">
@@ -194,7 +202,7 @@ function NewEpisodePage() {
             <div className="space-y-2">
               <Label>Fagligt kompleksitetsniveau</Label>
               <Select value={complexity} onValueChange={setComplexity}>
-                <SelectTrigger className="rounded-xl">
+                <SelectTrigger aria-label="Fagligt kompleksitetsniveau" className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -261,11 +269,11 @@ function NewEpisodePage() {
           <Button className="rounded-full" onClick={() => void copyPrompt()}>
             {copied ? <Check className="size-4" /> : <Copy className="size-4" />} Kopiér prompt
           </Button>
-          <a href="https://chatgpt.com" target="_blank" rel="noreferrer">
-            <Button variant="outline" className="rounded-full">
+          <Button asChild variant="outline" className="rounded-full">
+            <a href="https://chatgpt.com" target="_blank" rel="noreferrer">
               Åbn ChatGPT
-            </Button>
-          </a>
+            </a>
+          </Button>
         </div>
       </section>
 
@@ -316,7 +324,8 @@ function NewEpisodePage() {
             onClick={() => importEpisode.mutate(false)}
             disabled={importEpisode.isPending || !pasted.trim()}
           >
-            {importEpisode.isPending && <Loader2 className="size-4 animate-spin" />} Importér episode
+            {importEpisode.isPending && <Loader2 className="size-4 animate-spin" />} Importér
+            episode
           </Button>
         </section>
       ) : (

@@ -86,7 +86,7 @@ function ImprovePage() {
         <div className="space-y-2">
           <Label>Lektion</Label>
           <Select value={lessonId} onValueChange={setLessonId}>
-            <SelectTrigger className="rounded-xl">
+            <SelectTrigger aria-label="Lektion" className="rounded-xl">
               <SelectValue placeholder="Vælg lektion" />
             </SelectTrigger>
             <SelectContent>
@@ -164,18 +164,18 @@ function ImprovePage() {
             setPromptFiles(attachedFiles);
             if (lesson.data)
               setPrompt(
-              buildImprovePrompt({
-                className: klass.data?.name,
-                subject: klass.data?.subject ?? lesson.data.subject ?? undefined,
-                lessonTitle: lesson.data.title,
-                duration: lesson.data.duration_minutes,
-                learningGoal: lesson.data.learning_goal ?? undefined,
-                blockDetail: lessonToDetailedText(main),
-                wishes,
-                freeText,
-                attachedFiles,
-              }),
-            );
+                buildImprovePrompt({
+                  className: klass.data?.name,
+                  subject: klass.data?.subject ?? lesson.data.subject ?? undefined,
+                  lessonTitle: lesson.data.title,
+                  duration: lesson.data.duration_minutes,
+                  learningGoal: lesson.data.learning_goal ?? undefined,
+                  blockDetail: lessonToDetailedText(main),
+                  wishes,
+                  freeText,
+                  attachedFiles,
+                }),
+              );
           }}
         >
           Lav prompt til ChatGPT

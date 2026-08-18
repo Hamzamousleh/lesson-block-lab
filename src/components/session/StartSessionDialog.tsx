@@ -64,18 +64,23 @@ export function StartSessionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:max-w-lg sm:p-6">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">Hvordan skal eleverne arbejde?</DialogTitle>
+          <DialogTitle className="font-display text-2xl">
+            Hvordan skal eleverne arbejde?
+          </DialogTitle>
           <DialogDescription>Du kan altid afslutte sessionen igen.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
           <button
             type="button"
+            aria-pressed={mode === "live"}
             onClick={() => setMode("live")}
             className={`flex w-full gap-4 rounded-2xl border p-5 text-left transition-colors ${
-              mode === "live" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+              mode === "live"
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50"
             }`}
           >
             <Radio className="mt-1 size-5 shrink-0 text-primary" />
@@ -88,9 +93,12 @@ export function StartSessionDialog({
           </button>
           <button
             type="button"
+            aria-pressed={mode === "self_paced"}
             onClick={() => setMode("self_paced")}
             className={`flex w-full gap-4 rounded-2xl border p-5 text-left transition-colors ${
-              mode === "self_paced" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+              mode === "self_paced"
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50"
             }`}
           >
             <UserRound className="mt-1 size-5 shrink-0 text-primary" />
@@ -114,8 +122,9 @@ export function StartSessionDialog({
                 <button
                   key={l}
                   type="button"
+                  aria-pressed={variant === l}
                   onClick={() => setVariant(l)}
-                  className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                  className={`min-h-11 rounded-full border px-4 py-2 text-sm transition-colors ${
                     variant === l
                       ? "border-primary bg-primary/10"
                       : "border-border hover:border-primary/40"

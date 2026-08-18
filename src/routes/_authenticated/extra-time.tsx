@@ -88,7 +88,7 @@ function ExtraTimePage() {
         <div className="space-y-2">
           <Label>Lektion (valgfrit)</Label>
           <Select value={lessonId} onValueChange={setLessonId}>
-            <SelectTrigger className="rounded-xl">
+            <SelectTrigger aria-label="Lektion" className="rounded-xl">
               <SelectValue placeholder="Vælg lektion" />
             </SelectTrigger>
             <SelectContent>
@@ -183,9 +183,7 @@ function ExtraTimePage() {
         )}
       </section>
 
-      {prompt && (
-        <PromptResult prompt={prompt} importSearch={lessonId ? { lessonId } : {}} />
-      )}
+      {prompt && <PromptResult prompt={prompt} importSearch={lessonId ? { lessonId } : {}} />}
     </div>
   );
 }

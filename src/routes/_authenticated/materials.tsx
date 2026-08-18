@@ -195,14 +195,14 @@ function MaterialsPage() {
   );
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-14">
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-14">
       <h1 className="font-display text-4xl font-semibold">Materialer</h1>
       <p className="mt-2 text-muted-foreground">
         Upload dine PowerPoints, PDF'er, Word-dokumenter og billeder — og vedhæft dem i ChatGPT, når
         du laver undervisning.
       </p>
 
-      <section className="surface-card mt-8 space-y-6 p-8">
+      <section className="surface-card mt-8 space-y-6 p-4 sm:p-8">
         <h2 className="text-xl font-semibold">Upload materiale</h2>
 
         <div
@@ -216,7 +216,7 @@ function MaterialsPage() {
             setDragging(false);
             pick(e.dataTransfer.files?.[0]);
           }}
-          className={`rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
+          className={`rounded-2xl border-2 border-dashed p-5 text-center transition-colors sm:p-8 ${
             dragging ? "border-primary bg-accent" : "border-border"
           }`}
         >
@@ -270,7 +270,7 @@ function MaterialsPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label>Klasse (valgfri)</Label>
+            <Label id="material-class-label">Klasse (valgfri)</Label>
             <Select
               value={classId}
               onValueChange={(v) => {
@@ -279,7 +279,7 @@ function MaterialsPage() {
                 setLessonId(NONE);
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="material-class-label">
                 <SelectValue placeholder="Ingen" />
               </SelectTrigger>
               <SelectContent>
@@ -293,7 +293,7 @@ function MaterialsPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Forløb (valgfri)</Label>
+            <Label id="material-unit-label">Forløb (valgfri)</Label>
             <Select
               value={unitId}
               onValueChange={(v) => {
@@ -301,7 +301,7 @@ function MaterialsPage() {
                 setLessonId(NONE);
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="material-unit-label">
                 <SelectValue placeholder="Ingen" />
               </SelectTrigger>
               <SelectContent>
@@ -315,9 +315,9 @@ function MaterialsPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Lektion (valgfri)</Label>
+            <Label id="material-lesson-label">Lektion (valgfri)</Label>
             <Select value={lessonId} onValueChange={setLessonId}>
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="material-lesson-label">
                 <SelectValue placeholder="Ingen" />
               </SelectTrigger>
               <SelectContent>
@@ -361,8 +361,21 @@ function MaterialsPage() {
       <section className="mt-12">
         <h2 className="text-xl font-semibold">Dine filer</h2>
         {files.isLoading && (
-          <div className="mt-6 flex items-center gap-2 text-muted-foreground">
+          <div role="status" className="mt-6 flex items-center gap-2 text-muted-foreground">
             <Loader2 className="size-4 animate-spin" /> Henter filer …
+          </div>
+        )}
+        {files.isError && (
+          <div role="alert" className="mt-6 rounded-2xl border border-destructive/30 p-4">
+            <p className="text-sm text-destructive">Dine filer kunne ikke hentes.</p>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-3 min-h-11 rounded-full"
+              onClick={() => void files.refetch()}
+            >
+              Prøv igen
+            </Button>
           </div>
         )}
         {files.data?.length === 0 && (
@@ -370,7 +383,10 @@ function MaterialsPage() {
         )}
         <ul className="mt-6 space-y-3">
           {(files.data ?? []).map((f) => (
-            <li key={f.id} className="surface-card flex flex-wrap items-center gap-4 px-6 py-5">
+            <li
+              key={f.id}
+              className="surface-card flex flex-wrap items-center gap-3 px-4 py-4 sm:gap-4 sm:px-6 sm:py-5"
+            >
               <FileText className="size-5 shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{f.title}</p>
@@ -393,7 +409,7 @@ function MaterialsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-full"
+                className="min-h-11 rounded-full sm:min-h-8"
                 onClick={() => void open(f)}
               >
                 <Download className="size-4" /> Åbn
@@ -401,7 +417,7 @@ function MaterialsPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full"
+                className="size-11 rounded-full sm:size-9"
                 aria-label={`Redigér ${f.title}`}
                 onClick={() => edit(f)}
               >
@@ -410,7 +426,7 @@ function MaterialsPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full"
+                className="size-11 rounded-full sm:size-9"
                 aria-label={`Slet ${f.title}`}
                 onClick={() => setPendingDelete(f)}
               >
@@ -469,7 +485,7 @@ function MaterialsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Klasse (valgfri)</Label>
+              <Label id="edit-material-class-label">Klasse (valgfri)</Label>
               <Select
                 value={editClassId}
                 onValueChange={(v) => {
@@ -478,7 +494,7 @@ function MaterialsPage() {
                   setEditLessonId(NONE);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-labelledby="edit-material-class-label">
                   <SelectValue placeholder="Ingen" />
                 </SelectTrigger>
                 <SelectContent>
@@ -492,7 +508,7 @@ function MaterialsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Forløb (valgfri)</Label>
+              <Label id="edit-material-unit-label">Forløb (valgfri)</Label>
               <Select
                 value={editUnitId}
                 onValueChange={(v) => {
@@ -500,7 +516,7 @@ function MaterialsPage() {
                   setEditLessonId(NONE);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-labelledby="edit-material-unit-label">
                   <SelectValue placeholder="Ingen" />
                 </SelectTrigger>
                 <SelectContent>
@@ -514,9 +530,9 @@ function MaterialsPage() {
               </Select>
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label>Lektion (valgfri)</Label>
+              <Label id="edit-material-lesson-label">Lektion (valgfri)</Label>
               <Select value={editLessonId} onValueChange={setEditLessonId}>
-                <SelectTrigger>
+                <SelectTrigger aria-labelledby="edit-material-lesson-label">
                   <SelectValue placeholder="Ingen" />
                 </SelectTrigger>
                 <SelectContent>

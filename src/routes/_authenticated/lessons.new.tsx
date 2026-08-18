@@ -18,7 +18,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/lessons/new")({
   validateSearch: (search: Record<string, unknown>): { classId?: string } =>
-    typeof search['classId'] === "string" ? { classId: search['classId'] } : {},
+    typeof search["classId"] === "string" ? { classId: search["classId"] } : {},
   head: () => ({
     meta: [
       { title: "Ny lektion — CaseLab" },
@@ -65,7 +65,7 @@ function NewLesson() {
   const noClasses = classes.data?.length === 0;
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-14">
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-14">
       <h1 className="text-3xl font-semibold">Ny lektion</h1>
       <p className="mt-2 text-muted-foreground">
         Sæt rammen — aktiviteterne bygger du i editoren bagefter.
@@ -80,7 +80,7 @@ function NewLesson() {
         </div>
       ) : (
         <form
-          className="surface-card mt-10 space-y-6 p-8"
+          className="surface-card mt-10 space-y-6 p-4 sm:p-8"
           onSubmit={(e) => {
             e.preventDefault();
             if (!classId) {
@@ -89,7 +89,6 @@ function NewLesson() {
             }
             if (!create.isPending) create.mutate();
           }}
-
         >
           <div className="space-y-2">
             <Label htmlFor="l-title">Titel</Label>
@@ -103,9 +102,9 @@ function NewLesson() {
           </div>
 
           <div className="space-y-2">
-            <Label>Klasse</Label>
+            <Label id="new-lesson-class-label">Klasse</Label>
             <Select value={classId} onValueChange={setClassId}>
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="new-lesson-class-label">
                 <SelectValue placeholder="Vælg klasse" />
               </SelectTrigger>
               <SelectContent>
@@ -119,9 +118,9 @@ function NewLesson() {
           </div>
 
           <div className="space-y-2">
-            <Label>Forløb</Label>
+            <Label id="new-lesson-unit-label">Forløb</Label>
             <Select value={unitId} onValueChange={setUnitId} disabled={!classId}>
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="new-lesson-unit-label">
                 <SelectValue placeholder="Uden forløb" />
               </SelectTrigger>
               <SelectContent>

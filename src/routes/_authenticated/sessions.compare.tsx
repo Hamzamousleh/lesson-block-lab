@@ -49,16 +49,16 @@ function ComparePage() {
             Vælg op til tre sessioner. Tallene er opgjort af CaseLab — ingen fortolkning.
           </p>
         </div>
-        <Link to="/sessions">
-          <Button variant="ghost" className="rounded-full">
-            Alle sessioner
-          </Button>
-        </Link>
+        <Button asChild variant="ghost" className="rounded-full">
+          <Link to="/sessions">Alle sessioner</Link>
+        </Button>
       </div>
 
       <section className="surface-card mt-8 p-8">
         <h2 className="text-xl font-semibold">Vælg sessioner ({picked.length}/3)</h2>
-        {all.length === 0 && <p className="mt-3 text-muted-foreground">Du har ingen sessioner endnu.</p>}
+        {all.length === 0 && (
+          <p className="mt-3 text-muted-foreground">Du har ingen sessioner endnu.</p>
+        )}
         <ul className="mt-4 space-y-2">
           {all.map((s) => {
             const on = picked.includes(s.id);

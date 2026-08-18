@@ -3,11 +3,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { BookmarkPlus, Download, Loader2 } from "lucide-react";
-import {
-  participantsQuery,
-  responsesQuery,
-  sessionQuery,
-} from "@/lib/sessions";
+import { participantsQuery, responsesQuery, sessionQuery } from "@/lib/sessions";
 import { blocksQuery, classesQuery, lessonQuery } from "@/lib/data";
 import { blockDef } from "@/lib/blocks";
 import {
@@ -49,8 +45,14 @@ export const Route = createFileRoute("/_authenticated/sessions/$sessionId_/follo
 function FollowUpPage() {
   const { sessionId } = Route.useParams();
   const session = useQuery(sessionQuery(sessionId));
-  const lesson = useQuery({ ...lessonQuery(session.data?.lesson_id ?? ""), enabled: !!session.data });
-  const blocks = useQuery({ ...blocksQuery(session.data?.lesson_id ?? ""), enabled: !!session.data });
+  const lesson = useQuery({
+    ...lessonQuery(session.data?.lesson_id ?? ""),
+    enabled: !!session.data,
+  });
+  const blocks = useQuery({
+    ...blocksQuery(session.data?.lesson_id ?? ""),
+    enabled: !!session.data,
+  });
   const participants = useQuery(participantsQuery(sessionId));
   const responses = useQuery(responsesQuery(sessionId));
   const classes = useQuery(classesQuery());
@@ -85,7 +87,9 @@ function FollowUpPage() {
       })
     : "";
 
-  const klass = (classes.data ?? []).find((c) => c.id === (session.data?.class_id ?? lesson.data?.class_id));
+  const klass = (classes.data ?? []).find(
+    (c) => c.id === (session.data?.class_id ?? lesson.data?.class_id),
+  );
 
   const bookmark = useMutation({
     mutationFn: async () => {
@@ -158,11 +162,11 @@ function FollowUpPage() {
           >
             <Download className="size-4" /> Eksportér CSV
           </Button>
-          <Link to="/sessions/$sessionId" params={{ sessionId }}>
-            <Button variant="ghost" className="rounded-full">
+          <Button asChild variant="ghost" className="rounded-full">
+            <Link to="/sessions/$sessionId" params={{ sessionId }}>
               Tilbage til sessionen
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -177,8 +181,15 @@ function FollowUpPage() {
           <section className="surface-card mt-8 space-y-6 p-8">
             <div className="space-y-2">
               <Label>Hvilken aktivitet vil du arbejde videre med?</Label>
-              <Select value={active?.id ?? ""} onValueChange={(v) => { setBlockId(v); setSelected([]); setPrompt(null); }}>
-                <SelectTrigger className="rounded-xl">
+              <Select
+                value={active?.id ?? ""}
+                onValueChange={(v) => {
+                  setBlockId(v);
+                  setSelected([]);
+                  setPrompt(null);
+                }}
+              >
+                <SelectTrigger aria-label="Aktivitet" className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -194,8 +205,14 @@ function FollowUpPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Hvad skal der ske nu?</Label>
-                <Select value={intent} onValueChange={(v) => { setIntent(v as FollowUpIntentId); setPrompt(null); }}>
-                  <SelectTrigger className="rounded-xl">
+                <Select
+                  value={intent}
+                  onValueChange={(v) => {
+                    setIntent(v as FollowUpIntentId);
+                    setPrompt(null);
+                  }}
+                >
+                  <SelectTrigger aria-label="Næste handling" className="rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -209,8 +226,14 @@ function FollowUpPage() {
               </div>
               <div className="space-y-2">
                 <Label>Hvor lang tid har du?</Label>
-                <Select value={String(minutes)} onValueChange={(v) => { setMinutes(Number(v)); setPrompt(null); }}>
-                  <SelectTrigger className="rounded-xl">
+                <Select
+                  value={String(minutes)}
+                  onValueChange={(v) => {
+                    setMinutes(Number(v));
+                    setPrompt(null);
+                  }}
+                >
+                  <SelectTrigger aria-label="Tilgængelig tid" className="rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -231,7 +254,13 @@ function FollowUpPage() {
                   Navne erstattes med Elev 1, Elev 2 … Anbefales.
                 </p>
               </div>
-              <Switch checked={anonymized} onCheckedChange={(v) => { setAnonymized(v); setPrompt(null); }} />
+              <Switch
+                checked={anonymized}
+                onCheckedChange={(v) => {
+                  setAnonymized(v);
+                  setPrompt(null);
+                }}
+              />
             </div>
           </section>
 
@@ -268,7 +297,10 @@ function FollowUpPage() {
               {insight.kind === "ranking" && (
                 <ul className="space-y-2">
                   {insight.items.map((it) => (
-                    <li key={it.label} className="flex justify-between gap-3 rounded-xl bg-secondary/40 px-5 py-3">
+                    <li
+                      key={it.label}
+                      className="flex justify-between gap-3 rounded-xl bg-secondary/40 px-5 py-3"
+                    >
                       <span>{it.label}</span>
                       <span className="text-muted-foreground">
                         gns. placering {it.averagePosition} · nr. 1 hos {it.firstPlaceCount}
@@ -295,7 +327,9 @@ function FollowUpPage() {
                               )
                             }
                             className={`w-full rounded-xl border px-5 py-4 text-left transition-colors ${
-                              on ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                              on
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-primary/40"
                             }`}
                           >
                             <p className="text-xs tracking-wide text-muted-foreground uppercase">
@@ -352,7 +386,9 @@ function FollowUpPage() {
             </Button>
           </section>
 
-          {prompt && <PromptResult prompt={prompt} importSearch={{ lessonId: session.data.lesson_id }} />}
+          {prompt && (
+            <PromptResult prompt={prompt} importSearch={{ lessonId: session.data.lesson_id }} />
+          )}
         </>
       )}
     </div>

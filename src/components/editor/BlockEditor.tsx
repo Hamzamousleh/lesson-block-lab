@@ -150,10 +150,10 @@ export function BlockEditor({
 
   return (
     <Sheet open={!!block} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+      <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-lg sm:p-6">
         {block && def && draft && (
           <>
-            <SheetHeader>
+            <SheetHeader className="px-4 pt-6 sm:px-0 sm:pt-0">
               <SheetTitle className="flex items-center gap-2">
                 <span>{def.icon}</span> {def.label}
               </SheetTitle>
@@ -178,9 +178,7 @@ export function BlockEditor({
                   min={1}
                   max={180}
                   value={draft.duration_minutes}
-                  onChange={(e) =>
-                    setDraft({ ...draft, duration_minutes: Number(e.target.value) })
-                  }
+                  onChange={(e) => setDraft({ ...draft, duration_minutes: Number(e.target.value) })}
                 />
               </div>
 
@@ -229,11 +227,12 @@ export function BlockEditor({
                   const items = Array.isArray(value) ? (value as string[]) : [];
                   return (
                     <div key={f.key} className="space-y-2">
-                      <Label>{f.label}</Label>
+                      <Label id={`f-${f.key}-label`}>{f.label}</Label>
                       <div className="space-y-2">
                         {items.map((item, i) => (
                           <div key={i} className="flex gap-2">
                             <Input
+                              aria-label={`${f.label} ${i + 1}`}
                               value={item}
                               placeholder={`${f.itemLabel ?? "Element"} ${i + 1}`}
                               onChange={(e) => {
@@ -322,9 +321,9 @@ export function BlockEditor({
                 />
               </div>
 
-              <div className="flex gap-3">
+              <div className="sticky bottom-0 -mx-4 flex flex-wrap gap-3 border-t border-border/70 bg-background/95 px-4 py-4 backdrop-blur">
                 <Button
-                  className="rounded-full"
+                  className="min-h-11 flex-1 rounded-full sm:flex-none"
                   disabled={saving || materialLinks.isLoading}
                   onClick={() =>
                     onSave(
@@ -335,7 +334,11 @@ export function BlockEditor({
                 >
                   Gem aktivitet
                 </Button>
-                <Button variant="outline" className="rounded-full" onClick={onClose}>
+                <Button
+                  variant="outline"
+                  className="min-h-11 flex-1 rounded-full sm:flex-none"
+                  onClick={onClose}
+                >
                   Annullér
                 </Button>
               </div>

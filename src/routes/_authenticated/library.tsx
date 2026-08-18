@@ -240,7 +240,7 @@ function LibraryPage() {
               <div className="space-y-2">
                 <Label>Lektion</Label>
                 <Select value={targetLessonId} onValueChange={setTargetLessonId}>
-                  <SelectTrigger className="rounded-xl">
+                  <SelectTrigger aria-label="Lektion" className="rounded-xl">
                     <SelectValue placeholder="Vælg lektion" />
                   </SelectTrigger>
                   <SelectContent>
@@ -255,7 +255,7 @@ function LibraryPage() {
               <div className="space-y-2">
                 <Label>Placering</Label>
                 <Select value={insertion} onValueChange={setInsertion}>
-                  <SelectTrigger className="rounded-xl">
+                  <SelectTrigger aria-label="Placering" className="rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -277,7 +277,7 @@ function LibraryPage() {
               <div className="space-y-2">
                 <Label>Klasse</Label>
                 <Select value={targetClassId} onValueChange={setTargetClassId}>
-                  <SelectTrigger className="rounded-xl">
+                  <SelectTrigger aria-label="Klasse" className="rounded-xl">
                     <SelectValue placeholder="Vælg klasse" />
                   </SelectTrigger>
                   <SelectContent>
@@ -292,7 +292,7 @@ function LibraryPage() {
               <div className="space-y-2">
                 <Label>Forløb (valgfrit)</Label>
                 <Select value={targetUnitId} onValueChange={setTargetUnitId}>
-                  <SelectTrigger className="rounded-xl">
+                  <SelectTrigger aria-label="Forløb" className="rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

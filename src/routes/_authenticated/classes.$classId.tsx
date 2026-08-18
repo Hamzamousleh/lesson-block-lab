@@ -56,7 +56,9 @@ function ClassPage() {
     );
   }
   if (klass.isError || !klass.data) {
-    return <p className="mx-auto max-w-5xl px-6 py-20 text-destructive">Klassen kunne ikke hentes.</p>;
+    return (
+      <p className="mx-auto max-w-5xl px-6 py-20 text-destructive">Klassen kunne ikke hentes.</p>
+    );
   }
 
   return (
@@ -73,11 +75,11 @@ function ClassPage() {
           <Button variant="outline" className="rounded-full" onClick={() => setUnitOpen(true)}>
             <Plus className="size-4" /> Nyt forløb
           </Button>
-          <Link to="/lessons/new" search={{ classId }}>
-            <Button className="rounded-full">
+          <Button asChild className="rounded-full">
+            <Link to="/lessons/new" search={{ classId }}>
               <Plus className="size-4" /> Ny lektion
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -106,11 +108,11 @@ function ClassPage() {
               <p className="mt-1 text-muted-foreground">
                 Opret den første lektion og byg undervisningen trin for trin.
               </p>
-              <Link to="/lessons/new" search={{ classId }}>
-                <Button className="mt-5 rounded-full">
+              <Button asChild className="mt-5 rounded-full">
+                <Link to="/lessons/new" search={{ classId }}>
                   <Plus className="size-4" /> Ny lektion
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           )}
           {lessons.data?.slice(0, 6).map((l) => (
@@ -124,11 +126,11 @@ function ClassPage() {
                     : ""}
                 </p>
               </div>
-              <Link to="/lessons/$lessonId/edit" params={{ lessonId: l.id }}>
-                <Button variant="outline" className="rounded-full">
+              <Button asChild variant="outline" className="rounded-full">
+                <Link to="/lessons/$lessonId/edit" params={{ lessonId: l.id }}>
                   Åbn lektion
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           ))}
         </div>
@@ -137,20 +139,21 @@ function ClassPage() {
       <section className="mt-14">
         <h2 className="text-xl font-semibold">Forløb</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          {units.data?.length === 0 && (
-            <p className="text-muted-foreground">Ingen forløb endnu.</p>
-          )}
+          {units.data?.length === 0 && <p className="text-muted-foreground">Ingen forløb endnu.</p>}
           {units.data?.map((u) => (
-            <UnitCard key={u.id} unitId={u.id} title={u.title} description={u.description} status={u.status} classId={classId} />
+            <UnitCard
+              key={u.id}
+              unitId={u.id}
+              title={u.title}
+              description={u.description}
+              status={u.status}
+              classId={classId}
+            />
           ))}
         </div>
       </section>
 
-      <ClassInsight
-        classId={classId}
-        className={klass.data.name}
-        subject={klass.data.subject}
-      />
+      <ClassInsight classId={classId} className={klass.data.name} subject={klass.data.subject} />
 
       <NewUnitDialog open={unitOpen} onOpenChange={setUnitOpen} classId={classId} />
     </div>
@@ -182,7 +185,7 @@ function UnitCard({
       <p className="text-lg font-medium">{title}</p>
       {description && <p className="text-sm text-muted-foreground">{description}</p>}
       <Select value={status} onValueChange={(v) => mutate.mutate(v as UnitStatus)}>
-        <SelectTrigger className="w-40 rounded-full">
+        <SelectTrigger aria-label="Forløbsstatus" className="w-40 rounded-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -253,7 +256,7 @@ function NewUnitDialog({
           <div className="space-y-2">
             <Label>Status</Label>
             <Select value={status} onValueChange={(v) => setStatus(v as UnitStatus)}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

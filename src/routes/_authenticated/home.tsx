@@ -201,9 +201,9 @@ function Home() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Link to="/lessons/new">
-                  <Button className="rounded-full">Opret din første lektion</Button>
-                </Link>
+                <Button asChild className="rounded-full">
+                  <Link to="/lessons/new">Opret din første lektion</Link>
+                </Button>
                 <Button
                   variant="outline"
                   className="rounded-full"
@@ -250,16 +250,16 @@ function Home() {
                   </div>
                 </div>
                 <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
-                  <Link to="/lessons/$lessonId/run" params={{ lessonId: l.id }}>
-                    <Button variant="ghost" className="rounded-full">
+                  <Button asChild variant="ghost" className="rounded-full">
+                    <Link to="/lessons/$lessonId/run" params={{ lessonId: l.id }}>
                       <Play aria-hidden="true" className="size-4" /> Kør lektion
-                    </Button>
-                  </Link>
-                  <Link to="/lessons/$lessonId/edit" params={{ lessonId: l.id }}>
-                    <Button variant="outline" className="rounded-full">
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="rounded-full">
+                    <Link to="/lessons/$lessonId/edit" params={{ lessonId: l.id }}>
                       Åbn lektion
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               </div>
             );

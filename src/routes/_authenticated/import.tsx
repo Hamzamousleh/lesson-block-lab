@@ -6,7 +6,11 @@ import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { classesQuery, lessonsQuery, unitsQuery, blocksQuery } from "@/lib/data";
 import { validatePackage, totalDuration, type CaseLabPackage } from "@/lib/caselab-package";
 import { EXAMPLE_BLOCKS, EXAMPLE_LESSON } from "@/lib/examples";
-import { importBlocksPackage, importLessonPackage, type InsertionPoint } from "@/lib/import-package";
+import {
+  importBlocksPackage,
+  importLessonPackage,
+  type InsertionPoint,
+} from "@/lib/import-package";
 import { blockDef } from "@/lib/blocks";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,9 +57,11 @@ function ImportPage() {
   const [unitId, setUnitId] = useState("none");
   const [lessonId, setLessonId] = useState(search.lessonId ?? "");
   const [json, setJson] = useState("");
-  const [result, setResult] = useState<{ ok: boolean; errors: string[]; data?: CaseLabPackage } | null>(
-    null,
-  );
+  const [result, setResult] = useState<{
+    ok: boolean;
+    errors: string[];
+    data?: CaseLabPackage;
+  } | null>(null);
   const [insertion, setInsertion] = useState<string>("bottom");
   const [skipped, setSkipped] = useState<number[]>([]);
 
@@ -157,7 +163,7 @@ function ImportPage() {
               <div className="space-y-2">
                 <Label>Klasse</Label>
                 <Select value={classId} onValueChange={setClassId}>
-                  <SelectTrigger className="rounded-xl">
+                  <SelectTrigger aria-label="Klasse" className="rounded-xl">
                     <SelectValue placeholder="Vælg klasse" />
                   </SelectTrigger>
                   <SelectContent>
@@ -172,7 +178,7 @@ function ImportPage() {
               <div className="space-y-2">
                 <Label>Forløb (valgfrit)</Label>
                 <Select value={unitId} onValueChange={setUnitId}>
-                  <SelectTrigger className="rounded-xl">
+                  <SelectTrigger aria-label="Forløb" className="rounded-xl">
                     <SelectValue placeholder="Intet forløb" />
                   </SelectTrigger>
                   <SelectContent>
@@ -195,7 +201,7 @@ function ImportPage() {
           <div className="space-y-2">
             <Label>Lektion</Label>
             <Select value={lessonId} onValueChange={setLessonId}>
-              <SelectTrigger className="rounded-xl">
+              <SelectTrigger aria-label="Lektion" className="rounded-xl">
                 <SelectValue placeholder="Vælg lektion" />
               </SelectTrigger>
               <SelectContent>
@@ -230,10 +236,18 @@ function ImportPage() {
           <Button className="rounded-full" onClick={preview}>
             Forhåndsvis
           </Button>
-          <Button variant="outline" className="rounded-full" onClick={() => insertExample("lesson")}>
+          <Button
+            variant="outline"
+            className="rounded-full"
+            onClick={() => insertExample("lesson")}
+          >
             Eksempel: Hel lektion
           </Button>
-          <Button variant="outline" className="rounded-full" onClick={() => insertExample("blocks")}>
+          <Button
+            variant="outline"
+            className="rounded-full"
+            onClick={() => insertExample("blocks")}
+          >
             Eksempel: Tre aktiviteter
           </Button>
           <Button
@@ -410,7 +424,7 @@ function ImportPage() {
               <div className="space-y-2">
                 <Label>Hvor skal aktiviteterne indsættes?</Label>
                 <Select value={insertion} onValueChange={setInsertion}>
-                  <SelectTrigger className="rounded-xl">
+                  <SelectTrigger aria-label="Placering af aktiviteter" className="rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

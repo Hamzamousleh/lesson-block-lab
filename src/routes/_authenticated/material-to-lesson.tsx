@@ -88,7 +88,7 @@ function MaterialToLesson() {
           <div className="space-y-2">
             <Label>Klasse (valgfri)</Label>
             <Select value={classId} onValueChange={setClassId}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Klasse">
                 <SelectValue placeholder="Vælg klasse" />
               </SelectTrigger>
               <SelectContent>
@@ -104,7 +104,7 @@ function MaterialToLesson() {
           <div className="space-y-2">
             <Label>Materialetype</Label>
             <Select value={kind} onValueChange={setKind}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Materialetype">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -120,7 +120,7 @@ function MaterialToLesson() {
           <div className="space-y-2">
             <Label>Formål</Label>
             <Select value={purpose} onValueChange={setPurpose}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Formål">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -146,11 +146,7 @@ function MaterialToLesson() {
           </div>
         </div>
 
-        <MaterialPicker
-          selectedIds={fileIds}
-          onChange={setFileIds}
-          context={{ classId }}
-        />
+        <MaterialPicker selectedIds={fileIds} onChange={setFileIds} context={{ classId }} />
 
         <div className="space-y-2">
           <Label>Hvad skal du bruge?</Label>

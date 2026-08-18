@@ -2,7 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Globe2, Loader2, Plus } from "lucide-react";
 import { classesQuery } from "@/lib/data";
-import { episodesQuery, worldsQuery, WORLD_STATUS_LABEL, WORLD_TYPE_LABEL, type WorldType } from "@/lib/worlds";
+import {
+  episodesQuery,
+  worldsQuery,
+  WORLD_STATUS_LABEL,
+  WORLD_TYPE_LABEL,
+  type WorldType,
+} from "@/lib/worlds";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/worlds/")({
@@ -11,10 +17,14 @@ export const Route = createFileRoute("/_authenticated/worlds/")({
       { title: "Worlds — CaseLab" },
       {
         name: "description",
-        content: "Vedvarende læringsuniverser, hvor eleverne anvender teori over tid og møder konsekvenser.",
+        content:
+          "Vedvarende læringsuniverser, hvor eleverne anvender teori over tid og møder konsekvenser.",
       },
       { property: "og:title", content: "Worlds — CaseLab" },
-      { property: "og:description", content: "Byg vedvarende læringsuniverser med progression og konsekvenser." },
+      {
+        property: "og:description",
+        content: "Byg vedvarende læringsuniverser med progression og konsekvenser.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -43,15 +53,15 @@ function WorldsPage() {
         <div>
           <h1 className="text-3xl font-semibold">Worlds</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            Vedvarende læringsuniverser, hvor eleverne anvender teori igen og igen på de samme personer,
-            samfund eller organisationer — og møder konsekvenserne af deres beslutninger.
+            Vedvarende læringsuniverser, hvor eleverne anvender teori igen og igen på de samme
+            personer, samfund eller organisationer — og møder konsekvenserne af deres beslutninger.
           </p>
         </div>
-        <Link to="/worlds/new">
-          <Button className="rounded-full">
+        <Button asChild className="rounded-full">
+          <Link to="/worlds/new">
             <Plus className="size-4" /> Nyt World
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       {worlds.isLoading && (
@@ -68,9 +78,9 @@ function WorldsPage() {
             Et World er ikke et spil. Det er en ramme, hvor eleverne bruger fagteori på de samme
             situationer over tid og oplever, at beslutninger har konsekvenser.
           </p>
-          <Link to="/worlds/new">
-            <Button className="mt-6 rounded-full">Opret dit første World</Button>
-          </Link>
+          <Button asChild className="mt-6 rounded-full">
+            <Link to="/worlds/new">Opret dit første World</Link>
+          </Button>
         </div>
       )}
 

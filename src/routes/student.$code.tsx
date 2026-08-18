@@ -13,6 +13,7 @@ import { clearToken, readToken } from "@/lib/participant";
 import { StudentBlock, type SaveState } from "@/components/student/StudentBlock";
 import { StudentWorldHeader, StudentWorldRecap } from "@/components/student/StudentWorldHeader";
 import { Button } from "@/components/ui/button";
+import { StudentProgressCoordinator, type StudentProgressState } from "@/lib/student-progress";
 
 export const Route = createFileRoute("/student/$code")({
   ssr: false,
@@ -117,6 +118,14 @@ function StudentSession() {
   const [started, setStarted] = useState(false);
   const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [progressState, setProgressState] = useState<StudentProgressState>({
+    phase: "idle",
+    message: null,
+  });
+  const progressCoordinator = useRef<StudentProgressCoordinator | null>(null);
+  if (!progressCoordinator.current) {
+    progressCoordinator.current = new StudentProgressCoordinator(setProgressState);
+  }
 
   useEffect(() => {
     const t = readToken(code);
@@ -179,15 +188,17 @@ function StudentSession() {
     onError: () => setSaveState("error"),
   });
 
-  const progress = useMutation({
-    mutationFn: (vars: { progress_index: number; completed?: boolean }) =>
-      setProgressFn({ data: { participant_token: token as string, ...vars } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["student-state", code] }),
-  });
+  const setProgress = (vars: { progress_index: number; completed?: boolean }) =>
+    progressCoordinator.current!.run(async () => {
+      await setProgressFn({ data: { participant_token: token as string, ...vars } });
+      await queryClient.invalidateQueries({ queryKey: ["student-state", code] });
+    });
 
   const timerNode = useMemo(
     () =>
-      s?.timer ? <StudentTimer endsAt={s.timer.ends_at} paused={s.timer.remaining_seconds} /> : null,
+      s?.timer ? (
+        <StudentTimer endsAt={s.timer.ends_at} paused={s.timer.remaining_seconds} />
+      ) : null,
     [s?.timer],
   );
 
@@ -238,12 +249,12 @@ function StudentSession() {
   const header = (
     <>
       {world && <StudentWorldHeader world={world} />}
-      <div className="mb-8 flex items-center justify-between gap-3 text-sm text-muted-foreground">
-        <span className="min-w-0 truncate">{s.lesson.title}</span>
-        <span className="flex items-center gap-3">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+        <span className="min-w-0 break-words">{s.lesson.title}</span>
+        <span className="flex min-w-0 flex-wrap items-center gap-3">
           {timerNode}
           {state.isError ? <WifiOff className="size-4" aria-label="Ingen forbindelse" /> : null}
-          <span className="truncate">{s.participant.display_name}</span>
+          <span className="break-words">{s.participant.display_name}</span>
         </span>
       </div>
     </>
@@ -316,7 +327,10 @@ function StudentSession() {
             </span>
           </div>
           <div className="h-1.5 w-full rounded-full bg-secondary">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+            <div
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${pct}%` }}
+            />
           </div>
         </div>
 
@@ -337,28 +351,45 @@ function StudentSession() {
           </>
         )}
 
-        <div className="mt-10 flex gap-3">
+        {progressState.phase === "error" && (
+          <div
+            role="alert"
+            className="mt-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+          >
+            <p>{progressState.message}</p>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-3 min-h-11 rounded-full"
+              onClick={() => void progressCoordinator.current?.retry()}
+            >
+              Prøv igen
+            </Button>
+          </div>
+        )}
+
+        <div className="mt-8 grid grid-cols-2 gap-3">
           <Button
             variant="outline"
             className="h-14 flex-1 rounded-2xl"
-            disabled={index === 0 || progress.isPending}
+            disabled={index === 0 || progressState.phase === "pending"}
             onClick={() => {
               setFeedback(null);
-              progress.mutate({ progress_index: index - 1 });
+              void setProgress({ progress_index: index - 1 });
             }}
           >
             Forrige
           </Button>
           <Button
             className="h-14 flex-1 rounded-2xl"
-            disabled={progress.isPending}
+            disabled={progressState.phase === "pending"}
             onClick={() => {
               setFeedback(null);
-              if (isLast) progress.mutate({ progress_index: index, completed: true });
-              else progress.mutate({ progress_index: index + 1 });
+              if (isLast) void setProgress({ progress_index: index, completed: true });
+              else void setProgress({ progress_index: index + 1 });
             }}
           >
-            {progress.isPending && <Loader2 className="size-4 animate-spin" />}
+            {progressState.phase === "pending" && <Loader2 className="size-4 animate-spin" />}
             {isLast ? "Afslut" : "Næste"}
           </Button>
         </div>

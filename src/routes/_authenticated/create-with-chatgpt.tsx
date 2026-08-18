@@ -23,7 +23,8 @@ export const Route = createFileRoute("/_authenticated/create-with-chatgpt")({
       { title: "Planlæg med ChatGPT — CaseLab" },
       {
         name: "description",
-        content: "CaseLab samler det vigtigste, så ChatGPT kan lave undervisningen i det rigtige format.",
+        content:
+          "CaseLab samler det vigtigste, så ChatGPT kan lave undervisningen i det rigtige format.",
       },
       { property: "og:title", content: "Planlæg med ChatGPT — CaseLab" },
       { property: "og:description", content: "Byg en færdig ChatGPT-prompt til din undervisning." },
@@ -53,20 +54,13 @@ const NEEDS = [
   "Overrask mig",
 ];
 
-function Chip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+      aria-pressed={active}
+      className={`min-h-11 rounded-full border px-4 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         active
           ? "border-transparent bg-primary text-primary-foreground"
           : "border-border bg-transparent hover:bg-secondary"
@@ -155,16 +149,20 @@ function PromptGenerator() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-14">
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-14">
       <h1 className="font-display text-4xl font-semibold">Planlæg med ChatGPT</h1>
       <p className="mt-3 text-lg text-muted-foreground">
         CaseLab samler det vigtigste, så ChatGPT kan lave undervisningen i det rigtige format.
       </p>
 
-      <section className="surface-card mt-10 space-y-5 p-8">
+      <section className="surface-card mt-8 space-y-5 p-4 sm:mt-10 sm:p-8">
         <h2 className="text-xl font-semibold">Hvad skal du lave?</h2>
         <div className="flex flex-wrap gap-3">
-          <Chip label="En hel lektion" active={kind === "lesson"} onClick={() => setKind("lesson")} />
+          <Chip
+            label="En hel lektion"
+            active={kind === "lesson"}
+            onClick={() => setKind("lesson")}
+          />
           <Chip
             label="En eller flere aktiviteter"
             active={kind === "blocks"}
@@ -174,12 +172,12 @@ function PromptGenerator() {
       </section>
 
       {kind === "lesson" && (
-        <section className="surface-card mt-6 space-y-6 p-8">
+        <section className="surface-card mt-6 space-y-6 p-4 sm:p-8">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Klasse</Label>
+              <Label id="planning-class-label">Klasse</Label>
               <Select value={classId} onValueChange={setClassId}>
-                <SelectTrigger className="rounded-xl">
+                <SelectTrigger aria-labelledby="planning-class-label" className="rounded-xl">
                   <SelectValue placeholder="Vælg klasse" />
                 </SelectTrigger>
                 <SelectContent>
@@ -192,9 +190,9 @@ function PromptGenerator() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Forløb (valgfrit)</Label>
+              <Label id="planning-unit-label">Forløb (valgfrit)</Label>
               <Select value={unitId} onValueChange={setUnitId}>
-                <SelectTrigger className="rounded-xl">
+                <SelectTrigger aria-labelledby="planning-unit-label" className="rounded-xl">
                   <SelectValue placeholder="Intet forløb" />
                 </SelectTrigger>
                 <SelectContent>
@@ -212,8 +210,9 @@ function PromptGenerator() {
           </div>
 
           <div className="space-y-2">
-            <Label>Emne</Label>
+            <Label htmlFor="planning-topic">Emne</Label>
             <Input
+              id="planning-topic"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="Fx konformitet og gruppepres"
@@ -245,12 +244,21 @@ function PromptGenerator() {
           </div>
 
           <div className="space-y-2">
-            <Label>Læringsmål (valgfrit)</Label>
-            <Textarea value={goal} onChange={(e) => setGoal(e.target.value)} className="rounded-xl" />
+            <Label htmlFor="planning-goal">Læringsmål (valgfrit)</Label>
+            <Textarea
+              id="planning-goal"
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              className="rounded-xl"
+            />
           </div>
           <div className="space-y-2">
             <Label>Hvad ved eleverne allerede? (valgfrit)</Label>
-            <Textarea value={prior} onChange={(e) => setPrior(e.target.value)} className="rounded-xl" />
+            <Textarea
+              value={prior}
+              onChange={(e) => setPrior(e.target.value)}
+              className="rounded-xl"
+            />
           </div>
           <div className="space-y-2">
             <Label>Hvordan skal undervisningen føles?</Label>
@@ -269,11 +277,11 @@ function PromptGenerator() {
       )}
 
       {kind === "blocks" && (
-        <section className="surface-card mt-6 space-y-6 p-8">
+        <section className="surface-card mt-6 space-y-6 p-4 sm:p-8">
           <div className="space-y-2">
-            <Label>Eksisterende lektion (valgfrit)</Label>
+            <Label id="planning-lesson-label">Eksisterende lektion (valgfrit)</Label>
             <Select value={lessonId} onValueChange={setLessonId}>
-              <SelectTrigger className="rounded-xl">
+              <SelectTrigger aria-labelledby="planning-lesson-label" className="rounded-xl">
                 <SelectValue placeholder="Ingen lektion" />
               </SelectTrigger>
               <SelectContent>
@@ -370,11 +378,9 @@ function PromptGenerator() {
               <li>Vend tilbage til CaseLab</li>
               <li>Importér pakken</li>
             </ol>
-            <Link to="/import" className="mt-4 inline-block">
-              <Button variant="outline" className="rounded-full">
-                Gå til import
-              </Button>
-            </Link>
+            <Button asChild variant="outline" className="mt-4 rounded-full">
+              <Link to="/import">Gå til import</Link>
+            </Button>
           </div>
         </section>
       )}

@@ -47,16 +47,16 @@ export function PromptResult({
         <Button className="rounded-full" onClick={() => void copy()}>
           {copied ? <Check className="size-4" /> : <Copy className="size-4" />} Kopiér prompt
         </Button>
-        <a href="https://chatgpt.com" target="_blank" rel="noreferrer">
-          <Button variant="outline" className="rounded-full">
+        <Button asChild variant="outline" className="rounded-full">
+          <a href="https://chatgpt.com" target="_blank" rel="noreferrer">
             <ExternalLink className="size-4" /> Åbn ChatGPT
-          </Button>
-        </a>
-        <Link to="/import" search={importSearch ?? {}}>
-          <Button variant="outline" className="rounded-full">
+          </a>
+        </Button>
+        <Button asChild variant="outline" className="rounded-full">
+          <Link to="/import" search={importSearch ?? {}}>
             Gå til import
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
       <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
         <li>Kopiér prompten.</li>

@@ -84,7 +84,7 @@ function DifferentiatePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-12">
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="flex items-center gap-3">
         <span className="flex size-11 items-center justify-center rounded-2xl bg-accent">
           <Layers className="size-5 text-primary" />
@@ -97,10 +97,10 @@ function DifferentiatePage() {
         </div>
       </div>
 
-      <section className="surface-card mt-8 space-y-6 p-8">
+      <section className="surface-card mt-8 space-y-6 p-4 sm:p-8">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Lektion (valgfri)</Label>
+            <Label id="differentiate-lesson-label">Lektion (valgfri)</Label>
             <Select
               value={lessonId}
               onValueChange={(v) => {
@@ -109,7 +109,7 @@ function DifferentiatePage() {
                 setPrompt(null);
               }}
             >
-              <SelectTrigger className="rounded-xl">
+              <SelectTrigger aria-labelledby="differentiate-lesson-label" className="rounded-xl">
                 <SelectValue placeholder="Vælg lektion" />
               </SelectTrigger>
               <SelectContent>
@@ -122,7 +122,7 @@ function DifferentiatePage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Aktivitet</Label>
+            <Label id="differentiate-block-label">Aktivitet</Label>
             <Select
               value={blockId}
               onValueChange={(v) => {
@@ -131,7 +131,7 @@ function DifferentiatePage() {
               }}
               disabled={!lessonId}
             >
-              <SelectTrigger className="rounded-xl">
+              <SelectTrigger aria-labelledby="differentiate-block-label" className="rounded-xl">
                 <SelectValue placeholder="Vælg aktivitet" />
               </SelectTrigger>
               <SelectContent>

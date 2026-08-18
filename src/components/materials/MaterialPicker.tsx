@@ -113,11 +113,9 @@ export function MaterialPicker({
             />
           </div>
         ) : (
-          <Link to="/materials">
-            <Button type="button" variant="ghost" size="sm" className="rounded-full">
-              Upload materiale
-            </Button>
-          </Link>
+          <Button asChild variant="ghost" size="sm" className="rounded-full">
+            <Link to="/materials">Upload materiale</Link>
+          </Button>
         )}
       </div>
 
@@ -190,7 +188,5 @@ export function MaterialPicker({
 }
 
 export function selectedFileNames(files: MaterialFile[], ids: string[]): string[] {
-  return ids
-    .map((id) => files.find((f) => f.id === id)?.file_name)
-    .filter((n): n is string => !!n);
+  return ids.map((id) => files.find((f) => f.id === id)?.file_name).filter((n): n is string => !!n);
 }
