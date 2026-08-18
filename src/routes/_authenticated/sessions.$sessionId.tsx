@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Check, Copy, Download, Loader2, Monitor, Play, Sparkles } from "lucide-react";
 import {
@@ -13,8 +13,10 @@ import {
   responsesQuery,
   sessionQuery,
   startSession,
+  type StudentSession,
   updateSession,
 } from "@/lib/sessions";
+import { CockpitSyncCoordinator, type CockpitSyncState } from "@/lib/cockpit-sync";
 import { blocksQuery, lessonQuery } from "@/lib/data";
 import { summarize } from "@/lib/results";
 import { blockDef } from "@/lib/blocks";
@@ -40,6 +42,11 @@ function SessionDetail() {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [showNames, setShowNames] = useState(true);
+  const [syncState, setSyncState] = useState<CockpitSyncState>({ phase: "idle", label: null });
+  const syncCoordinatorRef = useRef<CockpitSyncCoordinator<StudentSession> | null>(null);
+  if (!syncCoordinatorRef.current) {
+    syncCoordinatorRef.current = new CockpitSyncCoordinator<StudentSession>(setSyncState);
+  }
 
   const session = useQuery({ ...sessionQuery(sessionId), refetchInterval: 5000 });
   const lesson = useQuery({ ...lessonQuery(session.data?.lesson_id ?? ""), enabled: !!session.data });
@@ -50,37 +57,28 @@ function SessionDetail() {
   const list = (blocks.data ?? []).filter((b) => !b.is_fallback);
   const s = session.data;
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["session", sessionId] });
+  const syncSession = useCallback(
+    (
+      label: string,
+      execute: () => Promise<StudentSession>,
+      onConfirmed: () => void = () => undefined,
+    ) =>
+      syncCoordinatorRef.current!.run({
+        label,
+        execute,
+        confirm: async (updated) => {
+          queryClient.setQueryData(["session", sessionId], updated);
+          await queryClient.invalidateQueries({
+            queryKey: ["session", sessionId],
+            refetchType: "none",
+          });
+          onConfirmed();
+        },
+      }),
+    [queryClient, sessionId],
+  );
 
-  const start = useMutation({
-    mutationFn: () => startSession(sessionId, list[0]?.id ?? null),
-    onSuccess: async () => {
-      await invalidate();
-      toast.success("Sessionen er startet");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const setBlock = useMutation({
-    mutationFn: (blockId: string) => updateSession(sessionId, { current_block_id: blockId, reveal_results: false }),
-    onSuccess: invalidate,
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const reveal = useMutation({
-    mutationFn: (v: boolean) => updateSession(sessionId, { reveal_results: v }),
-    onSuccess: invalidate,
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const stop = useMutation({
-    mutationFn: () => endSession(sessionId),
-    onSuccess: async () => {
-      await invalidate();
-      toast.success("Sessionen er afsluttet");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+  const syncPending = syncState.phase === "pending";
 
   if (session.isLoading || !s) {
     return (
@@ -120,8 +118,18 @@ function SessionDetail() {
         </div>
         <div className="flex flex-wrap gap-2">
           {s.status === "draft" && (
-            <Button className="rounded-full" disabled={start.isPending} onClick={() => start.mutate()}>
-              {start.isPending ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+            <Button
+              className="rounded-full"
+              disabled={syncPending}
+              onClick={() =>
+                void syncSession(
+                  "Sessionstart",
+                  () => startSession(sessionId, list[0]?.id ?? null),
+                  () => toast.success("Sessionen er startet"),
+                )
+              }
+            >
+              {syncPending ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
               Start session
             </Button>
           )}
@@ -133,7 +141,16 @@ function SessionDetail() {
             </Link>
           )}
           {s.status !== "ended" && (
-            <Button variant="outline" className="rounded-full" disabled={stop.isPending} onClick={() => stop.mutate()}>
+            <Button
+              variant="outline"
+              className="rounded-full"
+              disabled={syncPending}
+              onClick={() =>
+                void syncSession("Sessionafslutning", () => endSession(sessionId), () =>
+                  toast.success("Sessionen er afsluttet"),
+                )
+              }
+            >
               Afslut session
             </Button>
           )}
@@ -165,6 +182,38 @@ function SessionDetail() {
             </Button>
           </Link>
         </div>
+      </div>
+
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className={`mt-3 flex min-h-7 items-center gap-2 text-sm ${
+          syncState.phase === "error" ? "text-destructive" : "text-muted-foreground"
+        }`}
+      >
+        {syncState.phase === "pending" && (
+          <>
+            <Loader2 className="size-3.5 animate-spin" /> Synkroniserer…
+          </>
+        )}
+        {syncState.phase === "synced" && (
+          <>
+            <Check className="size-3.5" /> Synkroniseret
+          </>
+        )}
+        {syncState.phase === "error" && (
+          <>
+            <span>Kunne ikke synkronisere ændringen.</span>
+            <button
+              type="button"
+              className="underline underline-offset-2 hover:no-underline"
+              onClick={() => void syncCoordinatorRef.current?.retry()}
+            >
+              Prøv igen
+            </button>
+          </>
+        )}
       </div>
 
       {/* share */}
@@ -215,7 +264,16 @@ function SessionDetail() {
               <button
                 key={b.id}
                 type="button"
-                onClick={() => setBlock.mutate(b.id)}
+                disabled={syncPending}
+                onClick={() =>
+                  void syncSession("Aktivitet", () =>
+                    updateSession(sessionId, {
+                      current_block_id: b.id,
+                      reveal_results: false,
+                      reveal_answer_key: false,
+                    }),
+                  )
+                }
                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors ${
                   b.id === s.current_block_id ? "bg-accent text-accent-foreground" : "hover:bg-secondary"
                 }`}
@@ -239,7 +297,12 @@ function SessionDetail() {
                   variant={s.reveal_results ? "default" : "outline"}
                   size="sm"
                   className="rounded-full"
-                  onClick={() => reveal.mutate(!s.reveal_results)}
+                  disabled={syncPending}
+                  onClick={() =>
+                    void syncSession("Svarfordeling", () =>
+                      updateSession(sessionId, { reveal_results: !s.reveal_results }),
+                    )
+                  }
                 >
                   {s.reveal_results ? "Skjul resultat for eleverne" : "Vis resultat på projektor"}
                 </Button>

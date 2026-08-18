@@ -8,6 +8,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
+    "test:cockpit": "node --experimental-strip-types --test tests/cockpit-sync.test.mjs",
     "test:security": "node --experimental-strip-types --test tests/security-stabilization.test.mjs",
     "lint": "eslint .",
     "format": "prettier --write ."

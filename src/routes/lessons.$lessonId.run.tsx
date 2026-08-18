@@ -29,8 +29,10 @@ import {
   participantsQuery,
   responsesQuery,
   sessionsQuery,
+  type StudentSession,
   updateSession,
 } from "@/lib/sessions";
+import { CockpitSyncCoordinator, type CockpitSyncState } from "@/lib/cockpit-sync";
 import { summarize } from "@/lib/results";
 import { ResultBars, StudentBlock } from "@/components/student/StudentBlock";
 import { correctOptionIndex, timerLabel, toPreviewBlock, workMode } from "@/lib/cockpit";
@@ -96,6 +98,19 @@ interface TimerState {
   remaining: number;
 }
 
+function timerFromSession(session: StudentSession, fallbackSeconds: number): TimerState {
+  if (session.timer_ends_at) {
+    return {
+      endsAt: new Date(session.timer_ends_at).getTime(),
+      remaining: session.timer_remaining_seconds ?? fallbackSeconds,
+    };
+  }
+  return {
+    endsAt: null,
+    remaining: session.timer_remaining_seconds ?? fallbackSeconds,
+  };
+}
+
 function RunMode() {
   const { lessonId } = Route.useParams();
   const navigate = useNavigate();
@@ -122,6 +137,11 @@ function RunMode() {
   const [finished, setFinished] = useState(false);
   const [skipped, setSkipped] = useState<string[]>([]);
   const [showNames, setShowNames] = useState(false);
+  const [syncState, setSyncState] = useState<CockpitSyncState>({ phase: "idle", label: null });
+  const syncCoordinatorRef = useRef<CockpitSyncCoordinator<StudentSession> | null>(null);
+  if (!syncCoordinatorRef.current) {
+    syncCoordinatorRef.current = new CockpitSyncCoordinator<StudentSession>(setSyncState);
+  }
 
   const active = useFallback ? fallback : main;
   const elapsed = useElapsed(started, `caselab-run-start-${lessonId}`);
@@ -149,36 +169,55 @@ function RunMode() {
   const participants = useQuery({ ...participantsQuery(liveId, true), enabled: !!liveId });
   const responses = useQuery({ ...responsesQuery(liveId, true), enabled: !!liveId });
 
-  const refreshSessions = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: ["sessions"] }),
+  const reconcileSession = useCallback(
+    async (updated: StudentSession) => {
+      queryClient.setQueriesData<StudentSession[]>({ queryKey: ["sessions"] }, (existing) =>
+        existing?.map((session) => (session.id === updated.id ? updated : session)),
+      );
+      queryClient.setQueryData(["session", updated.id], updated);
+      await queryClient.invalidateQueries({ queryKey: ["sessions"], refetchType: "none" });
+    },
     [queryClient],
   );
+
+  const syncSession = useCallback(
+    (
+      label: string,
+      patch: Parameters<typeof updateSession>[1],
+      onConfirmed: (session: StudentSession) => void | Promise<void> = () => undefined,
+    ) => {
+      if (!liveSession) return Promise.resolve(false);
+      return syncCoordinatorRef.current!.run({
+        label,
+        execute: () => updateSession(liveSession.id, patch),
+        confirm: async (updated) => {
+          await reconcileSession(updated);
+          await onConfirmed(updated);
+        },
+      });
+    },
+    [liveSession, reconcileSession],
+  );
+
+  const syncPending = syncState.phase === "pending";
 
   /* Adopt the session's current activity once, so opening the cockpit from a
      running session continues where the class is — instead of resetting it. */
   const adoptedRef = useRef(false);
   useEffect(() => {
     if (adoptedRef.current || !liveSession) return;
-    if (!main.length) return;
+    if (!all.length) return;
     adoptedRef.current = true;
-    const i = main.findIndex((b) => b.id === liveSession.current_block_id);
+    const sessionBlock = all.find((b) => b.id === liveSession.current_block_id);
+    if (!sessionBlock) return;
+    const sessionList = sessionBlock.is_fallback ? fallback : main;
+    const i = sessionList.findIndex((b) => b.id === sessionBlock.id);
     if (i >= 0) {
-      setUseFallback(false);
+      setUseFallback(sessionBlock.is_fallback);
       setIndex(i);
       setStep(0);
     }
-  }, [liveSession, main]);
-
-  useEffect(() => {
-    if (!liveSession || !current || !adoptedRef.current) return;
-    if (liveSession.current_block_id === current.id) return;
-    void updateSession(liveSession.id, {
-      current_block_id: current.id,
-      status: "active",
-      reveal_results: false,
-      reveal_answer_key: false,
-    }).then(refreshSessions);
-  }, [liveSession, current, refreshSessions]);
+  }, [all, fallback, liveSession, main]);
 
   /* ---------- activity timer ---------- */
   const timerKey = `caselab-timer-${lessonId}`;
@@ -186,22 +225,33 @@ function RunMode() {
   const [, tick] = useState(0);
   const timerBlockRef = useRef<string | null>(null);
 
-  // seed / reset per activity, recovering a persisted timer after a refresh
+  const persistTimer = useCallback(
+    (blockId: string, next: TimerState) => {
+      try {
+        window.localStorage.setItem(timerKey, JSON.stringify({ blockId, ...next }));
+      } catch {
+        /* local persistence is optional */
+      }
+    },
+    [timerKey],
+  );
+
+  // A live session is authoritative. Local storage is only a fallback when no
+  // student session is connected.
   useEffect(() => {
     if (!current) return;
+    if (liveSession && liveSession.current_block_id === current.id) {
+      timerBlockRef.current = current.id;
+      const next = timerFromSession(liveSession, current.duration_minutes * 60);
+      setTimer((previous) =>
+        previous.endsAt === next.endsAt && previous.remaining === next.remaining ? previous : next,
+      );
+      return;
+    }
+
     if (timerBlockRef.current === current.id) return;
     timerBlockRef.current = current.id;
     let next: TimerState = { endsAt: null, remaining: current.duration_minutes * 60 };
-    if (liveSession && liveSession.current_block_id === current.id) {
-      if (liveSession.timer_ends_at) {
-        next = {
-          endsAt: new Date(liveSession.timer_ends_at).getTime(),
-          remaining: liveSession.timer_remaining_seconds ?? next.remaining,
-        };
-      } else if (typeof liveSession.timer_remaining_seconds === "number") {
-        next = { endsAt: null, remaining: liveSession.timer_remaining_seconds };
-      }
-    }
     try {
       const raw = window.localStorage.getItem(timerKey);
       if (raw) {
@@ -225,22 +275,27 @@ function RunMode() {
 
   const applyTimer = useCallback(
     (next: TimerState) => {
-      setTimer(next);
-      if (current) {
-        try {
-          window.localStorage.setItem(timerKey, JSON.stringify({ blockId: current.id, ...next }));
-        } catch {
-          /* ignore */
-        }
+      if (!current) return;
+      if (!liveSession) {
+        setTimer(next);
+        persistTimer(current.id, next);
+        return;
       }
-      if (liveSession) {
-        void updateSession(liveSession.id, {
+
+      void syncSession(
+        "Timer",
+        {
           timer_ends_at: next.endsAt ? new Date(next.endsAt).toISOString() : null,
           timer_remaining_seconds: Math.round(next.remaining),
-        }).then(refreshSessions);
-      }
+        },
+        (confirmed) => {
+          const serverTimer = timerFromSession(confirmed, current.duration_minutes * 60);
+          setTimer(serverTimer);
+          persistTimer(current.id, serverTimer);
+        },
+      );
     },
-    [current, timerKey, liveSession, refreshSessions],
+    [current, liveSession, persistTimer, syncSession],
   );
 
   const startTimer = () => applyTimer({ endsAt: Date.now() + timer.remaining * 1000, remaining: timer.remaining });
@@ -280,39 +335,96 @@ function RunMode() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const goToActivity = (
+    targetIndex: number,
+    targetFallback = useFallback,
+    targetStep = 0,
+    skippedBlockId?: string,
+  ) => {
+    const targetList = targetFallback ? fallback : main;
+    const target = targetList[targetIndex];
+    if (!target) return;
+
+    const applyConfirmedActivity = (confirmedBlockId: string) => {
+      const confirmedBlock = all.find((block) => block.id === confirmedBlockId);
+      if (!confirmedBlock) return;
+      const confirmedList = confirmedBlock.is_fallback ? fallback : main;
+      const confirmedIndex = confirmedList.findIndex((block) => block.id === confirmedBlock.id);
+      if (confirmedIndex < 0) return;
+      setUseFallback(confirmedBlock.is_fallback);
+      setIndex(confirmedIndex);
+      setStep(confirmedBlock.id === target.id ? targetStep : 0);
+      setFinished(false);
+      if (skippedBlockId && confirmedBlock.id === target.id) {
+        setSkipped((existing) =>
+          existing.includes(skippedBlockId) ? existing : [...existing, skippedBlockId],
+        );
+      }
+    };
+
+    if (!liveSession) {
+      applyConfirmedActivity(target.id);
+      return;
+    }
+
+    const resetSeconds = target.duration_minutes * 60;
+    void syncSession(
+      "Aktivitet",
+      {
+        current_block_id: target.id,
+        status: "active",
+        reveal_results: false,
+        reveal_answer_key: false,
+        timer_ends_at: null,
+        timer_remaining_seconds: resetSeconds,
+      },
+      (confirmed) => {
+        if (!confirmed.current_block_id) return;
+        applyConfirmedActivity(confirmed.current_block_id);
+        const serverTimer = timerFromSession(confirmed, resetSeconds);
+        setTimer(serverTimer);
+        persistTimer(confirmed.current_block_id, serverTimer);
+      },
+    );
+  };
+
   const next = () => {
+    if (syncCoordinatorRef.current?.isPending) return;
     if (!current) return;
     if (step < totalSteps - 1) {
       setStep((s) => s + 1);
       return;
     }
     if (index < active.length - 1) {
-      setIndex((i) => i + 1);
-      setStep(0);
+      goToActivity(index + 1);
     } else {
       setFinished(true);
     }
   };
   const prev = () => {
+    if (syncCoordinatorRef.current?.isPending) return;
     if (step > 0) {
       setStep((s) => s - 1);
       return;
     }
     if (index > 0) {
       const target = active[index - 1];
-      setIndex(index - 1);
-      setStep(target ? revealSteps(target) - 1 : 0);
+      goToActivity(index - 1, useFallback, target ? revealSteps(target) - 1 : 0);
     }
   };
   const jumpTo = (i: number) => {
-    setIndex(i);
-    setStep(0);
-    setFinished(false);
+    if (syncCoordinatorRef.current?.isPending) return;
+    goToActivity(i);
   };
   const skipCurrent = () => {
-    if (current) setSkipped((s) => (s.includes(current.id) ? s : [...s, current.id]));
-    if (index < active.length - 1) jumpTo(index + 1);
-    else setFinished(true);
+    if (!current || syncCoordinatorRef.current?.isPending) return;
+    if (index < active.length - 1) goToActivity(index + 1, useFallback, 0, current.id);
+    else {
+      setSkipped((existing) =>
+        existing.includes(current.id) ? existing : [...existing, current.id],
+      );
+      setFinished(true);
+    }
   };
 
   useEffect(() => {
@@ -438,12 +550,8 @@ function RunMode() {
             <Button
               variant="ghost"
               className="rounded-full"
-              onClick={() => {
-                setUseFallback(true);
-                setIndex(0);
-                setStep(0);
-                setFinished(false);
-              }}
+              disabled={syncPending}
+              onClick={() => goToActivity(0, true)}
             >
               Ekstra aktivitet
             </Button>
@@ -468,14 +576,24 @@ function RunMode() {
           </div>
         </div>
         <div className="flex items-center justify-between px-10 pb-8 text-sm text-muted-foreground sm:px-20">
-          <button type="button" onClick={prev} className="rounded-full px-4 py-2 hover:bg-secondary">
+          <button
+            type="button"
+            onClick={prev}
+            disabled={syncPending}
+            className="rounded-full px-4 py-2 hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+          >
             ← Forrige
           </button>
           <span className="tabular-nums">{timerLabel(seconds)}</span>
           <span>
             {index + 1} / {active.length}
           </span>
-          <button type="button" onClick={next} className="rounded-full px-4 py-2 hover:bg-secondary">
+          <button
+            type="button"
+            onClick={next}
+            disabled={syncPending}
+            className="rounded-full px-4 py-2 hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+          >
             Næste →
           </button>
         </div>
@@ -504,6 +622,41 @@ function RunMode() {
               {people.length === 1 ? "deltager" : "deltagere"}
             </span>
           </Link>
+        )}
+        {liveSession && (
+          <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className={`flex min-h-8 items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${
+              syncState.phase === "error"
+                ? "bg-destructive/10 text-destructive"
+                : "text-muted-foreground"
+            }`}
+          >
+            {syncState.phase === "pending" && (
+              <>
+                <Loader2 className="size-3.5 animate-spin" /> Synkroniserer…
+              </>
+            )}
+            {syncState.phase === "synced" && (
+              <>
+                <Check className="size-3.5" /> Synkroniseret
+              </>
+            )}
+            {syncState.phase === "error" && (
+              <>
+                <span>Kunne ikke synkronisere ændringen</span>
+                <button
+                  type="button"
+                  className="rounded-full underline underline-offset-2 hover:no-underline"
+                  onClick={() => void syncCoordinatorRef.current?.retry()}
+                >
+                  Prøv igen
+                </button>
+              </>
+            )}
+          </div>
         )}
         <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setProjector(true)}>
           <Maximize2 className="size-4" /> Projektor
@@ -579,7 +732,7 @@ function RunMode() {
                 )}
               </div>
               {step < totalSteps - 1 && (
-                <Button variant="outline" className="mt-6 rounded-full" onClick={next}>
+                <Button variant="outline" className="mt-6 rounded-full" onClick={next} disabled={syncPending}>
                   <Eye className="size-4" /> Vis næste trin
                 </Button>
               )}
@@ -602,10 +755,11 @@ function RunMode() {
                     variant={liveSession.reveal_results ? "default" : "outline"}
                     size="sm"
                     className="rounded-full"
+                    disabled={syncPending}
                     onClick={() =>
-                      void updateSession(liveSession.id, {
+                      void syncSession("Svarfordeling", {
                         reveal_results: !liveSession.reveal_results,
-                      }).then(refreshSessions)
+                      })
                     }
                   >
                     {liveSession.reveal_results ? "Skjul svarfordeling" : "Vis svarfordeling"}
@@ -615,10 +769,11 @@ function RunMode() {
                       variant={liveSession.reveal_answer_key ? "default" : "outline"}
                       size="sm"
                       className="rounded-full"
+                      disabled={syncPending}
                       onClick={() =>
-                        void updateSession(liveSession.id, {
+                        void syncSession("Facit", {
                           reveal_answer_key: !liveSession.reveal_answer_key,
-                        }).then(refreshSessions)
+                        })
                       }
                     >
                       {liveSession.reveal_answer_key ? "Skjul facit" : "Vis facit"}
@@ -671,26 +826,50 @@ function RunMode() {
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {running ? (
-                  <Button variant="outline" size="sm" className="rounded-full" onClick={pauseTimer}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
+                    onClick={pauseTimer}
+                    disabled={syncPending}
+                  >
                     <Pause className="size-4" /> Pause
                   </Button>
                 ) : (
-                  <Button size="sm" className="rounded-full" onClick={startTimer}>
+                  <Button size="sm" className="rounded-full" onClick={startTimer} disabled={syncPending}>
                     <Play className="size-4" /> Start timer
                   </Button>
                 )}
-                <Button variant="outline" size="sm" className="rounded-full" onClick={resetTimer}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={resetTimer}
+                  disabled={syncPending}
+                >
                   <RotateCcw className="size-4" /> Nulstil
                 </Button>
-                <Button variant="outline" size="sm" className="rounded-full" onClick={() => addMinutes(1)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => addMinutes(1)}
+                  disabled={syncPending}
+                >
                   +1 min
                 </Button>
-                <Button variant="outline" size="sm" className="rounded-full" onClick={() => addMinutes(2)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => addMinutes(2)}
+                  disabled={syncPending}
+                >
                   +2 min
                 </Button>
               </div>
               {overtime && (
-                <Button className="mt-4 w-full rounded-full" onClick={next}>
+                <Button className="mt-4 w-full rounded-full" onClick={next} disabled={syncPending}>
                   Gå til næste
                 </Button>
               )}
@@ -699,10 +878,11 @@ function RunMode() {
                   variant={liveSession.timer_show_students ? "default" : "ghost"}
                   size="sm"
                   className="mt-4 w-full rounded-full"
+                  disabled={syncPending}
                   onClick={() =>
-                    void updateSession(liveSession.id, {
+                    void syncSession("Timervisning", {
                       timer_show_students: !liveSession.timer_show_students,
-                    }).then(refreshSessions)
+                    })
                   }
                 >
                   {liveSession.timer_show_students ? "Skjul tiden for elever" : "Vis tiden for elever"}
@@ -769,6 +949,7 @@ function RunMode() {
                       <button
                         type="button"
                         onClick={() => jumpTo(i)}
+                        disabled={syncPending}
                         className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                           i === index
                             ? "bg-accent font-medium text-accent-foreground"
@@ -794,11 +975,8 @@ function RunMode() {
                   variant="outline"
                   size="sm"
                   className="mt-4 w-full rounded-full"
-                  onClick={() => {
-                    setUseFallback((v) => !v);
-                    setIndex(0);
-                    setStep(0);
-                  }}
+                  disabled={syncPending}
+                  onClick={() => goToActivity(0, !useFallback)}
                 >
                   {useFallback ? "Tilbage til lektionen" : `Ekstra aktivitet (${fallback.length})`}
                 </Button>
@@ -809,18 +987,29 @@ function RunMode() {
       </main>
 
       <footer className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-border/70 bg-background/90 px-6 py-4 backdrop-blur">
-        <Button variant="outline" className="rounded-full" onClick={prev} disabled={index === 0 && step === 0}>
+        <Button
+          variant="outline"
+          className="rounded-full"
+          onClick={prev}
+          disabled={syncPending || (index === 0 && step === 0)}
+        >
           <ArrowLeft className="size-4" /> Forrige
         </Button>
         <div className="flex min-w-0 items-center gap-3">
           <span className="min-w-0 truncate text-center text-sm text-muted-foreground">
             {current ? `${blockDef(current.type).icon} ${current.title}` : ""}
           </span>
-          <Button variant="ghost" size="sm" className="rounded-full" onClick={skipCurrent}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-full"
+            onClick={skipCurrent}
+            disabled={syncPending}
+          >
             <SkipForward className="size-4" /> Spring over
           </Button>
         </div>
-        <Button className="rounded-full" onClick={next}>
+        <Button className="rounded-full" onClick={next} disabled={syncPending}>
           {index === active.length - 1 && step === totalSteps - 1 ? "Afslut" : "Næste"}
           <ArrowRight className="size-4" />
         </Button>
