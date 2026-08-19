@@ -940,9 +940,10 @@ function RunMode() {
             <section className={`${panelClass} ${panelPad}`}>
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-sm font-semibold">Tid til aktiviteten</h2>
-                <span className="text-xs text-muted-foreground">
-                  Afsat: {current?.duration_minutes ?? 0} min
+                <span className={mode === "v2" ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>
+                  {mode === "v2" ? "Afsat" : "Afsat tid"}: {current?.duration_minutes ?? 0} min
                 </span>
+
               </div>
               {mode === "v2" ? (
                 <div className="mt-3">
