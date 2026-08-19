@@ -652,7 +652,7 @@ function LessonEditor() {
           titleInput={titleInput}
           statusSelect={statusSelect}
           primaryAction={runButton}
-          secondaryActions={toolbarButtons}
+          secondaryActions={toolbarButtonsV2}
         />
       ) : (
         <div className="surface-card mt-6 p-4 sm:p-8">
