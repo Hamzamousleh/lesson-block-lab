@@ -417,6 +417,115 @@ function LessonEditor() {
     );
   };
 
+  const runButton = (
+    <Button asChild className="min-h-11 rounded-full px-6">
+      <Link to="/lessons/$lessonId/run" params={{ lessonId }}>
+        <Play className="size-4" /> Kør lektion
+      </Link>
+    </Button>
+  );
+
+  const toolbarButtons = (
+    <>
+      <Button variant="outline" className="rounded-full" onClick={() => setSessionOpen(true)}>
+        <Smartphone className="size-4" /> Start elevsession
+      </Button>
+
+      <Button asChild variant="outline" className="rounded-full">
+        <Link to="/import" search={{ lessonId }}>
+          <Plus className="size-4" /> Importér aktiviteter
+        </Link>
+      </Button>
+      <Button asChild variant="outline" className="rounded-full">
+        <Link to="/extra-time" search={{ lessonId }}>
+          <Timer className="size-4" /> Jeg mangler tid
+        </Link>
+      </Button>
+      <Button asChild variant="outline" className="rounded-full">
+        <Link to="/improve-lesson" search={{ lessonId }}>
+          <Wand2 className="size-4" /> Gør den mere aktiv
+        </Link>
+      </Button>
+      <Button
+        variant="outline"
+        className="rounded-full"
+        disabled={saveLesson.isPending}
+        onClick={() => saveLesson.mutate()}
+      >
+        <BookmarkPlus className="size-4" /> Gem i bibliotek
+      </Button>
+      <Button
+        variant="outline"
+        className="rounded-full"
+        onClick={async () => {
+          const text = lessonToText(lesson.data!, list);
+          try {
+            await navigator.clipboard.writeText(text);
+            toast.success("Lektionen er kopieret ✓");
+          } catch {
+            toast.error("Lektionen kunne ikke kopieres. Markér teksten og kopiér manuelt.");
+          }
+        }}
+      >
+        <Copy className="size-4" /> Kopiér lektion til ChatGPT
+      </Button>
+      <Button
+        variant="ghost"
+        className="rounded-full"
+        disabled={dupLesson.isPending}
+        onClick={() => dupLesson.mutate()}
+      >
+        <Copy className="size-4" /> Dublér
+      </Button>
+      <Button
+        variant="ghost"
+        className="rounded-full text-destructive hover:text-destructive"
+        onClick={() => {
+          if (confirm("Vil du slette denne lektion?")) delLesson.mutate();
+        }}
+      >
+        <Trash2 className="size-4" /> Slet
+      </Button>
+    </>
+  );
+
+  const statusSelect = (
+    <>
+      <Label id="lesson-status-label" className="sr-only">
+        Lektionsstatus
+      </Label>
+      <Select
+        value={lesson.data.status}
+        onValueChange={(v) => patchLesson.mutate({ status: v as LessonStatus })}
+      >
+        <SelectTrigger aria-labelledby="lesson-status-label" className="w-36 rounded-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {(Object.keys(LESSON_STATUS_LABEL) as LessonStatus[]).map((s) => (
+            <SelectItem key={s} value={s}>
+              {LESSON_STATUS_LABEL[s]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
+
+  const titleInput = (
+    <Input
+      value={lesson.data.title}
+      onChange={(e) =>
+        queryClient.setQueryData(["lesson", lessonId], {
+          ...lesson.data,
+          title: e.target.value,
+        })
+      }
+      onBlur={(e) => patchLesson.mutate({ title: e.target.value })}
+      className="h-auto border-0 bg-transparent px-0 font-display !text-3xl font-semibold shadow-none focus-visible:ring-0"
+    />
+  );
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
@@ -451,132 +560,32 @@ function LessonEditor() {
             </>
           )}
         </nav>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild className="rounded-full">
-            <Link to="/lessons/$lessonId/run" params={{ lessonId }}>
-              <Play className="size-4" /> Kør lektion
-            </Link>
-          </Button>
-          <Button variant="outline" className="rounded-full" onClick={() => setSessionOpen(true)}>
-            <Smartphone className="size-4" /> Start elevsession
-          </Button>
-
-          <Button asChild variant="outline" className="rounded-full">
-            <Link to="/import" search={{ lessonId }}>
-              <Plus className="size-4" /> Importér aktiviteter
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="rounded-full">
-            <Link to="/extra-time" search={{ lessonId }}>
-              <Timer className="size-4" /> Jeg mangler tid
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="rounded-full">
-            <Link to="/improve-lesson" search={{ lessonId }}>
-              <Wand2 className="size-4" /> Gør den mere aktiv
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            className="rounded-full"
-            disabled={saveLesson.isPending}
-            onClick={() => saveLesson.mutate()}
-          >
-            <BookmarkPlus className="size-4" /> Gem i bibliotek
-          </Button>
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={async () => {
-              const text = lessonToText(lesson.data!, list);
-              try {
-                await navigator.clipboard.writeText(text);
-                toast.success("Lektionen er kopieret ✓");
-              } catch {
-                toast.error("Lektionen kunne ikke kopieres. Markér teksten og kopiér manuelt.");
-              }
-            }}
-          >
-            <Copy className="size-4" /> Kopiér lektion til ChatGPT
-          </Button>
-          <Button
-            variant="ghost"
-            className="rounded-full"
-            disabled={dupLesson.isPending}
-            onClick={() => dupLesson.mutate()}
-          >
-            <Copy className="size-4" /> Dublér
-          </Button>
-          <Button
-            variant="ghost"
-            className="rounded-full text-destructive hover:text-destructive"
-            onClick={() => {
-              if (confirm("Vil du slette denne lektion?")) delLesson.mutate();
-            }}
-          >
-            <Trash2 className="size-4" /> Slet
-          </Button>
-        </div>
+        {mode !== "v2" && (
+          <div className="flex flex-wrap gap-2">
+            {runButton}
+            {toolbarButtons}
+          </div>
+        )}
       </div>
 
       {mode === "v2" ? (
         <LessonSummaryV2
           contextLabel={klass.data ? `${klass.data.name} · ${klass.data.subject}` : ""}
+          unitLabel={unit?.title ?? null}
           planned={planned}
           target={target}
           over={over}
           activityCount={list.length}
           learningGoal={lesson.data.learning_goal ?? null}
           rescue={lesson.data.mode === "rescue"}
-          titleInput={
-            <Input
-              value={lesson.data.title}
-              onChange={(e) =>
-                queryClient.setQueryData(["lesson", lessonId], {
-                  ...lesson.data,
-                  title: e.target.value,
-                })
-              }
-              onBlur={(e) => patchLesson.mutate({ title: e.target.value })}
-              className="h-auto border-0 bg-transparent px-0 font-display !text-3xl font-semibold shadow-none focus-visible:ring-0"
-            />
-          }
-          statusSelect={
-            <>
-              <Label id="lesson-status-label" className="sr-only">
-                Lektionsstatus
-              </Label>
-              <Select
-                value={lesson.data.status}
-                onValueChange={(v) => patchLesson.mutate({ status: v as LessonStatus })}
-              >
-                <SelectTrigger aria-labelledby="lesson-status-label" className="w-36 rounded-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(LESSON_STATUS_LABEL) as LessonStatus[]).map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {LESSON_STATUS_LABEL[s]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </>
-          }
+          titleInput={titleInput}
+          statusSelect={statusSelect}
+          primaryAction={runButton}
+          secondaryActions={toolbarButtons}
         />
       ) : (
         <div className="surface-card mt-6 p-4 sm:p-8">
-          <Input
-            value={lesson.data.title}
-            onChange={(e) =>
-              queryClient.setQueryData(["lesson", lessonId], {
-                ...lesson.data,
-                title: e.target.value,
-              })
-            }
-            onBlur={(e) => patchLesson.mutate({ title: e.target.value })}
-            className="h-auto border-0 bg-transparent px-0 font-display !text-3xl font-semibold shadow-none focus-visible:ring-0"
-          />
+          {titleInput}
           <div className="mt-5 flex flex-wrap items-center gap-4 text-sm">
             <span className="text-muted-foreground">
               {klass.data ? `${klass.data.name} · ${klass.data.subject}` : ""}
@@ -595,24 +604,7 @@ function LessonEditor() {
             >
               {planned} / {target} min
             </span>
-            <Label id="lesson-status-label" className="sr-only">
-              Lektionsstatus
-            </Label>
-            <Select
-              value={lesson.data.status}
-              onValueChange={(v) => patchLesson.mutate({ status: v as LessonStatus })}
-            >
-              <SelectTrigger aria-labelledby="lesson-status-label" className="w-36 rounded-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(LESSON_STATUS_LABEL) as LessonStatus[]).map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {LESSON_STATUS_LABEL[s]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {statusSelect}
           </div>
           {lesson.data.learning_goal && (
             <p className="mt-4 text-muted-foreground">{lesson.data.learning_goal}</p>
@@ -621,6 +613,16 @@ function LessonEditor() {
       )}
 
       <div className={mode === "v2" ? "mt-10" : "mt-10 space-y-3"}>
+        {mode === "v2" && list.length > 0 && (
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+              Undervisningssekvens
+            </h2>
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {planned} min planlagt
+            </span>
+          </div>
+        )}
         {list.length === 0 && (
           <div className="surface-card border-dashed p-10 text-center">
             <p className="text-lg font-medium">Tidslinjen er tom</p>
@@ -636,14 +638,30 @@ function LessonEditor() {
           return blockRow(b, `${start}–${running}`, true, list.indexOf(b));
         })}
 
-        <Button
-          variant="outline"
-          className="w-full rounded-2xl border-dashed py-7"
-          onClick={() => setPickerOpen(true)}
-        >
-          <Plus className="size-4" /> Tilføj aktivitet
-        </Button>
+        {mode === "v2" ? (
+          <div className="flex gap-3 sm:gap-4">
+            <div className="relative flex w-8 shrink-0 justify-center sm:w-10">
+              <span aria-hidden="true" className="w-px bg-border" />
+            </div>
+            <Button
+              variant="outline"
+              className="min-h-11 flex-1 rounded-2xl border-dashed text-muted-foreground hover:text-foreground"
+              onClick={() => setPickerOpen(true)}
+            >
+              <Plus className="size-4" /> Tilføj aktivitet
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            className="w-full rounded-2xl border-dashed py-7"
+            onClick={() => setPickerOpen(true)}
+          >
+            <Plus className="size-4" /> Tilføj aktivitet
+          </Button>
+        )}
       </div>
+
 
       {fallbacks.length > 0 && (
         <div className="mt-12">

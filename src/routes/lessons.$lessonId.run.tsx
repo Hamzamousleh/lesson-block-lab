@@ -37,7 +37,11 @@ import { summarize } from "@/lib/results";
 import { ResultBars, StudentBlock } from "@/components/student/StudentBlock";
 import { correctOptionIndex, timerLabel, toPreviewBlock, workMode } from "@/lib/cockpit";
 import { useDesignMode } from "@/lib/design-mode";
-import { CockpitFocusV2 } from "@/components/run/CockpitFocusV2";
+import {
+  CockpitFocusV2,
+  CockpitLiveHeaderV2,
+  CockpitTimelineItemV2,
+} from "@/components/run/CockpitFocusV2";
 import {
   blockMaterialFilesQuery,
   formatFileSize,
@@ -629,15 +633,30 @@ function RunMode() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="flex flex-wrap items-center gap-2 border-b border-border/70 px-4 py-3 text-sm sm:gap-3 sm:px-6">
-        <div className="min-w-0 basis-full break-words sm:flex-1 sm:basis-auto">
-          <span className="font-medium">{l.title}</span>
-          {klass.data && <span className="text-muted-foreground"> · {klass.data.name}</span>}
-          {useFallback && <span className="ml-2 text-primary">· Ekstra aktivitet</span>}
-        </div>
-        <span className="rounded-full bg-secondary px-3 py-1 font-medium tabular-nums">
-          Aktivitet {index + 1} af {active.length}
-        </span>
-        {liveSession && (
+        {mode === "v2" ? (
+          <div className="min-w-0 basis-full sm:flex-1 sm:basis-auto">
+            <CockpitLiveHeaderV2
+              title={l.title}
+              index={index}
+              total={active.length}
+              className={klass.data?.name ?? null}
+              joinCode={liveSession?.join_code ?? null}
+              participants={liveSession ? people.length : null}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="min-w-0 basis-full break-words sm:flex-1 sm:basis-auto">
+              <span className="font-medium">{l.title}</span>
+              {klass.data && <span className="text-muted-foreground"> · {klass.data.name}</span>}
+              {useFallback && <span className="ml-2 text-primary">· Ekstra aktivitet</span>}
+            </div>
+            <span className="rounded-full bg-secondary px-3 py-1 font-medium tabular-nums">
+              Aktivitet {index + 1} af {active.length}
+            </span>
+          </>
+        )}
+        {liveSession && mode !== "v2" && (
           <Link to="/sessions/$sessionId" params={{ sessionId: liveSession.id }}>
             <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
               Elevsession · {liveSession.join_code} · {people.length}{" "}
@@ -645,6 +664,7 @@ function RunMode() {
             </span>
           </Link>
         )}
+
         {liveSession && (
           <div
             role="status"
@@ -661,11 +681,14 @@ function RunMode() {
                 <Loader2 className="size-3.5 animate-spin" /> Synkroniserer…
               </>
             )}
-            {syncState.phase === "synced" && (
-              <>
-                <Check className="size-3.5" /> Synkroniseret
-              </>
-            )}
+            {syncState.phase === "synced" &&
+              (mode === "v2" ? (
+                <Check className="size-3.5 opacity-50" />
+              ) : (
+                <>
+                  <Check className="size-3.5" /> Synkroniseret
+                </>
+              ))}
             {syncState.phase === "error" && (
               <>
                 <span>Kunne ikke synkronisere ændringen</span>
@@ -706,9 +729,9 @@ function RunMode() {
       </div>
 
       <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           {/* ---------------- left: what students see + responses ---------------- */}
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             {mode === "v2" && current && (
               <CockpitFocusV2
                 index={index}
@@ -725,9 +748,9 @@ function RunMode() {
                 }
                 participants={liveSession ? people.length : null}
                 nextTitle={active[index + 1]?.title ?? null}
-                nextTypeLabel={
-                  active[index + 1] ? blockDef(active[index + 1]!.type).label : null
-                }
+                nextTypeLabel={active[index + 1] ? blockDef(active[index + 1]!.type).label : null}
+                nextDurationMinutes={active[index + 1]?.duration_minutes ?? null}
+                studentInstructions={current.student_instructions ?? null}
                 onNext={next}
                 nextDisabled={syncPending}
               />
@@ -884,7 +907,7 @@ function RunMode() {
           </div>
 
           {/* ---------------- right: time, plan, notes ---------------- */}
-          <aside className="space-y-6">
+          <aside className="min-w-0 space-y-6">
             <section className="surface-card p-4 sm:p-6">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-sm font-semibold">Tid til aktiviteten</h2>
@@ -1033,6 +1056,7 @@ function RunMode() {
                       <button
                         type="button"
                         onClick={() => jumpTo(i)}
+                        aria-current={i === index ? "step" : undefined}
                         disabled={syncPending}
                         className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                           i === index
@@ -1042,13 +1066,31 @@ function RunMode() {
                           done ? "text-muted-foreground" : ""
                         }`}
                       >
-                        <span className="w-4 shrink-0">
-                          {i === index ? "→" : done ? "✓" : isSkipped ? "–" : ""}
-                        </span>
-                        <span className="min-w-0 flex-1 truncate">{b.title}</span>
-                        <span className="shrink-0 tabular-nums text-muted-foreground">
-                          {b.duration_minutes} min
-                        </span>
+                        {mode === "v2" ? (
+                          <CockpitTimelineItemV2
+                            title={b.title}
+                            durationMinutes={b.duration_minutes}
+                            state={
+                              isSkipped
+                                ? "skipped"
+                                : i === index
+                                  ? "current"
+                                  : done
+                                    ? "done"
+                                    : "upcoming"
+                            }
+                          />
+                        ) : (
+                          <>
+                            <span className="w-4 shrink-0">
+                              {i === index ? "→" : done ? "✓" : isSkipped ? "–" : ""}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate">{b.title}</span>
+                            <span className="shrink-0 tabular-nums text-muted-foreground">
+                              {b.duration_minutes} min
+                            </span>
+                          </>
+                        )}
                       </button>
                     </li>
                   );
@@ -1085,7 +1127,11 @@ function RunMode() {
         </Button>
         <div className="col-span-2 flex min-w-0 flex-wrap items-center justify-center gap-2 sm:order-2 sm:col-span-1 sm:flex-nowrap sm:gap-3">
           <span className="min-w-0 basis-full break-words text-center text-sm text-muted-foreground sm:basis-auto">
-            {current ? `${blockDef(current.type).icon} ${current.title}` : ""}
+            {current
+              ? mode === "v2"
+                ? `${current.title} · ${blockDef(current.type).label}`
+                : `${blockDef(current.type).icon} ${current.title}`
+              : ""}
           </span>
           <Button
             variant="ghost"
