@@ -13,7 +13,7 @@ export type DesignMode = "classic" | "v2";
 
 const STORAGE_KEY = "didaktiva_design";
 
-let current: DesignMode = "classic";
+let current: DesignMode = "v2";
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -24,9 +24,9 @@ function normalize(value: string | null | undefined): DesignMode | null {
   return value === "v2" || value === "classic" ? value : null;
 }
 
-/** Reads query param (wins, and persists) then localStorage. Default: classic. */
+/** Reads query param (wins, and persists) then localStorage. Default: v2. */
 function readEnvironment(): DesignMode {
-  if (typeof window === "undefined") return "classic";
+  if (typeof window === "undefined") return "v2";
   const fromQuery = normalize(new URLSearchParams(window.location.search).get("design"));
   if (fromQuery) {
     try {
@@ -37,9 +37,9 @@ function readEnvironment(): DesignMode {
     return fromQuery;
   }
   try {
-    return normalize(window.localStorage.getItem(STORAGE_KEY)) ?? "classic";
+    return normalize(window.localStorage.getItem(STORAGE_KEY)) ?? "v2";
   } catch {
-    return "classic";
+    return "v2";
   }
 }
 
@@ -66,12 +66,12 @@ export function setDesignMode(mode: DesignMode) {
   emit();
 }
 
-/** Hydration-safe: server and first client render always return "classic". */
+/** Hydration-safe: server and first client render always return "v2". */
 export function useDesignMode(): DesignMode {
   return useSyncExternalStore(
     subscribe,
     () => current,
-    () => "classic" as DesignMode,
+    () => "v2" as DesignMode,
   );
 }
 
