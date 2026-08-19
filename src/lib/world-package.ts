@@ -341,7 +341,7 @@ function parseEpisode(
 
 export function validateWorldPackage(input: string): WorldValidationResult {
   const text = input.trim();
-  if (!text) return { ok: false, errors: ["Indsæt en CaseLab World-pakke for at fortsætte."] };
+  if (!text) return { ok: false, errors: ["Indsæt en Didaktiva World-pakke for at fortsætte."] };
 
   let raw: unknown;
   try {

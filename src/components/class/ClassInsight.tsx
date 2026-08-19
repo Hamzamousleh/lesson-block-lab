@@ -112,7 +112,7 @@ export function ClassInsight({
 
         {list.length === 0 ? (
           <p className="mt-4 text-muted-foreground">
-            Når klassen har deltaget i en elevsession, samler CaseLab tallene her.
+            Når klassen har deltaget i en elevsession, samler Didaktiva tallene her.
           </p>
         ) : (
           <div className="surface-card mt-4 p-8">
@@ -165,7 +165,7 @@ export function ClassInsight({
                   })}
                 </ul>
                 <p className="mt-6 text-sm text-muted-foreground">
-                  Tallene er rå opgørelser fra elevernes svar. CaseLab fortolker dem ikke.
+                  Tallene er rå opgørelser fra elevernes svar. Didaktiva fortolker dem ikke.
                 </p>
               </>
             )}
@@ -237,7 +237,7 @@ export function ClassInsight({
         <h2 className="text-xl font-semibold">Planlæg næste lektion</h2>
         <div className="surface-card mt-4 space-y-5 p-8">
           <p className="text-muted-foreground">
-            CaseLab samler overblikket og dine noter til en prompt, du kan bruge i ChatGPT.
+            Didaktiva samler overblikket og dine noter til en prompt, du kan bruge i ChatGPT.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">

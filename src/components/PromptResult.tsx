@@ -28,11 +28,11 @@ export function PromptResult({
   }
 
   return (
-    <section className="surface-card mt-6 space-y-4 p-8">
+    <section className="surface-quiet mt-8 space-y-4 p-8">
       <div>
         <h2 className="text-xl font-semibold">Klar til ChatGPT</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          CaseLab har klargjort instruktionen, men har ikke sendt noget. Du vælger selv, hvad du
+          Didaktiva har klargjort instruktionen, men har ikke sendt noget. Du vælger selv, hvad du
           kopierer til ChatGPT.
         </p>
       </div>

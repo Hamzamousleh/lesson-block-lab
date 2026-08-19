@@ -62,7 +62,7 @@ export const Route = createFileRoute("/lessons/$lessonId/run")({
   },
   head: () => ({
     meta: [
-      { title: "Undervis — CaseLab" },
+      { title: "Undervis — Didaktiva" },
       {
         name: "description",
         content: "Kør lektionen live med elevvisning, tid og svar i ét billede.",
@@ -156,7 +156,7 @@ function RunMode() {
   }
 
   const active = useFallback ? fallback : main;
-  const elapsed = useElapsed(started, `caselab-run-start-${lessonId}`);
+  const elapsed = useElapsed(started, `didaktiva-run-start-${lessonId}`);
 
   const current: LessonBlock | undefined = active[index];
   const totalSteps = current ? revealSteps(current) : 1;

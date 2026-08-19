@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/lessons/")({
   head: () => ({
     meta: [
-      { title: "Lektioner — CaseLab" },
+      { title: "Lektioner — Didaktiva" },
       { name: "description", content: "Alle dine lektioner samlet ét sted." },
-      { property: "og:title", content: "Lektioner — CaseLab" },
+      { property: "og:title", content: "Lektioner — Didaktiva" },
       { property: "og:description", content: "Alle dine lektioner samlet ét sted." },
       { name: "robots", content: "noindex" },
     ],
@@ -61,7 +61,7 @@ function LessonsPage() {
         {lessons.data?.map((l) => {
           const c = classById.get(l.class_id);
           return (
-            <div key={l.id} className="surface-card flex flex-wrap items-center gap-4 px-6 py-5">
+            <div key={l.id} className="group relative flex flex-col gap-4 rounded-3xl border border-border/80 bg-card px-5 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift hover:border-primary/30 sm:flex-row sm:items-center sm:px-6">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-lg font-medium">
                   {l.mode === "rescue" && <span className="mr-2">⚡</span>}

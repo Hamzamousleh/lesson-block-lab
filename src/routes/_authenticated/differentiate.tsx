@@ -24,13 +24,13 @@ import {
 export const Route = createFileRoute("/_authenticated/differentiate")({
   head: () => ({
     meta: [
-      { title: "Differentiér en aktivitet — CaseLab" },
+      { title: "Differentiér en aktivitet — Didaktiva" },
       {
         name: "description",
         content:
           "Lav niveaudelte varianter af den samme aktivitet med Støtte, Standard og Udfordring.",
       },
-      { property: "og:title", content: "Differentiér en aktivitet — CaseLab" },
+      { property: "og:title", content: "Differentiér en aktivitet — Didaktiva" },
       { property: "og:description", content: "Samme faglige mål, tre niveauer." },
       { name: "robots", content: "noindex" },
     ],
@@ -97,7 +97,8 @@ function DifferentiatePage() {
         </div>
       </div>
 
-      <section className="surface-card mt-8 space-y-6 p-4 sm:p-8">
+      <section className="mt-8 rounded-3xl border border-border/70 bg-surface/70 p-4 sm:p-6">
+        <div className="space-y-6 rounded-2xl border border-primary/5 bg-card p-6 sm:p-8">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label id="differentiate-lesson-label">Lektion (valgfri)</Label>
@@ -168,10 +169,10 @@ function DifferentiatePage() {
                 key={l}
                 type="button"
                 onClick={() => toggleLevel(l)}
-                className={`rounded-full border px-5 py-2 text-sm transition-colors ${
+                className={`rounded-full border px-5 py-2 text-sm font-medium transition-all ${
                   levels.includes(l)
-                    ? "border-primary bg-primary/10 text-foreground"
-                    : "border-border text-muted-foreground hover:border-primary/40"
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:bg-accent"
                 }`}
               >
                 {l}
@@ -179,7 +180,7 @@ function DifferentiatePage() {
             ))}
           </div>
           <p className="text-sm text-muted-foreground">
-            Navnene er neutrale og bruges kun internt i CaseLab.
+            Navnene er neutrale og bruges kun internt i Didaktiva.
           </p>
         </div>
 
@@ -238,6 +239,7 @@ function DifferentiatePage() {
         >
           Klargør til ChatGPT
         </Button>
+        </div>
       </section>
 
       {prompt && (

@@ -126,7 +126,7 @@ export function validateBlock(raw: unknown, index: number, errors: string[]): Pa
     return null;
   }
   if (!BLOCK_TYPE_MAP[type]) {
-    errors.push(`Aktivitet ${nr} bruger typen '${type}', som CaseLab ikke understøtter.`);
+    errors.push(`Aktivitet ${nr} bruger typen '${type}', som Didaktiva ikke understøtter.`);
     return null;
   }
   const def = blockDef(type);
@@ -179,7 +179,7 @@ export function validateBlock(raw: unknown, index: number, errors: string[]): Pa
 
 export function validatePackage(input: string): ValidationResult {
   const text = input.trim();
-  if (!text) return { ok: false, errors: ["Indsæt en CaseLab-pakke for at fortsætte."] };
+  if (!text) return { ok: false, errors: ["Indsæt en Didaktiva-pakke for at fortsætte."] };
 
   let raw: unknown;
   try {

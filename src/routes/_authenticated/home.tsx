@@ -24,12 +24,12 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
-      { title: "Hjem — CaseLab" },
+      { title: "Hjem — Didaktiva" },
       {
         name: "description",
         content: "Dit overblik: planlæg undervisning og fortsæt hvor du slap.",
       },
-      { property: "og:title", content: "Hjem — CaseLab" },
+      { property: "og:title", content: "Hjem — Didaktiva" },
       { property: "og:description", content: "Planlæg undervisning og fortsæt hvor du slap." },
       { name: "robots", content: "noindex" },
     ],

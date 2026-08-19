@@ -3,7 +3,7 @@ import { Check } from "lucide-react";
 import { setDesignMode, useDesignMode, type DesignMode } from "@/lib/design-mode";
 
 const OPTIONS: { value: DesignMode; label: string }[] = [
-  { value: "classic", label: "Original" },
+  { value: "classic", label: "CaseLab (Classic)" },
   { value: "v2", label: "Didaktiva V2" },
 ];
 

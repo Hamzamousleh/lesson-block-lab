@@ -34,12 +34,12 @@ import {
 export const Route = createFileRoute("/_authenticated/worlds/$worldId_/episodes/new")({
   head: () => ({
     meta: [
-      { title: "Ny episode — CaseLab" },
+      { title: "Ny episode — Didaktiva" },
       {
         name: "description",
         content: "Byg næste episode i dit World med World-hukommelsen som grundlag.",
       },
-      { property: "og:title", content: "Ny episode — CaseLab" },
+      { property: "og:title", content: "Ny episode — Didaktiva" },
       {
         property: "og:description",
         content: "Næste episode bygges oven på tilstand og tidligere beslutninger.",
@@ -175,7 +175,7 @@ function NewEpisodePage() {
         {mode === "reflection" ? "Afslutning" : `Episode ${nextNumber}`}
       </h1>
       <p className="mt-2 text-muted-foreground">
-        {w.title} · CaseLab sender World-hukommelsen med, så ChatGPT bygger videre på det, der
+        {w.title} · Didaktiva sender World-hukommelsen med, så ChatGPT bygger videre på det, der
         faktisk er sket — og ikke opfinder en ny fortid.
       </p>
 
@@ -249,7 +249,7 @@ function NewEpisodePage() {
         </div>
 
         <div className="rounded-xl bg-secondary/50 p-4">
-          <p className="text-sm font-medium">Det sender CaseLab med</p>
+          <p className="text-sm font-medium">Det sender Didaktiva med</p>
           <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
             {stateLines.map((l) => (
               <li key={l}>{l}</li>
@@ -330,7 +330,7 @@ function NewEpisodePage() {
         </section>
       ) : (
         <p className="mt-6 text-sm text-muted-foreground">
-          Refleksionslektionen er en almindelig CaseLab-lektion. Indsæt JSON-svaret under Importér.
+          Refleksionslektionen er en almindelig Didaktiva-lektion. Indsæt JSON-svaret under Importér.
         </p>
       )}
     </div>

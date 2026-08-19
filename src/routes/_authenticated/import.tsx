@@ -28,12 +28,12 @@ export const Route = createFileRoute("/_authenticated/import")({
     typeof search["lessonId"] === "string" ? { lessonId: search["lessonId"] } : {},
   head: () => ({
     meta: [
-      { title: "Importér fra ChatGPT — CaseLab" },
+      { title: "Indlæs fra ChatGPT — Didaktiva" },
       {
         name: "description",
         content: "Indsæt svaret fra ChatGPT, gennemgå det, og gør undervisningen klar.",
       },
-      { property: "og:title", content: "Importér fra ChatGPT — CaseLab" },
+      { property: "og:title", content: "Indlæs fra ChatGPT — Didaktiva" },
       { property: "og:description", content: "Indsæt og gennemgå svaret fra ChatGPT." },
       { name: "robots", content: "noindex" },
     ],
@@ -124,7 +124,7 @@ function ImportPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-14">
-      <h1 className="font-display text-4xl font-semibold">Importér fra ChatGPT</h1>
+      <h1 className="font-display text-4xl font-semibold">Indlæs fra ChatGPT</h1>
       <p className="mt-3 text-lg text-muted-foreground">
         Indsæt hele svaret fra ChatGPT. Du får en forhåndsvisning, før noget gemmes.
       </p>
@@ -221,7 +221,7 @@ function ImportPage() {
         <div>
           <h2 className="text-xl font-semibold">Svar fra ChatGPT</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Teknisk format: CaseLab 2.0 JSON. Du behøver ikke redigere koden manuelt.
+            Teknisk format: Didaktiva 2.0 JSON. Du behøver ikke redigere koden manuelt.
           </p>
         </div>
         <Textarea

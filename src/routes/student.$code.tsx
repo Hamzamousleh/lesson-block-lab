@@ -20,10 +20,10 @@ export const Route = createFileRoute("/student/$code")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Aktivitet — CaseLab" },
-      { name: "description", content: "Din aktivitet i CaseLab." },
-      { property: "og:title", content: "Aktivitet — CaseLab" },
-      { property: "og:description", content: "Din aktivitet i CaseLab." },
+      { title: "Aktivitet — Didaktiva" },
+      { name: "description", content: "Din aktivitet i Didaktiva." },
+      { property: "og:title", content: "Aktivitet — Didaktiva" },
+      { property: "og:description", content: "Din aktivitet i Didaktiva." },
       { name: "robots", content: "noindex" },
     ],
   }),

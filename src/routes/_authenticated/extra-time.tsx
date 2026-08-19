@@ -20,12 +20,12 @@ export const Route = createFileRoute("/_authenticated/extra-time")({
     typeof search["lessonId"] === "string" ? { lessonId: search["lessonId"] } : {},
   head: () => ({
     meta: [
-      { title: "Jeg mangler tid — CaseLab" },
+      { title: "Fyld lektionen ud — Didaktiva" },
       {
         name: "description",
         content: "Få ekstra aktiviteter til lektionen, når der er minutter tilovers.",
       },
-      { property: "og:title", content: "Jeg mangler tid — CaseLab" },
+      { property: "og:title", content: "Fyld lektionen ud — Didaktiva" },
       { property: "og:description", content: "Ekstra aktiviteter på få klik." },
       { name: "robots", content: "noindex" },
     ],
@@ -78,13 +78,14 @@ function ExtraTimePage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-14">
-      <p className="text-sm font-medium text-primary">⏱ Jeg mangler tid</p>
+      <p className="text-sm font-medium text-primary">⏱ Fyld lektionen ud</p>
       <h1 className="mt-2 font-display text-4xl font-semibold">Få ekstra aktiviteter</h1>
       <p className="mt-3 text-lg text-muted-foreground">
         Vælg lektion, hvor mange minutter du mangler, og hvad du har brug for.
       </p>
 
-      <section className="surface-card mt-10 space-y-6 p-8">
+      <section className="mt-10 rounded-3xl border border-border/70 bg-surface/70 p-4 sm:p-6">
+        <div className="space-y-6 rounded-2xl border border-primary/5 bg-card p-6 sm:p-8">
         <div className="space-y-2">
           <Label>Lektion (valgfrit)</Label>
           <Select value={lessonId} onValueChange={setLessonId}>
@@ -120,7 +121,7 @@ function ExtraTimePage() {
               <Button
                 key={m}
                 variant={!custom && minutes === m ? "default" : "outline"}
-                className="rounded-full"
+                className={`rounded-full transition-all ${!custom && minutes === m ? "shadow-sm" : "bg-card"}`}
                 onClick={() => {
                   setMinutes(m);
                   setCustom("");
@@ -146,7 +147,7 @@ function ExtraTimePage() {
               <Button
                 key={w}
                 variant={want === w ? "default" : "outline"}
-                className="rounded-full"
+                className={`rounded-full transition-all ${want === w ? "shadow-sm" : "bg-card"}`}
                 onClick={() => setWant(w)}
               >
                 {w}
@@ -181,6 +182,7 @@ function ExtraTimePage() {
             Vælg en lektion eller skriv et emne for at fortsætte.
           </p>
         )}
+        </div>
       </section>
 
       {prompt && <PromptResult prompt={prompt} importSearch={lessonId ? { lessonId } : {}} />}

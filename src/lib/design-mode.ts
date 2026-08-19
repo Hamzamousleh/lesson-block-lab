@@ -76,6 +76,6 @@ export function useDesignMode(): DesignMode {
 }
 
 /** User-facing product name. Internal contracts keep using "CaseLab". */
-export function productName(mode: DesignMode): string {
-  return mode === "v2" ? "Didaktiva" : "CaseLab";
+export function productName(_mode: DesignMode): string {
+  return _mode === "v2" ? "Didaktiva" : "CaseLab";
 }

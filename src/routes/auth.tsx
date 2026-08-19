@@ -11,10 +11,10 @@ import { Loader2 } from "lucide-react";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Log ind — CaseLab" },
-      { name: "description", content: "Log ind eller opret en lærerkonto i CaseLab." },
-      { property: "og:title", content: "Log ind — CaseLab" },
-      { property: "og:description", content: "Log ind eller opret en lærerkonto i CaseLab." },
+      { title: "Log ind — Didaktiva" },
+      { name: "description", content: "Log ind eller opret en lærerkonto i Didaktiva." },
+      { property: "og:title", content: "Log ind — Didaktiva" },
+      { property: "og:description", content: "Log ind eller opret en lærerkonto i Didaktiva." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -80,10 +80,15 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6 py-16">
       <div className="w-full max-w-md">
-        <Link to="/" className="mb-10 block text-center font-display text-2xl font-semibold">
-          Case<span className="text-primary">Lab</span>
+        <Link to="/" className="mb-10 flex items-center justify-center gap-3 font-display text-2xl font-semibold sm:text-3xl">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm sm:size-10">
+            <span className="font-display text-xl font-bold sm:text-2xl">D</span>
+          </div>
+          <span>
+            Didakt<span className="text-primary">iva</span>
+          </span>
         </Link>
-        <div className="surface-card p-8">
+        <div className="surface-quiet p-8 shadow-lift border-primary/10 rounded-[32px]">
           <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             Underviser
           </p>
@@ -145,7 +150,7 @@ function AuthPage() {
           </Button>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            {mode === "signin" ? "Ny på CaseLab?" : "Har du allerede en konto?"}{" "}
+            {mode === "signin" ? "Ny på Didaktiva?" : "Har du allerede en konto?"}{" "}
             <button
               type="button"
               className="font-medium text-primary underline-offset-4 hover:underline"
@@ -156,7 +161,7 @@ function AuthPage() {
           </p>
         </div>
 
-        <div className="surface-card mt-6 p-6">
+        <div className="surface-quiet mt-6 p-8 border-primary/5 rounded-[32px]">
           <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             Elev
           </p>

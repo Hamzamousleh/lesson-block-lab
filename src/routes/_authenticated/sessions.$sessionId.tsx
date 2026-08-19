@@ -27,9 +27,9 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/sessions/$sessionId")({
   head: () => ({
     meta: [
-      { title: "Elevsession — CaseLab" },
+      { title: "Elevresultater — Didaktiva" },
       { name: "description", content: "Deltagere, svar og styring af elevsessionen." },
-      { property: "og:title", content: "Elevsession — CaseLab" },
+      { property: "og:title", content: "Elevresultater — Didaktiva" },
       { property: "og:description", content: "Deltagere, svar og styring." },
       { name: "robots", content: "noindex" },
     ],
