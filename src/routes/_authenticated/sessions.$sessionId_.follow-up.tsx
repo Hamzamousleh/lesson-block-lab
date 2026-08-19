@@ -100,6 +100,7 @@ function FollowUpPage() {
         subject: lesson.data?.subject ?? null,
         texts: chosenTexts.map((t) => t.text),
         tags: ["elevsvar"],
+        sourceSessionId: sessionId,
       });
     },
     onSuccess: () => toast.success("Svarene er gemt i biblioteket ✓"),

@@ -23,3 +23,16 @@ export function clearToken(code: string) {
     /* ignore */
   }
 }
+
+/** Clears account/session-specific browser state without removing harmless design preferences. */
+export function clearPrivateLocalStorage() {
+  try {
+    const prefixes = [PREFIX, "caselab-run-start-", "caselab-timer-"];
+    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+      const key = localStorage.key(index);
+      if (key && prefixes.some((prefix) => key.startsWith(prefix))) localStorage.removeItem(key);
+    }
+  } catch {
+    /* storage may be unavailable */
+  }
+}

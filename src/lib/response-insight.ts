@@ -1,5 +1,6 @@
 import type { LessonBlock } from "./types";
 import type { SessionParticipant, SessionResponse } from "./sessions";
+import { privacySafeStudentAlias } from "./student-alias";
 
 /* ------------------------------------------------------------------ *
  * Deterministic response summaries. No AI, no interpretation.
@@ -47,10 +48,15 @@ function pct(n: number, total: number): number {
   return total ? Math.round((n / total) * 100) : 0;
 }
 
-/** Stable anonymous aliases: "Elev 1", "Elev 2" … by join order. */
+/** Keep neutral persisted aliases; anonymize legacy free-text names by join order. */
 export function aliasMap(participants: SessionParticipant[]): Map<string, string> {
   const sorted = [...participants].sort((a, b) => a.joined_at.localeCompare(b.joined_at));
-  return new Map(sorted.map((p, i) => [p.id, `Elev ${i + 1}`]));
+  return new Map(
+    sorted.map((participant, index) => [
+      participant.id,
+      privacySafeStudentAlias(participant.display_name, index),
+    ]),
+  );
 }
 
 export function nameMap(participants: SessionParticipant[]): Map<string, string> {
@@ -61,7 +67,9 @@ function textOf(data: Record<string, unknown>): string {
   const parts: string[] = [];
   if (typeof data["text"] === "string" && data["text"].trim()) parts.push(data["text"].trim());
   if (Array.isArray(data["answers"])) {
-    const answers = (data["answers"] as unknown[]).filter((x): x is string => typeof x === "string");
+    const answers = (data["answers"] as unknown[]).filter(
+      (x): x is string => typeof x === "string",
+    );
     if (answers.length) parts.push(answers.filter((a) => a.trim()).join("\n"));
   }
   if (Array.isArray(data["ordered_items"]))
@@ -100,7 +108,9 @@ export function blockInsight(
     }
     const correctIndex = correctIndexOf({ content });
     const correctCount =
-      correctIndex !== null && counts[correctIndex] !== undefined ? (counts[correctIndex] ?? 0) : null;
+      correctIndex !== null && counts[correctIndex] !== undefined
+        ? (counts[correctIndex] ?? 0)
+        : null;
     return {
       kind: "options",
       total,
@@ -135,7 +145,9 @@ export function blockInsight(
     return {
       kind: "scale",
       total,
-      average: values.length ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10 : 0,
+      average: values.length
+        ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10
+        : 0,
       median: Math.round(median * 10) / 10,
       min: values.length ? Math.min(...values) : lo,
       max: values.length ? Math.max(...values) : hi,
@@ -201,7 +213,10 @@ export function questionOf(block: Pick<LessonBlock, "type" | "content">): string
   return "";
 }
 
-export function insightToText(insight: BlockInsight, opts?: { includeText?: TextResponseItem[]; useNames?: boolean }): string {
+export function insightToText(
+  insight: BlockInsight,
+  opts?: { includeText?: TextResponseItem[]; useNames?: boolean },
+): string {
   if (insight.kind === "options") {
     const lines = insight.labels.map(
       (l, i) =>
@@ -220,7 +235,10 @@ export function insightToText(insight: BlockInsight, opts?: { includeText?: Text
   }
   if (insight.kind === "ranking") {
     return `${insight.total} svar\n${insight.items
-      .map((i) => `${i.label} — gennemsnitlig placering ${i.averagePosition}, placeret som nr. 1 af ${i.firstPlaceCount}`)
+      .map(
+        (i) =>
+          `${i.label} — gennemsnitlig placering ${i.averagePosition}, placeret som nr. 1 af ${i.firstPlaceCount}`,
+      )
       .join("\n")}`;
   }
   if (insight.kind === "text") {

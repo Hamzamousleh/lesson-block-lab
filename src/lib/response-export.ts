@@ -73,6 +73,7 @@ export interface ResponseExampleData {
   lesson_title: string | null;
   examples: string[];
   captured_at: string;
+  source_session_id: string | null;
 }
 
 export async function saveResponseExamples(input: {
@@ -82,6 +83,7 @@ export async function saveResponseExamples(input: {
   texts: string[];
   title?: string;
   tags?: string[];
+  sourceSessionId?: string | null;
 }): Promise<void> {
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) throw new Error("Du er ikke logget ind.");
@@ -94,6 +96,7 @@ export async function saveResponseExamples(input: {
     lesson_title: input.lessonTitle ?? null,
     examples: input.texts,
     captured_at: new Date().toISOString(),
+    source_session_id: input.sourceSessionId ?? null,
   };
 
   const { error } = await supabase.from("library_items").insert({

@@ -5,6 +5,7 @@ import {
   sanitizeStudentBlock,
   validateStudentResponse,
 } from "./session-security";
+import { generateStudentAlias } from "./student-alias";
 
 export type JsonValue =
   string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
@@ -311,13 +312,11 @@ async function validateSessionParents(session: Awaited<ReturnType<typeof session
 
 export async function joinSessionByCode(input: {
   code: string;
-  display_name: string;
   participant_token?: string | null | undefined;
+  rotate_alias?: boolean | undefined;
 }) {
   const code = normalizeCode(input.code);
-  const name = input.display_name.trim().slice(0, 60);
   if (!code) throw new Error("Indtast koden fra din underviser.");
-  if (!name) throw new Error("Skriv dit navn for at deltage.");
 
   const { data: session, error } = await supabaseAdmin
     .from("sessions")
@@ -339,9 +338,19 @@ export async function joinSessionByCode(input: {
       .eq("session_id", session.id)
       .maybeSingle();
     if (existing) {
+      let displayName = existing.display_name;
+      if (input.rotate_alias) {
+        const { data: names, error: namesError } = await supabaseAdmin
+          .from("session_participants")
+          .select("display_name")
+          .eq("session_id", session.id)
+          .neq("id", existing.id);
+        if (namesError) throw new Error("Der kunne ikke oprettes et nyt alias.");
+        displayName = generateStudentAlias((names ?? []).map((row) => row.display_name));
+      }
       const { data: updated } = await supabaseAdmin
         .from("session_participants")
-        .update({ display_name: name, last_seen_at: new Date().toISOString() })
+        .update({ display_name: displayName, last_seen_at: new Date().toISOString() })
         .eq("id", existing.id)
         .select()
         .single();
@@ -349,15 +358,21 @@ export async function joinSessionByCode(input: {
         participant_token: input.participant_token,
         code: session.join_code,
         participant_id: existing.id,
-        display_name: updated?.display_name ?? name,
+        display_name: updated?.display_name ?? displayName,
       };
     }
   }
 
+  const { data: names, error: namesError } = await supabaseAdmin
+    .from("session_participants")
+    .select("display_name")
+    .eq("session_id", session.id);
+  if (namesError) throw new Error("Der kunne ikke oprettes et alias.");
+  const displayName = generateStudentAlias((names ?? []).map((row) => row.display_name));
   const participant_token = token();
   const { data: participant, error: pErr } = await supabaseAdmin
     .from("session_participants")
-    .insert({ session_id: session.id, display_name: name, participant_token })
+    .insert({ session_id: session.id, display_name: displayName, participant_token })
     .select()
     .single();
   if (pErr) throw new Error(pErr.message);

@@ -1,20 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { joinSessionFn, peekSessionFn } from "@/lib/session.functions";
 import { readToken, saveToken } from "@/lib/participant";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/join/$code")({
   ssr: false,
   head: () => ({
     meta: [
       { title: "Deltag i aktivitet — CaseLab" },
-      { name: "description", content: "Skriv dit navn og deltag i aktiviteten." },
+      { name: "description", content: "Deltag med et automatisk alias." },
       { property: "og:title", content: "Deltag i aktivitet — CaseLab" },
-      { property: "og:description", content: "Skriv dit navn og deltag." },
+      { property: "og:description", content: "Deltag med et automatisk alias." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -24,7 +23,7 @@ export const Route = createFileRoute("/join/$code")({
 function JoinCode() {
   const { code } = Route.useParams();
   const navigate = useNavigate();
-  const [name, setName] = useState("");
+  const [alias, setAlias] = useState<string | null>(null);
 
   const peek = useQuery({
     queryKey: ["peek-session", code],
@@ -37,11 +36,17 @@ function JoinCode() {
   }, [code, navigate]);
 
   const join = useMutation({
-    mutationFn: () =>
-      joinSessionFn({ data: { code, display_name: name, participant_token: readToken(code) } }),
+    mutationFn: (rotateAlias: boolean) =>
+      joinSessionFn({
+        data: {
+          code,
+          participant_token: readToken(code),
+          rotate_alias: rotateAlias,
+        },
+      }),
     onSuccess: (res) => {
       saveToken(code, res.participant_token);
-      void navigate({ to: "/student/$code", params: { code }, replace: true });
+      setAlias(res.display_name);
     },
   });
 
@@ -61,7 +66,10 @@ function JoinCode() {
         <div className="mt-10">
           <h1 className="font-display text-3xl font-semibold">Sessionen blev ikke fundet.</h1>
           <p className="mt-2 text-muted-foreground">Tjek koden og prøv igen.</p>
-          <Button className="mt-6 h-14 w-full rounded-2xl" onClick={() => void navigate({ to: "/join" })}>
+          <Button
+            className="mt-6 h-14 w-full rounded-2xl"
+            onClick={() => void navigate({ to: "/join" })}
+          >
             Prøv en anden kode
           </Button>
         </div>
@@ -83,35 +91,45 @@ function JoinCode() {
             {peek.data.subject ? ` · ${peek.data.subject}` : ""}
           </p>
 
-          <form
-            className="mt-8 space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (name.trim()) join.mutate();
-            }}
-          >
-            <label className="text-base font-medium" htmlFor="student-name">
-              Navn
-            </label>
-            <Input
-              id="student-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Dit navn"
-              className="h-14 rounded-2xl text-base"
-            />
+          <p className="mt-6 rounded-2xl bg-secondary/60 p-4 text-sm text-muted-foreground">
+            Du deltager med et automatisk alias. Du behøver ikke oprette en konto eller skrive dit
+            rigtige navn.
+          </p>
+
+          <div className="mt-6 space-y-3">
+            {alias ? (
+              <div className="rounded-2xl border border-primary/25 bg-accent/50 p-5 text-center">
+                <p className="text-sm text-muted-foreground">Du deltager som:</p>
+                <p className="mt-1 text-xl font-semibold">{alias}</p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2 rounded-full"
+                  disabled={join.isPending}
+                  onClick={() => join.mutate(true)}
+                >
+                  <RefreshCw className="size-4" /> Nyt alias
+                </Button>
+              </div>
+            ) : null}
             <Button
-              type="submit"
+              type="button"
               size="lg"
               className="h-14 w-full rounded-2xl text-base"
-              disabled={join.isPending || !name.trim()}
+              disabled={join.isPending}
+              onClick={() => {
+                if (alias) void navigate({ to: "/student/$code", params: { code }, replace: true });
+                else join.mutate(false);
+              }}
             >
-              {join.isPending && <Loader2 className="size-4 animate-spin" />} Deltag
+              {join.isPending && <Loader2 className="size-4 animate-spin" />}
+              {alias ? "Deltag" : "Få mit alias"}
             </Button>
             {join.isError && (
               <p className="text-sm text-destructive">{(join.error as Error).message}</p>
             )}
-          </form>
+          </div>
         </>
       )}
     </div>

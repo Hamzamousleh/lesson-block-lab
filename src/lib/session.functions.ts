@@ -6,8 +6,8 @@ export const joinSessionFn = createServerFn({ method: "POST" })
     z
       .object({
         code: z.string().min(1).max(20),
-        display_name: z.string().min(1).max(60),
         participant_token: z.string().min(10).max(120).nullish(),
+        rotate_alias: z.boolean().optional(),
       })
       .parse(d),
   )
@@ -24,7 +24,9 @@ export const peekSessionFn = createServerFn({ method: "POST" })
   });
 
 export const studentStateFn = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ participant_token: z.string().min(10).max(120) }).parse(d))
+  .inputValidator((d: unknown) =>
+    z.object({ participant_token: z.string().min(10).max(120) }).parse(d),
+  )
   .handler(async ({ data }) => {
     const { getStudentState } = await import("./session.server");
     return getStudentState(data.participant_token);

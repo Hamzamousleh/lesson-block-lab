@@ -289,6 +289,11 @@ export async function deleteSession(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+export async function deleteSessionStudentData(id: string): Promise<void> {
+  const { error } = await supabase.rpc("delete_session_student_data", { p_session_id: id });
+  if (error) throw new Error("Elevdata kunne ikke slettes. Prøv igen.");
+}
+
 /* ---------------- helpers ---------------- */
 
 export function joinUrl(code: string): string {

@@ -345,6 +345,28 @@ function LibraryPage() {
                   ? ` · ${(view.data as unknown as ResponseExampleData).question}`
                   : ""}
               </p>
+              <p className="text-xs text-muted-foreground">
+                Kilde: Elevsession
+                {(view.data as unknown as ResponseExampleData).source_session_id ? (
+                  <>
+                    {" · "}
+                    <Link
+                      to="/sessions/$sessionId"
+                      params={{
+                        sessionId: (view.data as unknown as ResponseExampleData)
+                          .source_session_id as string,
+                      }}
+                      className="text-primary underline-offset-4 hover:underline"
+                    >
+                      Åbn session
+                    </Link>
+                  </>
+                ) : null}
+                {" · Gemt "}
+                {new Date(
+                  (view.data as unknown as ResponseExampleData).captured_at,
+                ).toLocaleDateString("da-DK")}
+              </p>
               <ul className="space-y-2">
                 {((view.data as unknown as ResponseExampleData).examples ?? []).map((t, i) => (
                   <li key={i} className="rounded-xl bg-secondary/40 px-4 py-3 whitespace-pre-wrap">

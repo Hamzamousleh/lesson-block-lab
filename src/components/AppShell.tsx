@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, LogOut, Menu, User } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Settings, User } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/use-session";
@@ -27,18 +27,22 @@ import {
   isNavigationItemActive,
   TEACHER_NAVIGATION,
 } from "@/lib/teacher-navigation";
+import { AccountPrivacyDialog } from "@/components/AccountPrivacyDialog";
+import { clearPrivateLocalStorage } from "@/lib/participant";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
+    clearPrivateLocalStorage();
     navigate({ to: "/auth", replace: true });
   }
 
@@ -164,6 +168,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                   {user?.email ?? "Lærer"}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setAccountOpen(true)}>
+                  <Settings className="size-4" /> Konto og data
+                </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => void signOut()}>
                   <LogOut className="size-4" /> Log ud
                 </DropdownMenuItem>
@@ -173,6 +180,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main>{children}</main>
+      <AccountPrivacyDialog
+        open={accountOpen}
+        onOpenChange={setAccountOpen}
+        onDeleted={() => {
+          queryClient.clear();
+          setAccountOpen(false);
+          void navigate({ to: "/", replace: true });
+        }}
+      />
     </div>
   );
 }

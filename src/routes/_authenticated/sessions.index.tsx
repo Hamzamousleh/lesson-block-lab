@@ -1,16 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Play } from "lucide-react";
+import { Loader2, Play, ShieldX } from "lucide-react";
 import {
   SESSION_MODE_LABEL,
   SESSION_STATUS_LABEL,
   deleteSession,
+  deleteSessionStudentData,
   endSession,
   sessionsQuery,
 } from "@/lib/sessions";
 import { classesQuery, lessonsQuery } from "@/lib/data";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/sessions/")({
   head: () => ({
@@ -27,6 +39,7 @@ export const Route = createFileRoute("/_authenticated/sessions/")({
 
 function SessionsPage() {
   const queryClient = useQueryClient();
+  const [studentDataSessionId, setStudentDataSessionId] = useState<string | null>(null);
   const sessions = useQuery(sessionsQuery());
   const lessons = useQuery(lessonsQuery());
   const classes = useQuery(classesQuery());
@@ -50,6 +63,19 @@ function SessionsPage() {
     onSuccess: async () => {
       await invalidate();
       toast.success("Sessionen er slettet");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeStudentData = useMutation({
+    mutationFn: deleteSessionStudentData,
+    onSuccess: async (_, sessionId) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["session-participants", sessionId] }),
+        queryClient.invalidateQueries({ queryKey: ["session-responses", sessionId] }),
+      ]);
+      setStudentDataSessionId(null);
+      toast.success("Elevdata er slettet");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -87,6 +113,15 @@ function SessionsPage() {
             onClick={() => stop.mutate(s.id)}
           >
             Afslut
+          </Button>
+        )}
+        {s.status === "ended" && (
+          <Button
+            variant="ghost"
+            className="rounded-full text-destructive hover:text-destructive"
+            onClick={() => setStudentDataSessionId(s.id)}
+          >
+            <ShieldX className="size-4" /> Slet elevdata
           </Button>
         )}
         <Button
@@ -158,6 +193,35 @@ function SessionsPage() {
           </section>
         </>
       )}
+
+      <AlertDialog
+        open={!!studentDataSessionId}
+        onOpenChange={(open) => !open && setStudentDataSessionId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slet elevdata permanent?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Dette sletter deltagere og elevsvar permanent. Lektionen og den anonyme
+              sessionshistorik bevares.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removeStudentData.isPending}>Annuller</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!studentDataSessionId || removeStudentData.isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                if (studentDataSessionId) removeStudentData.mutate(studentDataSessionId);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {removeStudentData.isPending && <Loader2 className="size-4 animate-spin" />}
+              Slet elevdata
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

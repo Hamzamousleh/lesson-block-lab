@@ -148,6 +148,19 @@ function StudentSession() {
     retry: 1,
   });
 
+  useEffect(() => {
+    if (!state.isError) return;
+    const message = state.error instanceof Error ? state.error.message : "";
+    if (
+      !message.includes("deltagelse kunne ikke genkendes") &&
+      !message.includes("Aktiviteten findes ikke længere")
+    )
+      return;
+    clearToken(code);
+    setToken(null);
+    void navigate({ to: "/join/$code", params: { code }, replace: true });
+  }, [code, navigate, state.error, state.isError]);
+
   const s = state.data;
   const selfPaced = s?.session.mode === "self_paced";
   const index = s?.participant.progress_index ?? 0;

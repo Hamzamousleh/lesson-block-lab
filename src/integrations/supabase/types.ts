@@ -985,6 +985,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_student_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      delete_session_student_data: {
+        Args: { p_session_id: string }
+        Returns: Json
+      }
       world_apply_consequence: {
         Args: {
           p_changes: Json
