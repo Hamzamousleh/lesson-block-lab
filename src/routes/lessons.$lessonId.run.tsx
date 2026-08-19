@@ -596,6 +596,10 @@ function RunMode() {
   ).length;
   /** V2 only: when responses exist they outrank the static student preview. */
   const responseFirst = mode === "v2" && !!liveSession && !!liveSummary && answeredCount > 0;
+  /** V2 side panels are lighter and denser than the classic cards. */
+  const panelClass = mode === "v2" ? "surface-quiet" : "surface-card";
+  const panelPad = mode === "v2" ? "px-4 py-4 sm:px-5 sm:py-5" : "p-4 sm:p-6";
+
 
 
   /* ---------- projector ---------- */
