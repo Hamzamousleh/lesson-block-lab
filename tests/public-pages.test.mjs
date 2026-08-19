@@ -105,8 +105,10 @@ const aboutScreenshots = [
 
 test("about contains no screenshot placeholders", () => {
   const about = read("src/routes/about.tsx");
+  const placeholderComponent = ["Screenshot", "Placeholder"].join("");
+  const placeholderCopy = ["Screenshot", "tilføjes", "før", "publicering"].join(" ");
   assert.equal(about.match(/<ProductRow\b/g)?.length, 6);
-  assert.doesNotMatch(about, /ScreenshotPlaceholder|Screenshot tilføjes før publicering/);
+  assert.doesNotMatch(about, new RegExp(`${placeholderComponent}|${placeholderCopy}`, "i"));
 });
 
 test("all eight local about screenshot assets exist and are referenced", () => {
