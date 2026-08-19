@@ -845,21 +845,25 @@ function RunMode() {
             </section>
 
             {liveSession && liveSummary && (
-              <section className="surface-card p-4 sm:p-8">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-lg font-semibold">Elevsvar</h2>
+              <section
+                className={`surface-card p-4 sm:p-8 ${responseFirst ? "order-2" : "order-3"}`}
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-3">
+                  <h2 className="text-lg font-semibold">
+                    {mode === "v2" ? `Elevsvar · ${current?.title ?? ""}` : "Elevsvar"}
+                  </h2>
                   <span className="text-sm tabular-nums text-muted-foreground">
-                    Svar:{" "}
-                    {
-                      liveAnswers.filter((a) => people.some((p) => p.id === a.participant_id))
-                        .length
-                    }{" "}
-                    / {people.length}
+                    <span className="font-semibold text-foreground">{answeredCount}</span> af{" "}
+                    {people.length} har svaret
                   </span>
                 </div>
                 <div className="mt-5">
-                  <ResultBars summary={liveSummary} />
+                  <ResultBars
+                    summary={liveSummary}
+                    variant={mode === "v2" ? "v2" : "classic"}
+                  />
                 </div>
+
                 <div className="mt-6 flex flex-wrap gap-2">
                   <Button
                     variant={liveSession.reveal_results ? "default" : "outline"}
