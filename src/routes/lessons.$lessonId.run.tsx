@@ -629,15 +629,30 @@ function RunMode() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="flex flex-wrap items-center gap-2 border-b border-border/70 px-4 py-3 text-sm sm:gap-3 sm:px-6">
-        <div className="min-w-0 basis-full break-words sm:flex-1 sm:basis-auto">
-          <span className="font-medium">{l.title}</span>
-          {klass.data && <span className="text-muted-foreground"> · {klass.data.name}</span>}
-          {useFallback && <span className="ml-2 text-primary">· Ekstra aktivitet</span>}
-        </div>
-        <span className="rounded-full bg-secondary px-3 py-1 font-medium tabular-nums">
-          Aktivitet {index + 1} af {active.length}
-        </span>
-        {liveSession && (
+        {mode === "v2" ? (
+          <div className="min-w-0 basis-full sm:flex-1 sm:basis-auto">
+            <CockpitLiveHeaderV2
+              title={l.title}
+              index={index}
+              total={active.length}
+              className={klass.data?.name ?? null}
+              joinCode={liveSession?.join_code ?? null}
+              participants={liveSession ? people.length : null}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="min-w-0 basis-full break-words sm:flex-1 sm:basis-auto">
+              <span className="font-medium">{l.title}</span>
+              {klass.data && <span className="text-muted-foreground"> · {klass.data.name}</span>}
+              {useFallback && <span className="ml-2 text-primary">· Ekstra aktivitet</span>}
+            </div>
+            <span className="rounded-full bg-secondary px-3 py-1 font-medium tabular-nums">
+              Aktivitet {index + 1} af {active.length}
+            </span>
+          </>
+        )}
+        {liveSession && mode !== "v2" && (
           <Link to="/sessions/$sessionId" params={{ sessionId: liveSession.id }}>
             <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
               Elevsession · {liveSession.join_code} · {people.length}{" "}
@@ -645,6 +660,7 @@ function RunMode() {
             </span>
           </Link>
         )}
+
         {liveSession && (
           <div
             role="status"
