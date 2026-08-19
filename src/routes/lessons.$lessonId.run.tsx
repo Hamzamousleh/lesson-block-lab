@@ -1194,12 +1194,15 @@ function RunMode() {
           <Button
             variant="ghost"
             size="sm"
-            className="min-h-11 shrink-0 rounded-full sm:min-h-8"
+            className={`min-h-11 shrink-0 rounded-full sm:min-h-8 ${
+              mode === "v2" ? "text-muted-foreground hover:text-foreground" : ""
+            }`}
             onClick={skipCurrent}
             disabled={syncPending}
           >
             <SkipForward className="size-4" /> Spring over
           </Button>
+
         </div>
       </footer>
     </div>
