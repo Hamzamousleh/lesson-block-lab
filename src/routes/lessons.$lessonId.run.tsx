@@ -932,21 +932,28 @@ function RunMode() {
           </div>
 
           {/* ---------------- right: time, plan, notes ---------------- */}
-          <aside className="min-w-0 space-y-6">
-            <section className="surface-card p-4 sm:p-6">
+          <aside className={`min-w-0 ${mode === "v2" ? "space-y-4" : "space-y-6"}`}>
+            <section className={`${panelClass} ${panelPad}`}>
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-sm font-semibold">Tid til aktiviteten</h2>
-                <span className="text-sm text-muted-foreground">
-                  Afsat tid: {current?.duration_minutes ?? 0} min
+                <span className="text-xs text-muted-foreground">
+                  Afsat: {current?.duration_minutes ?? 0} min
                 </span>
               </div>
-              <p
-                className={`mt-4 font-mono text-4xl font-semibold tabular-nums ${
-                  overtime ? "text-destructive" : ""
-                }`}
-              >
-                {timerLabel(seconds)}
-              </p>
+              {mode === "v2" ? (
+                <div className="mt-3">
+                  <CockpitTimerV2 seconds={seconds} />
+                </div>
+              ) : (
+                <p
+                  className={`mt-4 font-mono text-4xl font-semibold tabular-nums ${
+                    overtime ? "text-destructive" : ""
+                  }`}
+                >
+                  {timerLabel(seconds)}
+                </p>
+              )}
+
               <div className="mt-5 flex flex-wrap gap-2">
                 {running ? (
                   <Button
