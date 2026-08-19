@@ -1032,9 +1032,17 @@ function RunMode() {
               )}
             </section>
 
-            <section className="surface-card p-6">
+            <section
+              className={
+                mode === "v2"
+                  ? `${panelClass} ${panelPad} -mt-2 rounded-t-none border-t-0`
+                  : "surface-card p-6"
+              }
+            >
               <h2 className="text-sm font-semibold">Lektionens tid</h2>
-              <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+              <div
+                className={`mt-3 text-sm text-muted-foreground ${mode === "v2" ? "space-y-1" : "space-y-1.5"}`}
+              >
                 <p className="flex items-center gap-2">
                   <Clock className="size-4" /> Planlagt: {plannedTotal} min
                 </p>
@@ -1058,7 +1066,8 @@ function RunMode() {
               </p>
             </section>
 
-            <section className="surface-card p-6">
+            <section className={mode === "v2" ? `${panelClass} ${panelPad}` : "surface-card p-6"}>
+
               <h2 className="text-sm font-semibold">Lærernote</h2>
               <p className="mt-3 text-sm whitespace-pre-wrap">
                 {current?.teacher_notes || "Ingen noter til denne aktivitet."}
