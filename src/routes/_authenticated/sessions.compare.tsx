@@ -10,12 +10,12 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/sessions/compare")({
   head: () => ({
     meta: [
-      { title: "Sammenlign sessioner — CaseLab" },
+      { title: "Sammenlign sessioner — Didaktiva" },
       {
         name: "description",
         content: "Sammenlign op til tre elevsessioner på deltagelse, svar og korrekte besvarelser.",
       },
-      { property: "og:title", content: "Sammenlign sessioner — CaseLab" },
+      { property: "og:title", content: "Sammenlign sessioner — Didaktiva" },
       { property: "og:description", content: "Se udviklingen på tværs af sessioner." },
       { name: "robots", content: "noindex" },
     ],
