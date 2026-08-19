@@ -6,7 +6,6 @@ import {
   FileText,
   Library,
   MessagesSquare,
-  Presentation,
   ShieldCheck,
   Sparkles,
   Users,
@@ -52,21 +51,38 @@ const activityTypes = [
   "Exit ticket",
 ];
 
-function ScreenshotPlaceholder({ title, description }: { title: string; description: string }) {
+function ProductScreenshot({
+  src,
+  alt,
+  width,
+  height,
+  caption,
+  priority = false,
+}: {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  caption?: string | undefined;
+  priority?: boolean | undefined;
+}) {
   return (
-    <figure
-      className="flex aspect-[16/10] min-h-56 items-center justify-center rounded-3xl border border-border bg-card p-6 text-center shadow-soft"
-      role="img"
-      aria-label={`${title}. ${description}. Screenshot tilføjes før publicering.`}
-    >
-      <div className="max-w-sm">
-        <Presentation className="mx-auto size-8 text-primary" aria-hidden="true" />
-        <figcaption className="mt-4 font-semibold">{title}</figcaption>
-        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-        <p className="mt-4 text-xs font-semibold tracking-wide text-primary uppercase">
-          Screenshot tilføjes før publicering
-        </p>
-      </div>
+    <figure className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
+      <img
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
+        decoding="async"
+        className="block h-auto w-full"
+      />
+      {caption ? (
+        <figcaption className="border-t border-border px-5 py-3 text-sm text-muted-foreground">
+          {caption}
+        </figcaption>
+      ) : null}
     </figure>
   );
 }
@@ -75,16 +91,24 @@ function ProductRow({
   eyebrow,
   title,
   icon: Icon,
-  screenshotTitle,
-  screenshotDescription,
+  screenshotSrc,
+  screenshotAlt,
+  screenshotWidth,
+  screenshotHeight,
+  screenshotCaption,
+  screenshotPriority,
   reverse = false,
   children,
 }: {
   eyebrow: string;
   title: string;
   icon: typeof Sparkles;
-  screenshotTitle: string;
-  screenshotDescription: string;
+  screenshotSrc: string;
+  screenshotAlt: string;
+  screenshotWidth: number;
+  screenshotHeight: number;
+  screenshotCaption?: string | undefined;
+  screenshotPriority?: boolean | undefined;
   reverse?: boolean;
   children: React.ReactNode;
 }) {
@@ -101,7 +125,14 @@ function ProductRow({
         <div className="mt-4 space-y-4 leading-7 text-muted-foreground">{children}</div>
       </div>
       <div className={reverse ? "md:order-1 md:col-span-3" : "md:col-span-3"}>
-        <ScreenshotPlaceholder title={screenshotTitle} description={screenshotDescription} />
+        <ProductScreenshot
+          src={screenshotSrc}
+          alt={screenshotAlt}
+          width={screenshotWidth}
+          height={screenshotHeight}
+          caption={screenshotCaption}
+          priority={screenshotPriority}
+        />
       </div>
     </section>
   );
@@ -139,8 +170,12 @@ function AboutPage() {
             eyebrow="Fra idé til undervisning"
             title="Start dér, hvor dit faglige arbejde allerede er"
             icon={Sparkles}
-            screenshotTitle="Home og de fire primære handlinger"
-            screenshotDescription="Forsiden med Planlæg undervisning, Brug mit materiale, Red mig og Kør undervisning."
+            screenshotSrc="/images/about/home.jpg"
+            screenshotAlt="Didaktiva Hjem med genveje til Planlæg undervisning, Brug mit materiale, Red mig og Kør undervisning"
+            screenshotWidth={2040}
+            screenshotHeight={1248}
+            screenshotCaption="Planlæg, genbrug og kør undervisningen fra ét sted."
+            screenshotPriority
           >
             <p>
               En lektion begynder sjældent i et tomt system. Den begynder med en PowerPoint, en
@@ -153,8 +188,10 @@ function AboutPage() {
             eyebrow="Planlæg undervisning"
             title="Byg et tydeligt og varieret undervisningsflow"
             icon={BookOpenCheck}
-            screenshotTitle="Lesson Editor og aktivitetstimeline"
-            screenshotDescription="En lektion med Blocks, varighed, rækkefølge og redigering."
+            screenshotSrc="/images/about/lesson-editor.jpg"
+            screenshotAlt="Didaktiva Lesson Editor med aktivitetstimeline, læringsmål og lektionshandlinger"
+            screenshotWidth={2040}
+            screenshotHeight={1272}
             reverse
           >
             <p>
@@ -168,8 +205,10 @@ function AboutPage() {
             eyebrow="Brug mit materiale"
             title="Lad dit eget faglige materiale være udgangspunktet"
             icon={FileText}
-            screenshotTitle="Materialer og Brug mit materiale"
-            screenshotDescription="Materialebibliotek og valg af filer som grundlag for planlægning."
+            screenshotSrc="/images/about/materialer.jpg"
+            screenshotAlt="Didaktiva Brug mit materiale med uploadede undervisningsfiler og lektionsopsætning"
+            screenshotWidth={2040}
+            screenshotHeight={1272}
           >
             <p>
               Organisér egne PDF-, PPTX- og DOCX-filer samt billeder i Didaktiva. De kan bruges som
@@ -194,8 +233,10 @@ function AboutPage() {
             eyebrow="Kør undervisning"
             title="Bevar overblikket i Teacher Cockpit"
             icon={Workflow}
-            screenshotTitle="Teacher Cockpit"
-            screenshotDescription="Student preview, navigation, timer, svarantal, resultater, facit og noter."
+            screenshotSrc="/images/about/teacher-cockpit.jpg"
+            screenshotAlt="Teacher Cockpit med elevvisning, timer, progression og lærerens styring af aktiviteten"
+            screenshotWidth={2040}
+            screenshotHeight={1272}
           >
             <p>
               Cockpittet samler student preview, aktivitetsnavigation, timer, svarantal,
@@ -208,8 +249,10 @@ function AboutPage() {
             eyebrow="Eleverne deltager"
             title="Lav adgangstærskel, tydeligt fagligt fokus"
             icon={Users}
-            screenshotTitle="Student View"
-            screenshotDescription="Elevens mobile visning med automatisk alias og den aktuelle aktivitet."
+            screenshotSrc="/images/about/student-view.jpg"
+            screenshotAlt="Elevvisning i Didaktiva med aktiv undervisningsopgave og svarmuligheder"
+            screenshotWidth={2040}
+            screenshotHeight={1272}
             reverse
           >
             <p>
@@ -219,12 +262,24 @@ function AboutPage() {
             </p>
           </ProductRow>
 
+          <div className="mx-auto max-w-4xl pb-10 md:pb-16">
+            <ProductScreenshot
+              src="/images/about/elev-alias.jpg"
+              alt="Elevens join-visning med automatisk genereret Didaktiva-alias"
+              width={2040}
+              height={1272}
+              caption="Elever deltager med et automatisk alias og uden elevkonto."
+            />
+          </div>
+
           <ProductRow
             eyebrow="Fra elevsvar til lærerhandling"
             title="Se det, der er vigtigt for næste faglige greb"
             icon={MessagesSquare}
-            screenshotTitle="Elevsvar og resultater"
-            screenshotDescription="Fordelinger, fritekstsvar og lærerens opfølgning i plenum."
+            screenshotSrc="/images/about/elevresultater.jpg"
+            screenshotAlt="Didaktiva-visning af klassens elevsvar og mulighed for at arbejde videre med resultaterne"
+            screenshotWidth={2040}
+            screenshotHeight={1272}
           >
             <p>
               Fordelinger og fritekstsvar kan synliggøre forskellige forståelser, argumenter,
@@ -322,9 +377,11 @@ function AboutPage() {
             </ol>
           </div>
           <div className="lg:col-span-3">
-            <ScreenshotPlaceholder
-              title="Worlds og episodeprogression"
-              description="World-overblik, episoder, elevvalg, konsekvenser og næste episode."
+            <ProductScreenshot
+              src="/images/about/worlds.jpg"
+              alt="Didaktiva Worlds med episoder, progression og world state"
+              width={2040}
+              height={1272}
             />
           </div>
         </div>

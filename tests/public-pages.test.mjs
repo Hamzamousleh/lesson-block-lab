@@ -77,12 +77,55 @@ test("internal CaseLab transport compatibility remains intact", () => {
   assert.match(transport + types, /2\.0/);
 });
 
-test("about provides seven safe screenshot placeholders", () => {
+const aboutScreenshots = [
+  [
+    "home.jpg",
+    "Didaktiva Hjem med genveje til Planlæg undervisning, Brug mit materiale, Red mig og Kør undervisning",
+  ],
+  [
+    "lesson-editor.jpg",
+    "Didaktiva Lesson Editor med aktivitetstimeline, læringsmål og lektionshandlinger",
+  ],
+  [
+    "materialer.jpg",
+    "Didaktiva Brug mit materiale med uploadede undervisningsfiler og lektionsopsætning",
+  ],
+  [
+    "teacher-cockpit.jpg",
+    "Teacher Cockpit med elevvisning, timer, progression og lærerens styring af aktiviteten",
+  ],
+  ["elev-alias.jpg", "Elevens join-visning med automatisk genereret Didaktiva-alias"],
+  ["student-view.jpg", "Elevvisning i Didaktiva med aktiv undervisningsopgave og svarmuligheder"],
+  [
+    "elevresultater.jpg",
+    "Didaktiva-visning af klassens elevsvar og mulighed for at arbejde videre med resultaterne",
+  ],
+  ["worlds.jpg", "Didaktiva Worlds med episoder, progression og world state"],
+];
+
+test("about contains no screenshot placeholders", () => {
   const about = read("src/routes/about.tsx");
   assert.equal(about.match(/<ProductRow\b/g)?.length, 6);
-  assert.equal(about.match(/<ScreenshotPlaceholder\b/g)?.length, 2);
-  assert.match(about, /Screenshot tilføjes før publicering/);
-  assert.doesNotMatch(about, /<img\b/);
+  assert.doesNotMatch(about, /ScreenshotPlaceholder|Screenshot tilføjes før publicering/);
+});
+
+test("all eight local about screenshot assets exist and are referenced", () => {
+  const about = read("src/routes/about.tsx");
+  for (const [file] of aboutScreenshots) {
+    const asset = new URL(`../public/images/about/${file}`, import.meta.url);
+    assert.equal(fs.existsSync(asset), true, file);
+    assert.ok(fs.statSync(asset).size > 0, file);
+    assert.match(about, new RegExp(`/images/about/${file.replace(".", "\\.")}`));
+  }
+});
+
+test("all about screenshots have concrete alt text and local sources", () => {
+  const about = read("src/routes/about.tsx");
+  for (const [, alt] of aboutScreenshots)
+    assert.match(about, new RegExp(`(?:screenshotAlt|alt)=\"${alt}\"`));
+  assert.doesNotMatch(about, /(?:screenshotSrc|src)=\"https?:\/\//);
+  assert.match(about, /loading=\{priority \? \"eager\" : \"lazy\"\}/);
+  assert.match(about, /className=\"block h-auto w-full\"/);
 });
 
 test("legal pages contain required dates and contact details", () => {
