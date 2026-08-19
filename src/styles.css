@@ -186,3 +186,11 @@
   box-shadow: var(--shadow-soft);
 }
 
+/* Didaktiva V2: lighter companion card for secondary/supporting panels. */
+@utility surface-quiet {
+  background-color: var(--color-card);
+  border: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
+  border-radius: var(--radius-2xl);
+}
+
+
