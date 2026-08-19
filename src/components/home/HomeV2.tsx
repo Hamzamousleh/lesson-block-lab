@@ -132,10 +132,10 @@ export function HomeV2() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
       <section className="max-w-2xl">
-        <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+        <p className="text-xs font-bold tracking-[0.2em] text-primary uppercase">
           Didaktiva
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-balance sm:text-4xl">
+        <h1 className="mt-2 font-display text-3xl font-semibold text-balance sm:text-4xl">
           Hvad skal du bruge i dag?
         </h1>
         <p className="mt-3 text-base text-muted-foreground sm:text-lg">
@@ -145,7 +145,7 @@ export function HomeV2() {
 
       <section
         aria-label="Primære handlinger"
-        className="mt-8 rounded-3xl border border-border/70 bg-surface/70 p-3 sm:p-4"
+        className="mt-8 rounded-[32px] border border-border/70 bg-surface/70 p-3 sm:p-4"
       >
         <div className="grid gap-3 sm:grid-cols-2">
           {PRIMARY_ACTIONS.map((action) => {
@@ -186,9 +186,9 @@ export function HomeV2() {
 
       <section className="mt-10">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-          <h2 className="truncate text-xl font-semibold">Fortsæt hvor du slap</h2>
+          <h2 className="truncate text-xl font-semibold">Fortsæt undervisningen</h2>
           <Button asChild variant="ghost" size="sm" className="shrink-0 rounded-full">
-            <Link to="/lessons">Se alle lektioner →</Link>
+            <Link to="/lessons">Alle lektioner →</Link>
           </Button>
         </div>
 
@@ -212,7 +212,7 @@ export function HomeV2() {
             <p className="text-sm text-destructive">Kunne ikke hente dine lektioner.</p>
           )}
           {lessons.data?.length === 0 && !lessons.isLoading && (
-            <div className="flex flex-col items-start gap-4 rounded-2xl border border-dashed border-border bg-card/60 p-8">
+            <div className="flex flex-col items-start gap-4 rounded-3xl border border-dashed border-border bg-card/60 p-10 transition-colors hover:border-primary/30">
               <span className="grid size-11 place-items-center rounded-2xl bg-accent text-primary">
                 <Sparkles aria-hidden="true" className="size-5" />
               </span>
@@ -233,19 +233,19 @@ export function HomeV2() {
             return (
               <article
                 key={l.id}
-                className="group relative flex flex-col gap-4 rounded-2xl border border-border/80 bg-card px-5 py-4 transition-colors duration-200 hover:border-primary/30 hover:bg-accent/15 focus-within:border-primary/30 sm:flex-row sm:items-center sm:px-6"
+                className="group relative flex flex-col gap-4 rounded-3xl border border-border/80 bg-card px-5 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift hover:border-primary/30 sm:flex-row sm:items-center sm:px-6"
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-lg font-semibold leading-snug">
                     <Link
                       to="/lessons/$lessonId/edit"
                       params={{ lessonId: l.id }}
-                      className="after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="after:absolute after:inset-0 after:rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <span className="line-clamp-2">{l.title}</span>
                     </Link>
                   </p>
-                  <p className="mt-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                  <p className="mt-1 text-xs font-semibold tracking-wider text-primary uppercase">
                     {c ? `${c.name} · ${c.subject}` : l.subject || "Lektion"}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -283,8 +283,8 @@ export function HomeV2() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-          Flere værktøjer
+        <h2 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+          Værktøjer
         </h2>
         <div className="mt-3 grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
           {TOOLS.map((tool) => {
@@ -293,7 +293,7 @@ export function HomeV2() {
               <Link
                 key={tool.title}
                 to={tool.to}
-                className="flex min-h-16 items-start gap-3 rounded-2xl border border-border/80 bg-card/70 px-4 py-3 transition-colors duration-200 hover:border-primary/30 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex min-h-16 items-start gap-3 rounded-2xl border border-border/70 bg-card/60 px-4 py-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:shadow-sm"
               >
                 <Icon
                   aria-hidden="true"

@@ -124,7 +124,7 @@ function ImportPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-14">
-      <h1 className="font-display text-4xl font-semibold">Importér fra ChatGPT</h1>
+      <h1 className="font-display text-4xl font-semibold">Indlæs fra ChatGPT</h1>
       <p className="mt-3 text-lg text-muted-foreground">
         Indsæt hele svaret fra ChatGPT. Du får en forhåndsvisning, før noget gemmes.
       </p>

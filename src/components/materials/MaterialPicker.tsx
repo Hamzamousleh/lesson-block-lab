@@ -113,8 +113,8 @@ export function MaterialPicker({
             />
           </div>
         ) : (
-          <Button asChild variant="ghost" size="sm" className="rounded-full">
-            <Link to="/materials">Upload materiale</Link>
+          <Button asChild variant="outline" size="sm" className="rounded-full">
+            <Link to="/materials">Gå til materialer</Link>
           </Button>
         )}
       </div>
@@ -166,7 +166,7 @@ export function MaterialPicker({
                 aria-pressed={on}
                 onClick={() => toggle(f.id)}
                 className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors ${
-                  on ? "border-primary bg-accent" : "border-border/70 hover:bg-secondary/60"
+                  on ? "border-primary bg-primary/5" : "border-border/70 bg-card hover:bg-secondary/60"
                 }`}
               >
                 <FileText className="size-4 shrink-0 text-muted-foreground" />

@@ -24,7 +24,7 @@ import {
 export const Route = createFileRoute("/_authenticated/worlds/new")({
   head: () => ({
     meta: [
-      { title: "Nyt World — CaseLab" },
+      { title: "Nyt World — Didaktiva" },
       {
         name: "description",
         content: "Opret et vedvarende læringsunivers med faglige variabler og episoder.",

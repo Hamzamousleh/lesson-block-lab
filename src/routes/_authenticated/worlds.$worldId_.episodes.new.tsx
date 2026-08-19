@@ -34,7 +34,7 @@ import {
 export const Route = createFileRoute("/_authenticated/worlds/$worldId_/episodes/new")({
   head: () => ({
     meta: [
-      { title: "Ny episode — CaseLab" },
+      { title: "Ny episode — Didaktiva" },
       {
         name: "description",
         content: "Byg næste episode i dit World med World-hukommelsen som grundlag.",

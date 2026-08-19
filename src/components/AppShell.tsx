@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <SheetContent side="left" className="w-[min(86vw,22rem)] p-5">
               <SheetHeader className="text-left">
                 <SheetTitle>Navigation</SheetTitle>
-                <SheetDescription>Gå til et område i CaseLab.</SheetDescription>
+                <SheetDescription>Gå til et område i Didaktiva.</SheetDescription>
               </SheetHeader>
               <nav aria-label="Mobilnavigation" className="mt-6 flex flex-col gap-5">
                 {TEACHER_NAVIGATION.map((entry) =>
@@ -106,9 +106,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Sheet>
           <Link to="/home" className="font-display text-[26px] font-semibold tracking-tight sm:text-[28px] lg:text-[30px]">
             {mode === "v2" ? (
-              <>
-                Didakt<span className="text-primary">iva</span>
-              </>
+              <div className="flex items-center gap-2">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+                  <span className="font-display text-xl font-bold">D</span>
+                </div>
+                <span>
+                  Didakt<span className="text-primary">iva</span>
+                </span>
+              </div>
             ) : (
               <>
                 Case<span className="text-primary">Lab</span>

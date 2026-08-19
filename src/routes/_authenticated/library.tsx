@@ -36,9 +36,9 @@ import {
 export const Route = createFileRoute("/_authenticated/library")({
   head: () => ({
     meta: [
-      { title: "Mit bibliotek — CaseLab" },
+      { title: "Mit bibliotek — Didaktiva" },
       { name: "description", content: "Gem og genbrug dine bedste aktiviteter og lektioner." },
-      { property: "og:title", content: "Mit bibliotek — CaseLab" },
+      { property: "og:title", content: "Mit bibliotek — Didaktiva" },
       { property: "og:description", content: "Genbrug dine bedste aktiviteter og lektioner." },
       { name: "robots", content: "noindex" },
     ],
@@ -181,7 +181,7 @@ function LibraryPage() {
           </div>
         )}
         {filtered.map((i) => (
-          <div key={i.id} className="surface-card flex flex-wrap items-center gap-4 px-6 py-5">
+          <div key={i.id} className="group relative flex flex-col gap-4 rounded-3xl border border-border/80 bg-card px-5 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift hover:border-primary/30 sm:flex-row sm:items-center sm:px-6">
             <span className="text-xl">
               {i.item_type === "block"
                 ? blockDef(i.block_type ?? "").icon

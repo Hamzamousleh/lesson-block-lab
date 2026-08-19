@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/units")({
   head: () => ({
     meta: [
-      { title: "Forløb — CaseLab" },
+      { title: "Forløb — Didaktiva" },
       { name: "description", content: "Dine faglige forløb på tværs af klasser." },
       { property: "og:title", content: "Forløb — CaseLab" },
       { property: "og:description", content: "Alle dine forløb på tværs af klasser." },

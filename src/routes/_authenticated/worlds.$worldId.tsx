@@ -57,12 +57,12 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/worlds/$worldId")({
   head: () => ({
     meta: [
-      { title: "World — CaseLab" },
+      { title: "World — Didaktiva" },
       {
         name: "description",
         content: "Følg tilstand, episoder og konsekvenser i dit læringsunivers.",
       },
-      { property: "og:title", content: "World — CaseLab" },
+      { property: "og:title", content: "World — Didaktiva" },
       {
         property: "og:description",
         content: "Tilstand, episoder, konsekvenser og World-hukommelse.",
@@ -86,7 +86,7 @@ function StateBar({ s }: { s: WorldStateVar }) {
       )
     : 0;
   return (
-    <div className="rounded-xl border border-border/70 p-4">
+    <div className="surface-quiet p-4 transition-colors duration-200 hover:border-primary/20">
       <div className="flex items-baseline justify-between gap-2">
         <p className="text-sm font-medium">{s.label}</p>
         <p className="text-sm text-muted-foreground">{formatStateValue(s)}</p>
@@ -151,7 +151,7 @@ function ConsequenceCard({
   const canApply = !isApplied && errors.length === 0 && (evaluation.fires || evaluation.tie);
 
   return (
-    <div className="rounded-xl border border-border/70 p-4">
+    <div className="surface-quiet p-4 transition-colors duration-200 hover:border-primary/20">
       <div className="flex flex-wrap items-center gap-2">
         <p className="font-medium">{consequence.title}</p>
         <span className="rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground">
@@ -270,18 +270,12 @@ function EpisodeCard({
   });
 
   return (
-    <div
-      className={`surface-card p-6 ${
-        tone === "now"
-          ? "border-primary/40 ring-1 ring-primary/20"
-          : tone === "past"
-            ? "opacity-90"
-            : ""
-      }`}
-    >
+    <div className={`surface-quiet p-6 transition-all duration-300 ${
+      tone === "now" ? "border-primary/40 shadow-lift" : "hover:border-primary/20"
+    }`}>
       <div className="flex flex-wrap items-center gap-3">
-        <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">
-          Episode {episode.episode_number}
+        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-secondary text-[11px] font-bold uppercase tracking-wider text-secondary-foreground">
+          {episode.episode_number}
         </span>
         {episode.branch_key && (
           <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
@@ -613,7 +607,7 @@ function WorldDetail() {
       </div>
 
       {eligible.length > 0 && (
-        <div className="mt-8 rounded-2xl border border-primary/40 bg-primary/5 p-5">
+        <div className="mt-8 rounded-2xl border border-primary/40 bg-primary/5 p-6 shadow-sm">
           <p className="font-medium">Planlagte konsekvenser er klar</p>
           <p className="mt-1 text-sm text-muted-foreground">
             {eligible.length} konsekvens(er) fra en tidligere episode kan nu mærkes i
@@ -662,7 +656,7 @@ function WorldDetail() {
       </section>
 
       {list.length === 0 && (
-        <div className="surface-card mt-12 p-8 text-center text-muted-foreground">
+        <div className="surface-quiet mt-12 p-8 text-center text-muted-foreground">
           Ingen episoder endnu. Byg den første episode med ChatGPT.
         </div>
       )}
@@ -761,7 +755,7 @@ function WorldDetail() {
           {(events.data ?? []).map((ev) => (
             <div
               key={ev.id}
-              className={`rounded-xl border border-border/70 p-4 ${ev.reverted_at ? "opacity-50" : ""}`}
+              className={`surface-quiet p-4 ${ev.reverted_at ? "opacity-50" : ""}`}
             >
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-medium">{ev.title}</p>
@@ -792,7 +786,7 @@ function WorldDetail() {
       </section>
 
       {w.status !== "completed" && (
-        <div className="mt-12 rounded-2xl border border-border/70 p-6">
+        <div className="surface-quiet mt-12 p-6">
           <p className="font-medium">Afslut Worldet</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Gemmer et fagligt resumé med start- og sluttilstand samt de vigtigste begivenheder.

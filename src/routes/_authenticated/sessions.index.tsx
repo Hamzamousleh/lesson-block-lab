@@ -15,9 +15,9 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/sessions/")({
   head: () => ({
     meta: [
-      { title: "Elevsessioner — CaseLab" },
+      { title: "Elevsessioner — Didaktiva" },
       { name: "description", content: "Overblik over aktive og tidligere elevsessioner." },
-      { property: "og:title", content: "Elevsessioner — CaseLab" },
+      { property: "og:title", content: "Elevsessioner — Didaktiva" },
       { property: "og:description", content: "Aktive og tidligere elevsessioner." },
       { name: "robots", content: "noindex" },
     ],
@@ -62,7 +62,10 @@ function SessionsPage() {
     const lesson = lessonById.get(s.lesson_id);
     const klass = s.class_id ? classById.get(s.class_id) : undefined;
     return (
-      <div key={s.id} className="surface-card flex flex-wrap items-center gap-4 px-6 py-5">
+      <div
+        key={s.id}
+        className="group relative flex flex-col gap-4 rounded-3xl border border-border/80 bg-card px-5 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift hover:border-primary/30 sm:flex-row sm:items-center sm:px-6"
+      >
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-medium">{lesson?.title ?? "Lektion"}</p>
           <p className="text-sm text-muted-foreground">

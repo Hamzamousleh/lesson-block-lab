@@ -19,12 +19,12 @@ import {
 export const Route = createFileRoute("/_authenticated/rescue")({
   head: () => ({
     meta: [
-      { title: "Red mig — CaseLab" },
+      { title: "Red mig — Didaktiva" },
       {
         name: "description",
         content: "Lav en nødlektion på få minutter med en færdig ChatGPT-prompt.",
       },
-      { property: "og:title", content: "Red mig — CaseLab" },
+      { property: "og:title", content: "Red mig — Didaktiva" },
       { property: "og:description", content: "Nødundervisning klar på få minutter." },
       { name: "robots", content: "noindex" },
     ],
@@ -62,7 +62,8 @@ function RescuePage() {
         lektion, du kan undervise med det samme.
       </p>
 
-      <section className="surface-card mt-8 space-y-6 p-4 sm:mt-10 sm:p-8">
+      <section className="mt-8 rounded-3xl border border-border/70 bg-surface/70 p-4 sm:mt-10 sm:p-6">
+        <div className="space-y-6 rounded-2xl border bg-card p-6 sm:p-8">
         <div>
           <h2 className="text-xl font-semibold">Hvad skal du undervise i?</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -88,7 +89,7 @@ function RescuePage() {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="Fx stress"
-                className="rounded-xl"
+                className="rounded-xl bg-card"
               />
             </div>
           </div>
@@ -127,7 +128,7 @@ function RescuePage() {
             value={prior}
             onChange={(e) => setPrior(e.target.value)}
             placeholder="Fx de har læst om det autonome nervesystem"
-            className="rounded-xl"
+            className="rounded-xl bg-card"
           />
         </div>
 
@@ -139,7 +140,7 @@ function RescuePage() {
                 value={material}
                 onChange={(e) => setMaterial(e.target.value)}
                 placeholder="Indsæt tekst, noter eller uddrag …"
-                className="min-h-40 rounded-xl"
+                className="min-h-40 rounded-xl bg-card"
               />
             </>
           ) : (
@@ -171,6 +172,7 @@ function RescuePage() {
         {!canGenerate && (
           <p className="text-sm text-muted-foreground">Skriv et emne for at fortsætte.</p>
         )}
+        </div>
       </section>
 
       {prompt && <PromptResult prompt={prompt} />}

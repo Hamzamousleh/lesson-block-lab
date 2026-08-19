@@ -75,11 +75,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "CaseLab — fra fagligt stof til undervisning" },
+      { title: "Didaktiva — Fra fagligt stof til aktiv undervisning" },
       {
         name: "description",
         content:
-          "CaseLab er lærerens arbejdsrum: planlæg lektioner, byg aktiviteter og genbrug dit materiale.",
+          "Didaktiva er lærerens arbejdsrum: planlæg lektioner, byg aktiviteter og genbrug dit materiale.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

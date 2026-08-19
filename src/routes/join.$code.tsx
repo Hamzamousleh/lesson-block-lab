@@ -11,9 +11,9 @@ export const Route = createFileRoute("/join/$code")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Deltag i aktivitet — CaseLab" },
+      { title: "Deltag i aktivitet — Didaktiva" },
       { name: "description", content: "Skriv dit navn og deltag i aktiviteten." },
-      { property: "og:title", content: "Deltag i aktivitet — CaseLab" },
+      { property: "og:title", content: "Deltag i aktivitet — Didaktiva" },
       { property: "og:description", content: "Skriv dit navn og deltag." },
       { name: "robots", content: "noindex" },
     ],
@@ -47,9 +47,14 @@ function JoinCode() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
-      <p className="font-display text-2xl font-semibold">
-        Case<span className="text-primary">Lab</span>
-      </p>
+      <div className="flex items-center gap-2 font-display text-2xl font-semibold">
+        <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+          <span className="font-display text-sm font-bold">D</span>
+        </div>
+        <span>
+          Didakt<span className="text-primary">iva</span>
+        </span>
+      </div>
 
       {peek.isLoading && (
         <p className="mt-10 flex items-center gap-2 text-muted-foreground">

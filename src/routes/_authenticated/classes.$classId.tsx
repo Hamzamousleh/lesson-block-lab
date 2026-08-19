@@ -29,9 +29,9 @@ import {
 export const Route = createFileRoute("/_authenticated/classes/$classId")({
   head: () => ({
     meta: [
-      { title: "Klasse — CaseLab" },
+      { title: "Klasse — Didaktiva" },
       { name: "description", content: "Klassens forløb og seneste lektioner." },
-      { property: "og:title", content: "Klasse — CaseLab" },
+      { property: "og:title", content: "Klasse — Didaktiva" },
       { property: "og:description", content: "Klassens forløb og seneste lektioner." },
       { name: "robots", content: "noindex" },
     ],
@@ -89,7 +89,7 @@ function ClassPage() {
       <section className="mt-14">
         <h2 className="text-xl font-semibold">Aktuelt forløb</h2>
         {activeUnit ? (
-          <div className="surface-card mt-4 p-7">
+          <div className="surface-quiet mt-4 p-7">
             <p className="text-xl font-medium">{activeUnit.title}</p>
             {activeUnit.description && (
               <p className="mt-2 text-muted-foreground">{activeUnit.description}</p>
@@ -106,7 +106,7 @@ function ClassPage() {
         <h2 className="text-xl font-semibold">Seneste lektioner</h2>
         <div className="mt-4 space-y-3">
           {lessons.data?.length === 0 && (
-            <div className="surface-card p-8">
+            <div className="surface-quiet border-dashed p-8">
               <p className="text-lg font-medium">Ingen lektioner i denne klasse endnu</p>
               <p className="mt-1 text-muted-foreground">
                 Opret den første lektion og byg undervisningen trin for trin.
@@ -119,7 +119,7 @@ function ClassPage() {
             </div>
           )}
           {lessons.data?.slice(0, 6).map((l) => (
-            <div key={l.id} className="surface-card flex flex-wrap items-center gap-4 px-6 py-5">
+            <div key={l.id} className="group relative flex flex-col gap-4 rounded-2xl border border-border/80 bg-card px-5 py-4 transition-colors duration-200 hover:border-primary/30 hover:bg-accent/15 sm:flex-row sm:items-center sm:px-6">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-lg font-medium">{l.title}</p>
                 <p className="text-sm text-muted-foreground">
@@ -148,7 +148,7 @@ function ClassPage() {
         <h2 className="text-xl font-semibold">Forløb</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {units.data?.length === 0 && (
-            <div className="surface-card p-8 sm:col-span-2">
+            <div className="surface-quiet border-dashed p-8 sm:col-span-2">
               <p className="text-lg font-medium">Ingen forløb endnu</p>
               <p className="mt-1 text-muted-foreground">
                 Opret et fagligt tema, så lektionerne får en tydelig sammenhæng.
@@ -199,7 +199,7 @@ function UnitCard({
   });
 
   return (
-    <div className="surface-card flex flex-col gap-3 p-6">
+    <div className="surface-quiet flex flex-col gap-3 p-6 transition-colors duration-200 hover:border-primary/30">
       <p className="text-lg font-medium">{title}</p>
       {description && <p className="text-sm text-muted-foreground">{description}</p>}
       <Select value={status} onValueChange={(v) => mutate.mutate(v as UnitStatus)}>

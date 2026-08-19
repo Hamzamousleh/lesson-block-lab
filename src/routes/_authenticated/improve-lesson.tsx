@@ -23,12 +23,12 @@ export const Route = createFileRoute("/_authenticated/improve-lesson")({
     typeof search["lessonId"] === "string" ? { lessonId: search["lessonId"] } : {},
   head: () => ({
     meta: [
-      { title: "Gør lektionen mere aktiv — CaseLab" },
+      { title: "Gør lektionen mere aktiv — Didaktiva" },
       {
         name: "description",
         content: "Få forslag til aktiviteter, der gør en eksisterende lektion mere aktiv.",
       },
-      { property: "og:title", content: "Gør lektionen mere aktiv — CaseLab" },
+      { property: "og:title", content: "Gør lektionen mere aktiv — Didaktiva" },
       { property: "og:description", content: "Mere elevaktivitet i en eksisterende lektion." },
       { name: "robots", content: "noindex" },
     ],
@@ -82,7 +82,8 @@ function ImprovePage() {
         Vælg lektionen, fortæl hvad du vil ændre, og få en prompt, der giver dig nye aktiviteter.
       </p>
 
-      <section className="surface-card mt-10 space-y-6 p-8">
+      <section className="mt-10 rounded-3xl border border-border/70 bg-surface/70 p-4 sm:p-6">
+        <div className="space-y-6 rounded-2xl border border-primary/5 bg-card p-6 sm:p-8">
         <div className="space-y-2">
           <Label>Lektion</Label>
           <Select value={lessonId} onValueChange={setLessonId}>
@@ -131,7 +132,7 @@ function ImprovePage() {
               <Button
                 key={w}
                 variant={wishes.includes(w) ? "default" : "outline"}
-                className="rounded-full"
+                className={`rounded-full transition-all ${wishes.includes(w) ? "shadow-sm" : "bg-card"}`}
                 onClick={() => toggle(w)}
               >
                 {w}
@@ -185,6 +186,7 @@ function ImprovePage() {
             Vælg en lektion med aktiviteter, og vælg mindst én ændring.
           </p>
         )}
+        </div>
       </section>
 
       {prompt && (
