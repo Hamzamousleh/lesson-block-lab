@@ -757,7 +757,9 @@ function RunMode() {
             )}
             <section className="surface-card p-4 sm:p-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold">Det eleverne ser</h2>
+                <h2 className="text-lg font-semibold">
+                  {mode === "v2" ? "Det eleverne ser" : "Det eleverne ser"}
+                </h2>
                 <span className="text-xs tracking-widest text-muted-foreground uppercase">
                   {blockDef(current?.type ?? "").label} · {workMode(current?.type ?? "")}
                 </span>
@@ -1056,6 +1058,7 @@ function RunMode() {
                       <button
                         type="button"
                         onClick={() => jumpTo(i)}
+                        aria-current={i === index ? "step" : undefined}
                         disabled={syncPending}
                         className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                           i === index
