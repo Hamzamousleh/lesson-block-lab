@@ -731,7 +731,7 @@ function RunMode() {
       <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           {/* ---------------- left: what students see + responses ---------------- */}
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             {mode === "v2" && current && (
               <CockpitFocusV2
                 index={index}
@@ -1127,7 +1127,11 @@ function RunMode() {
         </Button>
         <div className="col-span-2 flex min-w-0 flex-wrap items-center justify-center gap-2 sm:order-2 sm:col-span-1 sm:flex-nowrap sm:gap-3">
           <span className="min-w-0 basis-full break-words text-center text-sm text-muted-foreground sm:basis-auto">
-            {current ? `${blockDef(current.type).icon} ${current.title}` : ""}
+            {current
+              ? mode === "v2"
+                ? `${current.title} · ${blockDef(current.type).label}`
+                : `${blockDef(current.type).icon} ${current.title}`
+              : ""}
           </span>
           <Button
             variant="ghost"
