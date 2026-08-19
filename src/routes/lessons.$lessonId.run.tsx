@@ -1094,8 +1094,17 @@ function RunMode() {
               )}
             </section>
 
-            <section className="surface-card p-6">
-              <h2 className="text-sm font-semibold">Forløbet</h2>
+            <section className={mode === "v2" ? `surface-card ${panelPad}` : "surface-card p-6"}>
+              <h2
+                className={
+                  mode === "v2"
+                    ? "text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase"
+                    : "text-sm font-semibold"
+                }
+              >
+                Forløbet
+              </h2>
+
               <ol className="mt-3 space-y-1">
                 {active.map((b, i) => {
                   const isSkipped = skipped.includes(b.id);
