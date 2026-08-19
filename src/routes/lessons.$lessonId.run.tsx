@@ -37,7 +37,11 @@ import { summarize } from "@/lib/results";
 import { ResultBars, StudentBlock } from "@/components/student/StudentBlock";
 import { correctOptionIndex, timerLabel, toPreviewBlock, workMode } from "@/lib/cockpit";
 import { useDesignMode } from "@/lib/design-mode";
-import { CockpitFocusV2 } from "@/components/run/CockpitFocusV2";
+import {
+  CockpitFocusV2,
+  CockpitLiveHeaderV2,
+  CockpitTimelineItemV2,
+} from "@/components/run/CockpitFocusV2";
 import {
   blockMaterialFilesQuery,
   formatFileSize,
@@ -677,11 +681,14 @@ function RunMode() {
                 <Loader2 className="size-3.5 animate-spin" /> Synkroniserer…
               </>
             )}
-            {syncState.phase === "synced" && (
-              <>
-                <Check className="size-3.5" /> Synkroniseret
-              </>
-            )}
+            {syncState.phase === "synced" &&
+              (mode === "v2" ? (
+                <Check className="size-3.5 opacity-50" />
+              ) : (
+                <>
+                  <Check className="size-3.5" /> Synkroniseret
+                </>
+              ))}
             {syncState.phase === "error" && (
               <>
                 <span>Kunne ikke synkronisere ændringen</span>
@@ -741,9 +748,9 @@ function RunMode() {
                 }
                 participants={liveSession ? people.length : null}
                 nextTitle={active[index + 1]?.title ?? null}
-                nextTypeLabel={
-                  active[index + 1] ? blockDef(active[index + 1]!.type).label : null
-                }
+                nextTypeLabel={active[index + 1] ? blockDef(active[index + 1]!.type).label : null}
+                nextDurationMinutes={active[index + 1]?.duration_minutes ?? null}
+                studentInstructions={current.student_instructions ?? null}
                 onNext={next}
                 nextDisabled={syncPending}
               />
@@ -1058,13 +1065,31 @@ function RunMode() {
                           done ? "text-muted-foreground" : ""
                         }`}
                       >
-                        <span className="w-4 shrink-0">
-                          {i === index ? "→" : done ? "✓" : isSkipped ? "–" : ""}
-                        </span>
-                        <span className="min-w-0 flex-1 truncate">{b.title}</span>
-                        <span className="shrink-0 tabular-nums text-muted-foreground">
-                          {b.duration_minutes} min
-                        </span>
+                        {mode === "v2" ? (
+                          <CockpitTimelineItemV2
+                            title={b.title}
+                            durationMinutes={b.duration_minutes}
+                            state={
+                              isSkipped
+                                ? "skipped"
+                                : i === index
+                                  ? "current"
+                                  : done
+                                    ? "done"
+                                    : "upcoming"
+                            }
+                          />
+                        ) : (
+                          <>
+                            <span className="w-4 shrink-0">
+                              {i === index ? "→" : done ? "✓" : isSkipped ? "–" : ""}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate">{b.title}</span>
+                            <span className="shrink-0 tabular-nums text-muted-foreground">
+                              {b.duration_minutes} min
+                            </span>
+                          </>
+                        )}
                       </button>
                     </li>
                   );
