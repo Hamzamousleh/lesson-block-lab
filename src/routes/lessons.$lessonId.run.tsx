@@ -937,7 +937,10 @@ function RunMode() {
 
           {/* ---------------- right: time, plan, notes ---------------- */}
           <aside className={`min-w-0 ${mode === "v2" ? "space-y-4" : "space-y-6"}`}>
-            <section className={`${panelClass} ${panelPad}`}>
+            <section
+              className={`${panelClass} ${panelPad} ${mode === "v2" ? "rounded-b-none" : ""}`}
+            >
+
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-sm font-semibold">Tid til aktiviteten</h2>
                 <span className={mode === "v2" ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>
