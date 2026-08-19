@@ -6,6 +6,7 @@ import { Link } from "@tanstack/react-router";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import {
   Activity,
+  ArrowRight,
   CalendarClock,
   Clock3,
   FileText,
@@ -13,7 +14,6 @@ import {
   Layers3,
   Library,
   ListChecks,
-  Loader2,
   Pencil,
   Play,
   Sparkles,
@@ -30,45 +30,72 @@ interface PrimaryAction {
   description: string;
   to: string;
   tone: "primary" | "warm" | "muted";
+  featured?: boolean;
 }
 
 const PRIMARY_ACTIONS: PrimaryAction[] = [
   {
     icon: Sparkles,
     title: "Planlæg undervisning",
-    description: "Fra idé til færdig lektion",
+    description: "Opret en færdig lektion med ChatGPT",
     to: "/create-with-chatgpt",
     tone: "primary",
+    featured: true,
   },
   {
     icon: FileText,
     title: "Brug mit materiale",
-    description: "Gør dine egne filer til undervisning",
+    description: "Knyt filer og ressourcer til undervisningen",
     to: "/material-to-lesson",
     tone: "muted",
   },
   {
     icon: Zap,
     title: "Red mig",
-    description: "Noget brugbart på få minutter",
+    description: "Lav hurtigt undervisning, når tiden er knap",
     to: "/rescue",
     tone: "warm",
   },
   {
     icon: Users,
     title: "Kør undervisning",
-    description: "Start en lektion med eleverne",
+    description: "Start en eksisterende lektion med eleverne",
     to: "/lessons",
     tone: "primary",
   },
 ];
 
 const TOOLS = [
-  { icon: Clock3, title: "Jeg mangler tid", to: "/extra-time" },
-  { icon: Activity, title: "Gør den mere aktiv", to: "/improve-lesson" },
-  { icon: Library, title: "Mit bibliotek", to: "/library" },
-  { icon: Globe2, title: "Worlds", to: "/worlds" },
-  { icon: Layers3, title: "Differentiér en aktivitet", to: "/differentiate" },
+  {
+    icon: Clock3,
+    title: "Jeg mangler tid",
+    description: "Fyld en planlagt lektion ud med ekstra aktiviteter",
+    to: "/extra-time",
+  },
+  {
+    icon: Activity,
+    title: "Gør den mere aktiv",
+    description: "Mere variation i en eksisterende lektion",
+    to: "/improve-lesson",
+  },
+  {
+    icon: Library,
+    title: "Mit bibliotek",
+    description: "Genbrug gemte aktiviteter og skabeloner",
+    to: "/library",
+  },
+  {
+    icon: Globe2,
+    title: "Worlds",
+    description: "Læringsuniverser med progression",
+    to: "/worlds",
+  },
+  {
+    icon: Layers3,
+    title: "Differentiér en aktivitet",
+    description: "Niveaudelte varianter med samme mål",
+    to: "/differentiate",
+  },
 ] as const;
 
 const TONE_CLASS: Record<PrimaryAction["tone"], string> = {
@@ -86,7 +113,7 @@ const updatedDateFormatter = new Intl.DateTimeFormat("da-DK", {
 
 export function HomeV2() {
   const classes = useQuery(classesQuery());
-  const lessons = useQuery(lessonsQuery({ limit: 4 }));
+  const lessons = useQuery(lessonsQuery({ limit: 3 }));
   const lessonBlocks = useQueries({
     queries: (lessons.data ?? []).map((lesson) => blocksQuery(lesson.id)),
   });
@@ -110,40 +137,52 @@ export function HomeV2() {
         </p>
       </section>
 
-      <section aria-label="Primære handlinger" className="mt-8 grid gap-4 sm:grid-cols-2">
-        {PRIMARY_ACTIONS.map((action) => {
-          const Icon = action.icon;
-          return (
-            <Link
-              key={action.title}
-              to={action.to}
-              className="surface-card group relative flex min-h-32 items-start gap-4 overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-6"
-            >
-              <span
-                className={`grid size-12 shrink-0 place-items-center rounded-2xl transition-transform duration-200 group-hover:scale-105 ${TONE_CLASS[action.tone]}`}
+      <section
+        aria-label="Primære handlinger"
+        className="mt-8 rounded-3xl border border-border/70 bg-surface/70 p-3 sm:p-4"
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          {PRIMARY_ACTIONS.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link
+                key={action.title}
+                to={action.to}
+                className={`group flex min-h-24 items-center gap-4 rounded-2xl border bg-card p-4 transition-[transform,background-color,border-color] duration-200 hover:-translate-y-0.5 hover:bg-accent/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none sm:p-5 ${
+                  action.featured
+                    ? "border-primary/35 hover:border-primary/55"
+                    : "border-border/80 hover:border-primary/30"
+                }`}
               >
-                <Icon aria-hidden="true" className="size-5" strokeWidth={1.9} />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-lg font-semibold sm:text-xl">{action.title}</span>
-                <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
-                  {action.description}
+                <span
+                  className={`grid size-11 shrink-0 place-items-center rounded-2xl ${TONE_CLASS[action.tone]}`}
+                >
+                  <Icon aria-hidden="true" className="size-5" strokeWidth={1.9} />
                 </span>
-              </span>
-              <span
-                aria-hidden="true"
-                className="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-primary/50 transition-transform duration-200 group-hover:scale-x-100"
-              />
-            </Link>
-          );
-        })}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-semibold sm:text-lg">{action.title}</span>
+                  <span className="mt-0.5 block text-sm leading-relaxed text-muted-foreground">
+                    {action.description}
+                  </span>
+                  <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                    Start
+                    <ArrowRight
+                      aria-hidden="true"
+                      className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transform-none"
+                    />
+                  </span>
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </section>
 
       <section className="mt-10">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <h2 className="truncate text-xl font-semibold">Fortsæt hvor du slap</h2>
           <Button asChild variant="ghost" size="sm" className="shrink-0 rounded-full">
-            <Link to="/lessons">Alle lektioner</Link>
+            <Link to="/lessons">Se alle lektioner →</Link>
           </Button>
         </div>
 
@@ -151,7 +190,10 @@ export function HomeV2() {
           {lessons.isLoading && (
             <div className="space-y-3" aria-hidden="true">
               {[0, 1].map((i) => (
-                <div key={i} className="surface-card h-24 animate-pulse bg-secondary/40" />
+                <div
+                  key={i}
+                  className="h-24 animate-pulse rounded-2xl border border-border/70 bg-secondary/40 motion-reduce:animate-none"
+                />
               ))}
             </div>
           )}
@@ -164,7 +206,7 @@ export function HomeV2() {
             <p className="text-sm text-destructive">Kunne ikke hente dine lektioner.</p>
           )}
           {lessons.data?.length === 0 && !lessons.isLoading && (
-            <div className="surface-card flex flex-col items-start gap-4 border-dashed p-8">
+            <div className="flex flex-col items-start gap-4 rounded-2xl border border-dashed border-border bg-card/60 p-8">
               <span className="grid size-11 place-items-center rounded-2xl bg-accent text-primary">
                 <Sparkles aria-hidden="true" className="size-5" />
               </span>
@@ -185,24 +227,21 @@ export function HomeV2() {
             return (
               <article
                 key={l.id}
-                className="surface-card flex flex-col gap-4 px-5 py-4 transition-shadow hover:shadow-[var(--shadow-lift)] sm:flex-row sm:items-center sm:px-6"
+                className="group relative flex flex-col gap-4 rounded-2xl border border-border/80 bg-card px-5 py-4 transition-colors duration-200 hover:border-primary/30 hover:bg-accent/15 focus-within:border-primary/30 sm:flex-row sm:items-center sm:px-6"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                  <p className="text-lg font-semibold leading-snug">
+                    <Link
+                      to="/lessons/$lessonId/edit"
+                      params={{ lessonId: l.id }}
+                      className="after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <span className="line-clamp-2">{l.title}</span>
+                    </Link>
+                  </p>
+                  <p className="mt-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                     {c ? `${c.name} · ${c.subject}` : l.subject || "Lektion"}
                   </p>
-                  <p className="mt-1 truncate text-lg font-medium">{l.title}</p>
-                  {blockCount !== undefined && blockCount > 0 && (
-                    <span
-                      aria-hidden="true"
-                      className="mt-2 flex flex-wrap items-center gap-1"
-                      title={`${blockCount} aktiviteter`}
-                    >
-                      {Array.from({ length: Math.min(blockCount, 12) }).map((_, i) => (
-                        <span key={i} className="h-1.5 w-5 rounded-full bg-primary/25" />
-                      ))}
-                    </span>
-                  )}
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
                       <Clock3 aria-hidden="true" className="size-3.5" /> {l.duration_minutes} min
@@ -219,7 +258,7 @@ export function HomeV2() {
                     </span>
                   </div>
                 </div>
-                <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
+                <div className="relative z-10 flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
                   <Button asChild className="rounded-full">
                     <Link to="/lessons/$lessonId/run" params={{ lessonId: l.id }}>
                       <Play aria-hidden="true" className="size-4" /> Kør lektion
@@ -234,11 +273,6 @@ export function HomeV2() {
               </article>
             );
           })}
-          {lessons.isLoading && (
-            <span className="sr-only">
-              <Loader2 aria-hidden="true" />
-            </span>
-          )}
         </div>
       </section>
 
@@ -246,17 +280,26 @@ export function HomeV2() {
         <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
           Flere værktøjer
         </h2>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           {TOOLS.map((tool) => {
             const Icon = tool.icon;
             return (
               <Link
                 key={tool.title}
                 to={tool.to}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card/70 px-4 py-2 text-sm font-medium transition-colors hover:border-primary/30 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex min-h-16 items-start gap-3 rounded-2xl border border-border/80 bg-card/70 px-4 py-3 transition-colors duration-200 hover:border-primary/30 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <Icon aria-hidden="true" className="size-4 text-primary/80" strokeWidth={1.8} />
-                {tool.title}
+                <Icon
+                  aria-hidden="true"
+                  className="mt-0.5 size-4 shrink-0 text-primary/80"
+                  strokeWidth={1.8}
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium">{tool.title}</span>
+                  <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                    {tool.description}
+                  </span>
+                </span>
               </Link>
             );
           })}
