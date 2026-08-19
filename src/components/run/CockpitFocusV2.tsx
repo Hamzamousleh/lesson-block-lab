@@ -205,14 +205,15 @@ export function CockpitTimelineItemV2({
               ? "text-muted-foreground"
               : state === "skipped"
                 ? "text-muted-foreground line-through"
-                : "text-muted-foreground/70"
+                : "text-foreground/75"
         }`}
       >
         {title}
       </span>
-      <span className="shrink-0 text-xs tabular-nums text-muted-foreground/70">
+      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
         {durationMinutes} min
       </span>
+
     </span>
   );
 }
