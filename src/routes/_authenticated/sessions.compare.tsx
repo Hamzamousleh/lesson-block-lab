@@ -46,7 +46,7 @@ function ComparePage() {
         <div>
           <h1 className="font-display text-3xl font-semibold">Sammenlign sessioner</h1>
           <p className="mt-2 text-muted-foreground">
-            Vælg op til tre sessioner. Tallene er opgjort af CaseLab — ingen fortolkning.
+            Vælg op til tre sessioner. Tallene er opgjort af Didaktiva — ingen fortolkning.
           </p>
         </div>
         <Button asChild variant="ghost" className="rounded-full">

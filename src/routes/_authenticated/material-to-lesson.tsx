@@ -68,7 +68,7 @@ function MaterialToLesson() {
     <div className="mx-auto max-w-3xl px-6 py-14">
       <h1 className="font-display text-4xl font-semibold">Brug mit materiale</h1>
       <p className="mt-2 text-muted-foreground">
-        Brug tekst eller egne filer som grundlag. CaseLab klargør instruktionen; du sender selv det
+        Brug tekst eller egne filer som grundlag. Didaktiva klargør instruktionen; du sender selv det
         valgte videre til ChatGPT.
       </p>
 

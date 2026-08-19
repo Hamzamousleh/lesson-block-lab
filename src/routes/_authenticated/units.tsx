@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/units")({
     meta: [
       { title: "Forløb — Didaktiva" },
       { name: "description", content: "Dine faglige forløb på tværs af klasser." },
-      { property: "og:title", content: "Forløb — CaseLab" },
+      { property: "og:title", content: "Forløb — Didaktiva" },
       { property: "og:description", content: "Alle dine forløb på tværs af klasser." },
       { name: "robots", content: "noindex" },
     ],

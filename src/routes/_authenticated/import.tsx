@@ -221,7 +221,7 @@ function ImportPage() {
         <div>
           <h2 className="text-xl font-semibold">Svar fra ChatGPT</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Teknisk format: CaseLab 2.0 JSON. Du behøver ikke redigere koden manuelt.
+            Teknisk format: Didaktiva 2.0 JSON. Du behøver ikke redigere koden manuelt.
           </p>
         </div>
         <Textarea
