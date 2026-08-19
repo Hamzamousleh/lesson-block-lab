@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6 lg:gap-8">
+        <div className="mx-auto flex h-[72px] max-w-5xl items-center gap-4 px-4 sm:px-6 lg:h-20 lg:gap-8">
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <Button
@@ -104,7 +104,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </nav>
             </SheetContent>
           </Sheet>
-          <Link to="/home" className="font-display text-xl font-semibold tracking-tight">
+          <Link to="/home" className="font-display text-[26px] font-semibold tracking-tight sm:text-[28px] lg:text-[30px]">
             {mode === "v2" ? (
               <>
                 Didakt<span className="text-primary">iva</span>
@@ -115,14 +115,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               </>
             )}
           </Link>
-          <nav aria-label="Hovednavigation" className="hidden items-center gap-1 lg:flex">
+          <nav aria-label="Hovednavigation" className="hidden items-center gap-1.5 lg:flex">
             {TEACHER_NAVIGATION.map((entry) =>
               entry.kind === "link" ? (
                 <Link
                   key={entry.to}
                   to={entry.to}
                   aria-current={isNavigationItemActive(pathname, entry.to) ? "page" : undefined}
-                  className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground"
+                  className="flex min-h-11 items-center rounded-xl px-4 text-[17px] font-medium text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground"
                 >
                   {entry.label}
                 </Link>
@@ -131,18 +131,22 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className={`rounded-full px-4 text-sm font-medium ${
+                      className={`min-h-11 gap-1 rounded-xl px-4 text-[17px] font-medium hover:bg-accent/50 ${
                         isNavigationGroupActive(pathname, entry.items)
                           ? "bg-accent text-accent-foreground"
                           : "text-muted-foreground"
                       }`}
                     >
-                      {entry.label} <ChevronDown aria-hidden="true" className="size-3.5" />
+                      {entry.label} <ChevronDown aria-hidden="true" className="size-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
+                  <DropdownMenuContent align="start" className="min-w-48 p-1.5">
                     {entry.items.map((item) => (
-                      <DropdownMenuItem key={item.to} asChild>
+                      <DropdownMenuItem
+                        key={item.to}
+                        asChild
+                        className="min-h-11 rounded-lg px-3 text-[15px] aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground"
+                      >
                         <Link
                           to={item.to}
                           aria-current={
@@ -164,10 +168,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="rounded-full"
+                  className="size-11 rounded-full hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Brugermenu"
                 >
-                  <User className="size-4" />
+                  <User className="size-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
