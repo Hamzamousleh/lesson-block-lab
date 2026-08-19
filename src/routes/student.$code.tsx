@@ -15,6 +15,7 @@ import { StudentBlock, type SaveState } from "@/components/student/StudentBlock"
 import { StudentWorldHeader, StudentWorldRecap } from "@/components/student/StudentWorldHeader";
 import { Button } from "@/components/ui/button";
 import { StudentProgressCoordinator, type StudentProgressState } from "@/lib/student-progress";
+import { PublicLegalLinks } from "@/components/public/PublicLayout";
 
 export const Route = createFileRoute("/student/$code")({
   ssr: false,
@@ -42,6 +43,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         }
       >
         {children}
+        <PublicLegalLinks className="mt-10 border-t border-border/60 pt-5" />
       </div>
     </div>
   );
