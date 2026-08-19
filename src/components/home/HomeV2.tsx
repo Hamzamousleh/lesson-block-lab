@@ -171,7 +171,7 @@ export function HomeV2() {
                     {action.description}
                   </span>
                   <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                    Start
+                    {action.cta}
                     <ArrowRight
                       aria-hidden="true"
                       className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transform-none"
@@ -286,7 +286,7 @@ export function HomeV2() {
         <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
           Flere værktøjer
         </h2>
-        <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-3 grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
           {TOOLS.map((tool) => {
             const Icon = tool.icon;
             return (
