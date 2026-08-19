@@ -590,6 +590,13 @@ function RunMode() {
   }
 
   const progressPct = ((index + 1) / active.length) * 100;
+  /** Presentation-only: how many of the active participants have answered. */
+  const answeredCount = liveAnswers.filter((a) =>
+    people.some((p) => p.id === a.participant_id),
+  ).length;
+  /** V2 only: when responses exist they outrank the static student preview. */
+  const responseFirst = mode === "v2" && !!liveSession && !!liveSummary && answeredCount > 0;
+
 
   /* ---------- projector ---------- */
   if (projector) {
