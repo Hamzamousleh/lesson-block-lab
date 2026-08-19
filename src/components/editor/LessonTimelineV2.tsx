@@ -244,17 +244,17 @@ export function LessonSummaryV2({
   secondaryActions?: React.ReactNode;
 }) {
   return (
-    <div className="surface-card mt-6 overflow-hidden p-0">
-      <div className="bg-surface/60 p-4 sm:p-8">
+    <div className="surface-quiet mt-6 overflow-hidden p-0">
+      <div className="bg-surface/40 p-4 sm:px-7 sm:py-6">
         <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
           <div className="min-w-0">
             {(contextLabel || unitLabel) && (
-              <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+              <p className="text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
                 {[contextLabel, unitLabel].filter(Boolean).join(" · ")}
               </p>
             )}
-            <div className="mt-1">{titleInput}</div>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <div className="mt-0.5">{titleInput}</div>
+            <p className="mt-1.5 text-sm text-muted-foreground">
               <span className="tabular-nums">
                 {planned} / {target} min planlagt
               </span>
@@ -272,7 +272,7 @@ export function LessonSummaryV2({
           {primaryAction && <div className="shrink-0">{primaryAction}</div>}
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
           {statusSelect}
           {rescue && (
             <span className="rounded-full bg-accent-warm px-3 py-1 font-medium text-accent-warm-foreground">
@@ -282,20 +282,21 @@ export function LessonSummaryV2({
         </div>
 
         {learningGoal && (
-          <div className="mt-5 rounded-2xl border border-border/60 bg-card p-4">
-            <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+          <p className="mt-4 border-l-2 border-border pl-3 text-sm leading-relaxed text-muted-foreground">
+            <span className="mr-1.5 text-[11px] font-semibold tracking-[0.14em] uppercase">
               Læringsmål
-            </p>
-            <p className="mt-1 text-sm leading-relaxed">{learningGoal}</p>
-          </div>
+            </span>
+            {learningGoal}
+          </p>
         )}
       </div>
 
       {secondaryActions && (
-        <div className="flex flex-wrap gap-2 border-t border-border/70 px-4 py-3 sm:px-8">
+        <div className="flex flex-wrap items-center gap-2 border-t border-border/50 px-4 py-2.5 sm:px-7">
           {secondaryActions}
         </div>
       )}
     </div>
   );
 }
+

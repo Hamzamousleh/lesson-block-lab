@@ -150,7 +150,32 @@ export function CockpitFocusV2({
   );
 }
 
+/**
+ * Warm, non-terminal timer typography: large time, quiet qualifier below.
+ * Pure presentation — the seconds value and all timer logic stay in the route.
+ */
+export function CockpitTimerV2({ seconds }: { seconds: number }) {
+  const overtime = seconds <= -1;
+  const abs = Math.max(0, Math.round(Math.abs(seconds)));
+  const time = `${overtime ? "+" : ""}${String(Math.floor(abs / 60)).padStart(2, "0")}:${String(
+    abs % 60,
+  ).padStart(2, "0")}`;
+  const qualifier = overtime ? "over tid" : seconds > 0 ? "tilbage" : "tiden er gået";
+
+  return (
+    <p className={overtime ? "text-destructive" : ""}>
+      <span className="block font-display text-[2.75rem] leading-none font-semibold tracking-tight tabular-nums">
+        {time}
+      </span>
+      <span className="mt-1.5 block text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+        {qualifier}
+      </span>
+    </p>
+  );
+}
+
 export function CockpitTimelineItemV2({
+
   title,
   durationMinutes,
   state,
@@ -180,14 +205,15 @@ export function CockpitTimelineItemV2({
               ? "text-muted-foreground"
               : state === "skipped"
                 ? "text-muted-foreground line-through"
-                : "text-muted-foreground/70"
+                : "text-foreground/75"
         }`}
       >
         {title}
       </span>
-      <span className="shrink-0 text-xs tabular-nums text-muted-foreground/70">
+      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
         {durationMinutes} min
       </span>
+
     </span>
   );
 }

@@ -56,6 +56,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -489,6 +491,75 @@ function LessonEditor() {
     </>
   );
 
+  /** V2: two clear secondary actions, everything else collected in one menu. */
+  const copyLessonToClipboard = async () => {
+    const text = lessonToText(lesson.data!, list);
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Lektionen er kopieret ✓");
+    } catch {
+      toast.error("Lektionen kunne ikke kopieres. Markér teksten og kopiér manuelt.");
+    }
+  };
+
+  const toolbarButtonsV2 = (
+    <>
+      <Button
+        variant="outline"
+        className="min-h-10 rounded-full"
+        onClick={() => setSessionOpen(true)}
+      >
+        <Smartphone className="size-4" /> Start elevsession
+      </Button>
+      <Button asChild variant="outline" className="min-h-10 rounded-full">
+        <Link to="/import" search={{ lessonId }}>
+          <Plus className="size-4" /> Importér aktiviteter
+        </Link>
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="min-h-10 rounded-full text-muted-foreground">
+            <MoreHorizontal className="size-4" /> Flere handlinger
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-60">
+          <DropdownMenuItem asChild>
+            <Link to="/extra-time" search={{ lessonId }}>
+              <Timer className="size-4" /> Jeg mangler tid
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/improve-lesson" search={{ lessonId }}>
+              <Wand2 className="size-4" /> Gør den mere aktiv
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={saveLesson.isPending}
+            onSelect={() => saveLesson.mutate()}
+          >
+            <BookmarkPlus className="size-4" /> Gem i bibliotek
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => void copyLessonToClipboard()}>
+            <Copy className="size-4" /> Kopiér lektion til ChatGPT
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={dupLesson.isPending} onSelect={() => dupLesson.mutate()}>
+            <Copy className="size-4" /> Dublér lektion
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onSelect={() => {
+              if (confirm("Vil du slette denne lektion?")) delLesson.mutate();
+            }}
+          >
+            <Trash2 className="size-4" /> Slet lektion
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+
+
   const statusSelect = (
     <>
       <Label id="lesson-status-label" className="sr-only">
@@ -581,7 +652,7 @@ function LessonEditor() {
           titleInput={titleInput}
           statusSelect={statusSelect}
           primaryAction={runButton}
-          secondaryActions={toolbarButtons}
+          secondaryActions={toolbarButtonsV2}
         />
       ) : (
         <div className="surface-card mt-6 p-4 sm:p-8">
