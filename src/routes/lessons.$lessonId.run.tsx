@@ -853,9 +853,18 @@ function RunMode() {
                     {mode === "v2" ? `Elevsvar · ${current?.title ?? ""}` : "Elevsvar"}
                   </h2>
                   <span className="text-sm tabular-nums text-muted-foreground">
-                    <span className="font-semibold text-foreground">{answeredCount}</span> af{" "}
-                    {people.length} har svaret
+                    {mode === "v2" ? (
+                      <>
+                        <span className="font-semibold text-foreground">{answeredCount}</span> af{" "}
+                        {people.length} har svaret
+                      </>
+                    ) : (
+                      <>
+                        Svar: {answeredCount} / {people.length}
+                      </>
+                    )}
                   </span>
+
                 </div>
                 <div className="mt-5">
                   <ResultBars
