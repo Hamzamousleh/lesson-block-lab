@@ -28,6 +28,7 @@ interface PrimaryAction {
   icon: LucideIcon;
   title: string;
   description: string;
+  cta: string;
   to: string;
   tone: "primary" | "warm" | "muted";
   featured?: boolean;
@@ -37,7 +38,8 @@ const PRIMARY_ACTIONS: PrimaryAction[] = [
   {
     icon: Sparkles,
     title: "Planlæg undervisning",
-    description: "Opret en færdig lektion med ChatGPT",
+    description: "Skab en lektion fra et emne, en idé eller et læringsmål",
+    cta: "Planlæg",
     to: "/create-with-chatgpt",
     tone: "primary",
     featured: true,
@@ -45,21 +47,24 @@ const PRIMARY_ACTIONS: PrimaryAction[] = [
   {
     icon: FileText,
     title: "Brug mit materiale",
-    description: "Knyt filer og ressourcer til undervisningen",
+    description: "Lav undervisning med dine filer og materialer som fagligt grundlag",
+    cta: "Brug materiale",
     to: "/material-to-lesson",
     tone: "muted",
   },
   {
     icon: Zap,
     title: "Red mig",
-    description: "Lav hurtigt undervisning, når tiden er knap",
+    description: "Få hurtigt en brugbar plan, når undervisningen er tæt på",
+    cta: "Få hjælp",
     to: "/rescue",
     tone: "warm",
   },
   {
     icon: Users,
     title: "Kør undervisning",
-    description: "Start en eksisterende lektion med eleverne",
+    description: "Vælg en lektion og start den live med eleverne",
+    cta: "Vælg lektion",
     to: "/lessons",
     tone: "primary",
   },
@@ -68,35 +73,36 @@ const PRIMARY_ACTIONS: PrimaryAction[] = [
 const TOOLS = [
   {
     icon: Clock3,
-    title: "Jeg mangler tid",
-    description: "Fyld en planlagt lektion ud med ekstra aktiviteter",
+    title: "Fyld lektionen ud",
+    description: "Tilføj relevante aktiviteter til en lektion, du allerede har planlagt",
     to: "/extra-time",
   },
   {
     icon: Activity,
     title: "Gør den mere aktiv",
-    description: "Mere variation i en eksisterende lektion",
+    description: "Skab mere elevaktivitet i en eksisterende lektion",
     to: "/improve-lesson",
   },
   {
     icon: Library,
     title: "Mit bibliotek",
-    description: "Genbrug gemte aktiviteter og skabeloner",
+    description: "Genbrug gemte aktiviteter og lektioner",
     to: "/library",
   },
   {
     icon: Globe2,
     title: "Worlds",
-    description: "Læringsuniverser med progression",
+    description: "Skab længere forløb, hvor elevvalg påvirker udviklingen",
     to: "/worlds",
   },
   {
     icon: Layers3,
     title: "Differentiér en aktivitet",
-    description: "Niveaudelte varianter med samme mål",
+    description: "Lav niveauinddelte varianter med samme faglige mål",
     to: "/differentiate",
   },
 ] as const;
+
 
 const TONE_CLASS: Record<PrimaryAction["tone"], string> = {
   primary: "bg-accent text-primary",
@@ -165,7 +171,7 @@ export function HomeV2() {
                     {action.description}
                   </span>
                   <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                    Start
+                    {action.cta}
                     <ArrowRight
                       aria-hidden="true"
                       className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transform-none"
@@ -280,7 +286,7 @@ export function HomeV2() {
         <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
           Flere værktøjer
         </h2>
-        <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-3 grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
           {TOOLS.map((tool) => {
             const Icon = tool.icon;
             return (
