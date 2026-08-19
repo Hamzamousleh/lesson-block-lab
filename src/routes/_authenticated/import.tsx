@@ -28,12 +28,12 @@ export const Route = createFileRoute("/_authenticated/import")({
     typeof search["lessonId"] === "string" ? { lessonId: search["lessonId"] } : {},
   head: () => ({
     meta: [
-      { title: "Importér fra ChatGPT — CaseLab" },
+      { title: "Indlæs fra ChatGPT — Didaktiva" },
       {
         name: "description",
         content: "Indsæt svaret fra ChatGPT, gennemgå det, og gør undervisningen klar.",
       },
-      { property: "og:title", content: "Importér fra ChatGPT — CaseLab" },
+      { property: "og:title", content: "Indlæs fra ChatGPT — Didaktiva" },
       { property: "og:description", content: "Indsæt og gennemgå svaret fra ChatGPT." },
       { name: "robots", content: "noindex" },
     ],

@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/worlds/new")({
         name: "description",
         content: "Opret et vedvarende læringsunivers med faglige variabler og episoder.",
       },
-      { property: "og:title", content: "Nyt World — CaseLab" },
+      { property: "og:title", content: "Nyt World — Didaktiva" },
       {
         property: "og:description",
         content: "Byg et World med faglige variabler, episoder og konsekvenser.",
