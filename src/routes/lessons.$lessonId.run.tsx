@@ -740,33 +740,36 @@ function RunMode() {
       <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">
         <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           {/* ---------------- left: what students see + responses ---------------- */}
-          <div className="min-w-0 space-y-6">
+          <div className="flex min-w-0 flex-col gap-6">
             {mode === "v2" && current && (
-              <CockpitFocusV2
-                index={index}
-                total={active.length}
-                title={current.title}
-                type={current.type}
-                typeLabel={blockDef(current.type).label}
-                workModeLabel={workMode(current.type)}
-                durationMinutes={current.duration_minutes}
-                answered={
-                  liveSession
-                    ? liveAnswers.filter((a) => people.some((p) => p.id === a.participant_id)).length
-                    : null
-                }
-                participants={liveSession ? people.length : null}
-                nextTitle={active[index + 1]?.title ?? null}
-                nextTypeLabel={active[index + 1] ? blockDef(active[index + 1]!.type).label : null}
-                nextDurationMinutes={active[index + 1]?.duration_minutes ?? null}
-                studentInstructions={current.student_instructions ?? null}
-                onNext={next}
-                nextDisabled={syncPending}
-              />
+              <div className="order-1">
+                <CockpitFocusV2
+                  index={index}
+                  total={active.length}
+                  title={current.title}
+                  type={current.type}
+                  typeLabel={blockDef(current.type).label}
+                  workModeLabel={workMode(current.type)}
+                  durationMinutes={current.duration_minutes}
+                  answered={liveSession ? answeredCount : null}
+                  participants={liveSession ? people.length : null}
+                  nextTitle={active[index + 1]?.title ?? null}
+                  nextTypeLabel={active[index + 1] ? blockDef(active[index + 1]!.type).label : null}
+                  nextDurationMinutes={active[index + 1]?.duration_minutes ?? null}
+                  studentInstructions={current.student_instructions ?? null}
+                  onNext={next}
+                  nextDisabled={syncPending}
+                />
+              </div>
             )}
-            <section className="surface-card p-4 sm:p-8">
+            <section
+              className={`${responseFirst ? "surface-quiet order-3" : "surface-card order-2"} p-4 sm:p-8`}
+            >
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold">Det eleverne ser</h2>
+                <h2 className={responseFirst ? "text-sm font-semibold" : "text-lg font-semibold"}>
+                  Det eleverne ser
+                </h2>
+
                 <span className="text-xs tracking-widest text-muted-foreground uppercase">
                   {blockDef(current?.type ?? "").label} · {workMode(current?.type ?? "")}
                 </span>
