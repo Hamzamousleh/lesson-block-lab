@@ -64,9 +64,9 @@ import {
 export const Route = createFileRoute("/_authenticated/lessons/$lessonId/edit")({
   head: () => ({
     meta: [
-      { title: "Lektionseditor — CaseLab" },
+      { title: "Lektionseditor — Didaktiva" },
       { name: "description", content: "Byg lektionen af aktiviteter på en visuel tidslinje." },
-      { property: "og:title", content: "Lektionseditor — CaseLab" },
+      { property: "og:title", content: "Lektionseditor — Didaktiva" },
       { property: "og:description", content: "Byg lektionen af aktiviteter på en tidslinje." },
       { name: "robots", content: "noindex" },
     ],
