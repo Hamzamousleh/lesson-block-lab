@@ -729,7 +729,7 @@ function RunMode() {
       </div>
 
       <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           {/* ---------------- left: what students see + responses ---------------- */}
           <div className="min-w-0 space-y-6">
             {mode === "v2" && current && (
@@ -907,7 +907,7 @@ function RunMode() {
           </div>
 
           {/* ---------------- right: time, plan, notes ---------------- */}
-          <aside className="space-y-6">
+          <aside className="min-w-0 space-y-6">
             <section className="surface-card p-4 sm:p-6">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-sm font-semibold">Tid til aktiviteten</h2>
