@@ -35,6 +35,8 @@ import { blockDef } from "@/lib/blocks";
 import { lessonToText } from "@/lib/prompt";
 import { copyBlockMaterialFiles, setBlockMaterialFiles } from "@/lib/materials";
 import { LESSON_STATUS_LABEL, type LessonBlock, type LessonStatus } from "@/lib/types";
+import { useDesignMode } from "@/lib/design-mode";
+import { LessonSummaryV2, TimelineRowV2 } from "@/components/editor/LessonTimelineV2";
 import { ActivityPicker } from "@/components/editor/ActivityPicker";
 import { BlockEditor, type BlockDraft } from "@/components/editor/BlockEditor";
 import { StartSessionDialog } from "@/components/session/StartSessionDialog";
@@ -54,15 +56,17 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/lessons/$lessonId/edit")({
   head: () => ({
     meta: [
-      { title: "Lektionseditor — CaseLab" },
+      { title: "Lektionseditor — Didaktiva" },
       { name: "description", content: "Byg lektionen af aktiviteter på en visuel tidslinje." },
-      { property: "og:title", content: "Lektionseditor — CaseLab" },
+      { property: "og:title", content: "Lektionseditor — Didaktiva" },
       { property: "og:description", content: "Byg lektionen af aktiviteter på en tidslinje." },
       { name: "robots", content: "noindex" },
     ],
@@ -91,6 +95,7 @@ function LessonEditor() {
   const [editing, setEditing] = useState<LessonBlock | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [sessionOpen, setSessionOpen] = useState(false);
+  const mode = useDesignMode();
 
   const all = blocks.data ?? [];
   const list = all.filter((b) => !b.is_fallback);
@@ -257,6 +262,35 @@ function LessonEditor() {
 
   const blockRow = (b: LessonBlock, meta: string, draggable: boolean, index = 0) => {
     const def = blockDef(b.type);
+    if (mode === "v2") {
+      return (
+        <TimelineRowV2
+          key={b.id}
+          block={b}
+          position={draggable ? index + 1 : null}
+          meta={meta}
+          draggable={draggable}
+          index={index}
+          isFirst={index === 0}
+          isLast={index === list.length - 1}
+          isLastRow={!draggable || index === list.length - 1}
+          dragging={dragId === b.id}
+          reorderPending={reorder.isPending}
+          savePending={saveBlock.isPending}
+          onEdit={() => setEditing(b)}
+          onMove={(delta) => moveBy(b.id, delta)}
+          onDragStart={() => setDragId(b.id)}
+          onDrop={() => {
+            if (draggable && dragId) moveTo(dragId, b.id);
+            setDragId(null);
+          }}
+          onSaveToLibrary={() => saveBlock.mutate(b)}
+          onToggleFallback={() => toggleFallback.mutate(b)}
+          onDuplicate={() => dup.mutate(b)}
+          onDelete={() => remove.mutate(b.id)}
+        />
+      );
+    }
     return (
       <div
         key={b.id}
@@ -385,6 +419,184 @@ function LessonEditor() {
     );
   };
 
+  const runButton = (
+    <Button asChild className="min-h-11 rounded-full px-6">
+      <Link to="/lessons/$lessonId/run" params={{ lessonId }}>
+        <Play className="size-4" /> Kør lektion
+      </Link>
+    </Button>
+  );
+
+  const toolbarButtons = (
+    <>
+      <Button variant="outline" className="rounded-full" onClick={() => setSessionOpen(true)}>
+        <Smartphone className="size-4" /> Start elevsession
+      </Button>
+
+      <Button asChild variant="outline" className="rounded-full">
+        <Link to="/import" search={{ lessonId }}>
+          <Plus className="size-4" /> Importér aktiviteter
+        </Link>
+      </Button>
+      <Button asChild variant="outline" className="rounded-full">
+        <Link to="/extra-time" search={{ lessonId }}>
+          <Timer className="size-4" /> Jeg mangler tid
+        </Link>
+      </Button>
+      <Button asChild variant="outline" className="rounded-full">
+        <Link to="/improve-lesson" search={{ lessonId }}>
+          <Wand2 className="size-4" /> Gør den mere aktiv
+        </Link>
+      </Button>
+      <Button
+        variant="outline"
+        className="rounded-full"
+        disabled={saveLesson.isPending}
+        onClick={() => saveLesson.mutate()}
+      >
+        <BookmarkPlus className="size-4" /> Gem i bibliotek
+      </Button>
+      <Button
+        variant="outline"
+        className="rounded-full"
+        onClick={async () => {
+          const text = lessonToText(lesson.data!, list);
+          try {
+            await navigator.clipboard.writeText(text);
+            toast.success("Lektionen er kopieret ✓");
+          } catch {
+            toast.error("Lektionen kunne ikke kopieres. Markér teksten og kopiér manuelt.");
+          }
+        }}
+      >
+        <Copy className="size-4" /> Kopiér lektion til ChatGPT
+      </Button>
+      <Button
+        variant="ghost"
+        className="rounded-full"
+        disabled={dupLesson.isPending}
+        onClick={() => dupLesson.mutate()}
+      >
+        <Copy className="size-4" /> Dublér
+      </Button>
+      <Button
+        variant="ghost"
+        className="rounded-full text-destructive hover:text-destructive"
+        onClick={() => {
+          if (confirm("Vil du slette denne lektion?")) delLesson.mutate();
+        }}
+      >
+        <Trash2 className="size-4" /> Slet
+      </Button>
+    </>
+  );
+
+  /** V2: two clear secondary actions, everything else collected in one menu. */
+  const copyLessonToClipboard = async () => {
+    const text = lessonToText(lesson.data!, list);
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Lektionen er kopieret ✓");
+    } catch {
+      toast.error("Lektionen kunne ikke kopieres. Markér teksten og kopiér manuelt.");
+    }
+  };
+
+  const toolbarButtonsV2 = (
+    <>
+      <Button
+        variant="outline"
+        className="min-h-10 rounded-full"
+        onClick={() => setSessionOpen(true)}
+      >
+        <Smartphone className="size-4" /> Start elevsession
+      </Button>
+      <Button asChild variant="outline" className="min-h-10 rounded-full">
+        <Link to="/import" search={{ lessonId }}>
+          <Plus className="size-4" /> Importér aktiviteter
+        </Link>
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="min-h-10 rounded-full text-muted-foreground">
+            <MoreHorizontal className="size-4" /> Flere handlinger
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-60">
+          <DropdownMenuItem asChild>
+            <Link to="/extra-time" search={{ lessonId }}>
+              <Timer className="size-4" /> Jeg mangler tid
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/improve-lesson" search={{ lessonId }}>
+              <Wand2 className="size-4" /> Gør den mere aktiv
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={saveLesson.isPending}
+            onSelect={() => saveLesson.mutate()}
+          >
+            <BookmarkPlus className="size-4" /> Gem i bibliotek
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => void copyLessonToClipboard()}>
+            <Copy className="size-4" /> Kopiér lektion til ChatGPT
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={dupLesson.isPending} onSelect={() => dupLesson.mutate()}>
+            <Copy className="size-4" /> Dublér lektion
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onSelect={() => {
+              if (confirm("Vil du slette denne lektion?")) delLesson.mutate();
+            }}
+          >
+            <Trash2 className="size-4" /> Slet lektion
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+
+
+  const statusSelect = (
+    <>
+      <Label id="lesson-status-label" className="sr-only">
+        Lektionsstatus
+      </Label>
+      <Select
+        value={lesson.data.status}
+        onValueChange={(v) => patchLesson.mutate({ status: v as LessonStatus })}
+      >
+        <SelectTrigger aria-labelledby="lesson-status-label" className="w-36 rounded-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {(Object.keys(LESSON_STATUS_LABEL) as LessonStatus[]).map((s) => (
+            <SelectItem key={s} value={s}>
+              {LESSON_STATUS_LABEL[s]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
+
+  const titleInput = (
+    <Input
+      value={lesson.data.title}
+      onChange={(e) =>
+        queryClient.setQueryData(["lesson", lessonId], {
+          ...lesson.data,
+          title: e.target.value,
+        })
+      }
+      onBlur={(e) => patchLesson.mutate({ title: e.target.value })}
+      className="h-auto border-0 bg-transparent px-0 font-display !text-3xl font-semibold shadow-none focus-visible:ring-0"
+    />
+  );
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
@@ -419,129 +631,69 @@ function LessonEditor() {
             </>
           )}
         </nav>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild className="rounded-full">
-            <Link to="/lessons/$lessonId/run" params={{ lessonId }}>
-              <Play className="size-4" /> Kør lektion
-            </Link>
-          </Button>
-          <Button variant="outline" className="rounded-full" onClick={() => setSessionOpen(true)}>
-            <Smartphone className="size-4" /> Start elevsession
-          </Button>
-
-          <Button asChild variant="outline" className="rounded-full">
-            <Link to="/import" search={{ lessonId }}>
-              <Plus className="size-4" /> Importér aktiviteter
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="rounded-full">
-            <Link to="/extra-time" search={{ lessonId }}>
-              <Timer className="size-4" /> Jeg mangler tid
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="rounded-full">
-            <Link to="/improve-lesson" search={{ lessonId }}>
-              <Wand2 className="size-4" /> Gør den mere aktiv
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            className="rounded-full"
-            disabled={saveLesson.isPending}
-            onClick={() => saveLesson.mutate()}
-          >
-            <BookmarkPlus className="size-4" /> Gem i bibliotek
-          </Button>
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={async () => {
-              const text = lessonToText(lesson.data!, list);
-              try {
-                await navigator.clipboard.writeText(text);
-                toast.success("Lektionen er kopieret ✓");
-              } catch {
-                toast.error("Lektionen kunne ikke kopieres. Markér teksten og kopiér manuelt.");
-              }
-            }}
-          >
-            <Copy className="size-4" /> Kopiér lektion til ChatGPT
-          </Button>
-          <Button
-            variant="ghost"
-            className="rounded-full"
-            disabled={dupLesson.isPending}
-            onClick={() => dupLesson.mutate()}
-          >
-            <Copy className="size-4" /> Dublér
-          </Button>
-          <Button
-            variant="ghost"
-            className="rounded-full text-destructive hover:text-destructive"
-            onClick={() => {
-              if (confirm("Vil du slette denne lektion?")) delLesson.mutate();
-            }}
-          >
-            <Trash2 className="size-4" /> Slet
-          </Button>
-        </div>
-      </div>
-
-      <div className="surface-card mt-6 p-4 sm:p-8">
-        <Input
-          value={lesson.data.title}
-          onChange={(e) =>
-            queryClient.setQueryData(["lesson", lessonId], {
-              ...lesson.data,
-              title: e.target.value,
-            })
-          }
-          onBlur={(e) => patchLesson.mutate({ title: e.target.value })}
-          className="h-auto border-0 bg-transparent px-0 font-display !text-3xl font-semibold shadow-none focus-visible:ring-0"
-        />
-        <div className="mt-5 flex flex-wrap items-center gap-4 text-sm">
-          <span className="text-muted-foreground">
-            {klass.data ? `${klass.data.name} · ${klass.data.subject}` : ""}
-          </span>
-          {lesson.data.mode === "rescue" && (
-            <span className="rounded-full bg-accent-warm px-3 py-1 font-medium text-accent-warm-foreground">
-              ⚡ Nødlektion
-            </span>
-          )}
-          <span
-            className={
-              over
-                ? "rounded-full bg-destructive/10 px-3 py-1 font-medium text-destructive"
-                : "rounded-full bg-secondary px-3 py-1 font-medium text-secondary-foreground"
-            }
-          >
-            {planned} / {target} min
-          </span>
-          <Label id="lesson-status-label" className="sr-only">
-            Lektionsstatus
-          </Label>
-          <Select
-            value={lesson.data.status}
-            onValueChange={(v) => patchLesson.mutate({ status: v as LessonStatus })}
-          >
-            <SelectTrigger aria-labelledby="lesson-status-label" className="w-36 rounded-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.keys(LESSON_STATUS_LABEL) as LessonStatus[]).map((s) => (
-                <SelectItem key={s} value={s}>
-                  {LESSON_STATUS_LABEL[s]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {lesson.data.learning_goal && (
-          <p className="mt-4 text-muted-foreground">{lesson.data.learning_goal}</p>
+        {mode !== "v2" && (
+          <div className="flex flex-wrap gap-2">
+            {runButton}
+            {toolbarButtons}
+          </div>
         )}
       </div>
 
-      <div className="mt-10 space-y-3">
+      {mode === "v2" ? (
+        <LessonSummaryV2
+          contextLabel={klass.data ? `${klass.data.name} · ${klass.data.subject}` : ""}
+          unitLabel={unit?.title ?? null}
+          planned={planned}
+          target={target}
+          over={over}
+          activityCount={list.length}
+          learningGoal={lesson.data.learning_goal ?? null}
+          rescue={lesson.data.mode === "rescue"}
+          titleInput={titleInput}
+          statusSelect={statusSelect}
+          primaryAction={runButton}
+          secondaryActions={toolbarButtonsV2}
+        />
+      ) : (
+        <div className="surface-card mt-6 p-4 sm:p-8">
+          {titleInput}
+          <div className="mt-5 flex flex-wrap items-center gap-4 text-sm">
+            <span className="text-muted-foreground">
+              {klass.data ? `${klass.data.name} · ${klass.data.subject}` : ""}
+            </span>
+            {lesson.data.mode === "rescue" && (
+              <span className="rounded-full bg-accent-warm px-3 py-1 font-medium text-accent-warm-foreground">
+                ⚡ Nødlektion
+              </span>
+            )}
+            <span
+              className={
+                over
+                  ? "rounded-full bg-destructive/10 px-3 py-1 font-medium text-destructive"
+                  : "rounded-full bg-secondary px-3 py-1 font-medium text-secondary-foreground"
+              }
+            >
+              {planned} / {target} min
+            </span>
+            {statusSelect}
+          </div>
+          {lesson.data.learning_goal && (
+            <p className="mt-4 text-muted-foreground">{lesson.data.learning_goal}</p>
+          )}
+        </div>
+      )}
+
+      <div className={mode === "v2" ? "mt-10" : "mt-10 space-y-3"}>
+        {mode === "v2" && list.length > 0 && (
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+              Undervisningssekvens
+            </h2>
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {planned} min planlagt
+            </span>
+          </div>
+        )}
         {list.length === 0 && (
           <div className="surface-card border-dashed p-10 text-center">
             <p className="text-lg font-medium">Tidslinjen er tom</p>
@@ -557,14 +709,30 @@ function LessonEditor() {
           return blockRow(b, `${start}–${running}`, true, list.indexOf(b));
         })}
 
-        <Button
-          variant="outline"
-          className="w-full rounded-2xl border-dashed py-7"
-          onClick={() => setPickerOpen(true)}
-        >
-          <Plus className="size-4" /> Tilføj aktivitet
-        </Button>
+        {mode === "v2" ? (
+          <div className="flex gap-3 sm:gap-4">
+            <div className="relative flex w-8 shrink-0 justify-center sm:w-10">
+              <span aria-hidden="true" className="w-px bg-border" />
+            </div>
+            <Button
+              variant="outline"
+              className="min-h-11 flex-1 rounded-2xl border-dashed text-muted-foreground hover:text-foreground"
+              onClick={() => setPickerOpen(true)}
+            >
+              <Plus className="size-4" /> Tilføj aktivitet
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            className="w-full rounded-2xl border-dashed py-7"
+            onClick={() => setPickerOpen(true)}
+          >
+            <Plus className="size-4" /> Tilføj aktivitet
+          </Button>
+        )}
       </div>
+
 
       {fallbacks.length > 0 && (
         <div className="mt-12">

@@ -36,6 +36,14 @@ import { CockpitSyncCoordinator, type CockpitSyncState } from "@/lib/cockpit-syn
 import { summarize } from "@/lib/results";
 import { ResultBars, StudentBlock } from "@/components/student/StudentBlock";
 import { correctOptionIndex, timerLabel, toPreviewBlock, workMode } from "@/lib/cockpit";
+import { useDesignMode } from "@/lib/design-mode";
+import {
+  CockpitFocusV2,
+  CockpitLiveHeaderV2,
+  CockpitTimelineItemV2,
+  CockpitTimerV2,
+} from "@/components/run/CockpitFocusV2";
+
 import {
   blockMaterialFilesQuery,
   formatFileSize,
@@ -54,7 +62,7 @@ export const Route = createFileRoute("/lessons/$lessonId/run")({
   },
   head: () => ({
     meta: [
-      { title: "Undervis — CaseLab" },
+      { title: "Undervis — Didaktiva" },
       {
         name: "description",
         content: "Kør lektionen live med elevvisning, tid og svar i ét billede.",
@@ -140,6 +148,7 @@ function RunMode() {
   const [finished, setFinished] = useState(false);
   const [skipped, setSkipped] = useState<string[]>([]);
   const [showNames, setShowNames] = useState(false);
+  const mode = useDesignMode();
   const [syncState, setSyncState] = useState<CockpitSyncState>({ phase: "idle", label: null });
   const syncCoordinatorRef = useRef<CockpitSyncCoordinator<StudentSession> | null>(null);
   if (!syncCoordinatorRef.current) {
@@ -147,7 +156,7 @@ function RunMode() {
   }
 
   const active = useFallback ? fallback : main;
-  const elapsed = useElapsed(started, `caselab-run-start-${lessonId}`);
+  const elapsed = useElapsed(started, `didaktiva-run-start-${lessonId}`);
 
   const current: LessonBlock | undefined = active[index];
   const totalSteps = current ? revealSteps(current) : 1;
@@ -581,6 +590,17 @@ function RunMode() {
   }
 
   const progressPct = ((index + 1) / active.length) * 100;
+  /** Presentation-only: how many of the active participants have answered. */
+  const answeredCount = liveAnswers.filter((a) =>
+    people.some((p) => p.id === a.participant_id),
+  ).length;
+  /** V2 only: when responses exist they outrank the static student preview. */
+  const responseFirst = mode === "v2" && !!liveSession && !!liveSummary && answeredCount > 0;
+  /** V2 side panels are lighter and denser than the classic cards. */
+  const panelClass = mode === "v2" ? "surface-quiet" : "surface-card";
+  const panelPad = mode === "v2" ? "px-4 py-4 sm:px-5 sm:py-5" : "p-4 sm:p-6";
+
+
 
   /* ---------- projector ---------- */
   if (projector) {
@@ -626,15 +646,30 @@ function RunMode() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="flex flex-wrap items-center gap-2 border-b border-border/70 px-4 py-3 text-sm sm:gap-3 sm:px-6">
-        <div className="min-w-0 basis-full break-words sm:flex-1 sm:basis-auto">
-          <span className="font-medium">{l.title}</span>
-          {klass.data && <span className="text-muted-foreground"> · {klass.data.name}</span>}
-          {useFallback && <span className="ml-2 text-primary">· Ekstra aktivitet</span>}
-        </div>
-        <span className="rounded-full bg-secondary px-3 py-1 font-medium tabular-nums">
-          Aktivitet {index + 1} af {active.length}
-        </span>
-        {liveSession && (
+        {mode === "v2" ? (
+          <div className="min-w-0 basis-full sm:flex-1 sm:basis-auto">
+            <CockpitLiveHeaderV2
+              title={l.title}
+              index={index}
+              total={active.length}
+              className={klass.data?.name ?? null}
+              joinCode={liveSession?.join_code ?? null}
+              participants={liveSession ? people.length : null}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="min-w-0 basis-full break-words sm:flex-1 sm:basis-auto">
+              <span className="font-medium">{l.title}</span>
+              {klass.data && <span className="text-muted-foreground"> · {klass.data.name}</span>}
+              {useFallback && <span className="ml-2 text-primary">· Ekstra aktivitet</span>}
+            </div>
+            <span className="rounded-full bg-secondary px-3 py-1 font-medium tabular-nums">
+              Aktivitet {index + 1} af {active.length}
+            </span>
+          </>
+        )}
+        {liveSession && mode !== "v2" && (
           <Link to="/sessions/$sessionId" params={{ sessionId: liveSession.id }}>
             <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
               Elevsession · {liveSession.join_code} · {people.length}{" "}
@@ -642,6 +677,7 @@ function RunMode() {
             </span>
           </Link>
         )}
+
         {liveSession && (
           <div
             role="status"
@@ -658,11 +694,14 @@ function RunMode() {
                 <Loader2 className="size-3.5 animate-spin" /> Synkroniserer…
               </>
             )}
-            {syncState.phase === "synced" && (
-              <>
-                <Check className="size-3.5" /> Synkroniseret
-              </>
-            )}
+            {syncState.phase === "synced" &&
+              (mode === "v2" ? (
+                <Check className="size-3.5 opacity-50" />
+              ) : (
+                <>
+                  <Check className="size-3.5" /> Synkroniseret
+                </>
+              ))}
             {syncState.phase === "error" && (
               <>
                 <span>Kunne ikke synkronisere ændringen</span>
@@ -703,12 +742,38 @@ function RunMode() {
       </div>
 
       <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           {/* ---------------- left: what students see + responses ---------------- */}
-          <div className="space-y-6">
-            <section className="surface-card p-4 sm:p-8">
+          <div className="flex min-w-0 flex-col gap-6">
+            {mode === "v2" && current && (
+              <div className="order-1">
+                <CockpitFocusV2
+                  index={index}
+                  total={active.length}
+                  title={current.title}
+                  type={current.type}
+                  typeLabel={blockDef(current.type).label}
+                  workModeLabel={workMode(current.type)}
+                  durationMinutes={current.duration_minutes}
+                  answered={liveSession ? answeredCount : null}
+                  participants={liveSession ? people.length : null}
+                  nextTitle={active[index + 1]?.title ?? null}
+                  nextTypeLabel={active[index + 1] ? blockDef(active[index + 1]!.type).label : null}
+                  nextDurationMinutes={active[index + 1]?.duration_minutes ?? null}
+                  studentInstructions={current.student_instructions ?? null}
+                  onNext={next}
+                  nextDisabled={syncPending}
+                />
+              </div>
+            )}
+            <section
+              className={`${responseFirst ? "surface-quiet order-3" : "surface-card order-2"} p-4 sm:p-8`}
+            >
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold">Det eleverne ser</h2>
+                <h2 className={responseFirst ? "text-sm font-semibold" : "text-lg font-semibold"}>
+                  Det eleverne ser
+                </h2>
+
                 <span className="text-xs tracking-widest text-muted-foreground uppercase">
                   {blockDef(current?.type ?? "").label} · {workMode(current?.type ?? "")}
                 </span>
@@ -784,21 +849,34 @@ function RunMode() {
             </section>
 
             {liveSession && liveSummary && (
-              <section className="surface-card p-4 sm:p-8">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-lg font-semibold">Elevsvar</h2>
+              <section
+                className={`surface-card p-4 sm:p-8 ${responseFirst ? "order-2" : "order-3"}`}
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-3">
+                  <h2 className="text-lg font-semibold">
+                    {mode === "v2" ? `Elevsvar · ${current?.title ?? ""}` : "Elevsvar"}
+                  </h2>
                   <span className="text-sm tabular-nums text-muted-foreground">
-                    Svar:{" "}
-                    {
-                      liveAnswers.filter((a) => people.some((p) => p.id === a.participant_id))
-                        .length
-                    }{" "}
-                    / {people.length}
+                    {mode === "v2" ? (
+                      <>
+                        <span className="font-semibold text-foreground">{answeredCount}</span> af{" "}
+                        {people.length} har svaret
+                      </>
+                    ) : (
+                      <>
+                        Svar: {answeredCount} / {people.length}
+                      </>
+                    )}
                   </span>
+
                 </div>
                 <div className="mt-5">
-                  <ResultBars summary={liveSummary} />
+                  <ResultBars
+                    summary={liveSummary}
+                    variant={mode === "v2" ? "v2" : "classic"}
+                  />
                 </div>
+
                 <div className="mt-6 flex flex-wrap gap-2">
                   <Button
                     variant={liveSession.reveal_results ? "default" : "outline"}
@@ -858,21 +936,32 @@ function RunMode() {
           </div>
 
           {/* ---------------- right: time, plan, notes ---------------- */}
-          <aside className="space-y-6">
-            <section className="surface-card p-4 sm:p-6">
+          <aside className={`min-w-0 ${mode === "v2" ? "space-y-4" : "space-y-6"}`}>
+            <section
+              className={`${panelClass} ${panelPad} ${mode === "v2" ? "rounded-b-none" : ""}`}
+            >
+
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-sm font-semibold">Tid til aktiviteten</h2>
-                <span className="text-sm text-muted-foreground">
-                  Afsat tid: {current?.duration_minutes ?? 0} min
+                <span className={mode === "v2" ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>
+                  {mode === "v2" ? "Afsat" : "Afsat tid"}: {current?.duration_minutes ?? 0} min
                 </span>
+
               </div>
-              <p
-                className={`mt-4 font-mono text-4xl font-semibold tabular-nums ${
-                  overtime ? "text-destructive" : ""
-                }`}
-              >
-                {timerLabel(seconds)}
-              </p>
+              {mode === "v2" ? (
+                <div className="mt-3">
+                  <CockpitTimerV2 seconds={seconds} />
+                </div>
+              ) : (
+                <p
+                  className={`mt-4 font-mono text-4xl font-semibold tabular-nums ${
+                    overtime ? "text-destructive" : ""
+                  }`}
+                >
+                  {timerLabel(seconds)}
+                </p>
+              )}
+
               <div className="mt-5 flex flex-wrap gap-2">
                 {running ? (
                   <Button
@@ -946,9 +1035,17 @@ function RunMode() {
               )}
             </section>
 
-            <section className="surface-card p-6">
+            <section
+              className={
+                mode === "v2"
+                  ? `${panelClass} ${panelPad} -mt-2 rounded-t-none border-t-0`
+                  : "surface-card p-6"
+              }
+            >
               <h2 className="text-sm font-semibold">Lektionens tid</h2>
-              <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+              <div
+                className={`mt-3 text-sm text-muted-foreground ${mode === "v2" ? "space-y-1" : "space-y-1.5"}`}
+              >
                 <p className="flex items-center gap-2">
                   <Clock className="size-4" /> Planlagt: {plannedTotal} min
                 </p>
@@ -972,7 +1069,8 @@ function RunMode() {
               </p>
             </section>
 
-            <section className="surface-card p-6">
+            <section className={mode === "v2" ? `${panelClass} ${panelPad}` : "surface-card p-6"}>
+
               <h2 className="text-sm font-semibold">Lærernote</h2>
               <p className="mt-3 text-sm whitespace-pre-wrap">
                 {current?.teacher_notes || "Ingen noter til denne aktivitet."}
@@ -996,8 +1094,17 @@ function RunMode() {
               )}
             </section>
 
-            <section className="surface-card p-6">
-              <h2 className="text-sm font-semibold">Forløbet</h2>
+            <section className={mode === "v2" ? `surface-card ${panelPad}` : "surface-card p-6"}>
+              <h2
+                className={
+                  mode === "v2"
+                    ? "text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase"
+                    : "text-sm font-semibold"
+                }
+              >
+                Forløbet
+              </h2>
+
               <ol className="mt-3 space-y-1">
                 {active.map((b, i) => {
                   const isSkipped = skipped.includes(b.id);
@@ -1007,6 +1114,7 @@ function RunMode() {
                       <button
                         type="button"
                         onClick={() => jumpTo(i)}
+                        aria-current={i === index ? "step" : undefined}
                         disabled={syncPending}
                         className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                           i === index
@@ -1016,13 +1124,31 @@ function RunMode() {
                           done ? "text-muted-foreground" : ""
                         }`}
                       >
-                        <span className="w-4 shrink-0">
-                          {i === index ? "→" : done ? "✓" : isSkipped ? "–" : ""}
-                        </span>
-                        <span className="min-w-0 flex-1 truncate">{b.title}</span>
-                        <span className="shrink-0 tabular-nums text-muted-foreground">
-                          {b.duration_minutes} min
-                        </span>
+                        {mode === "v2" ? (
+                          <CockpitTimelineItemV2
+                            title={b.title}
+                            durationMinutes={b.duration_minutes}
+                            state={
+                              isSkipped
+                                ? "skipped"
+                                : i === index
+                                  ? "current"
+                                  : done
+                                    ? "done"
+                                    : "upcoming"
+                            }
+                          />
+                        ) : (
+                          <>
+                            <span className="w-4 shrink-0">
+                              {i === index ? "→" : done ? "✓" : isSkipped ? "–" : ""}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate">{b.title}</span>
+                            <span className="shrink-0 tabular-nums text-muted-foreground">
+                              {b.duration_minutes} min
+                            </span>
+                          </>
+                        )}
                       </button>
                     </li>
                   );
@@ -1059,17 +1185,24 @@ function RunMode() {
         </Button>
         <div className="col-span-2 flex min-w-0 flex-wrap items-center justify-center gap-2 sm:order-2 sm:col-span-1 sm:flex-nowrap sm:gap-3">
           <span className="min-w-0 basis-full break-words text-center text-sm text-muted-foreground sm:basis-auto">
-            {current ? `${blockDef(current.type).icon} ${current.title}` : ""}
+            {current
+              ? mode === "v2"
+                ? `${current.title} · ${blockDef(current.type).label}`
+                : `${blockDef(current.type).icon} ${current.title}`
+              : ""}
           </span>
           <Button
             variant="ghost"
             size="sm"
-            className="min-h-11 shrink-0 rounded-full sm:min-h-8"
+            className={`min-h-11 shrink-0 rounded-full sm:min-h-8 ${
+              mode === "v2" ? "text-muted-foreground hover:text-foreground" : ""
+            }`}
             onClick={skipCurrent}
             disabled={syncPending}
           >
             <SkipForward className="size-4" /> Spring over
           </Button>
+
         </div>
       </footer>
     </div>

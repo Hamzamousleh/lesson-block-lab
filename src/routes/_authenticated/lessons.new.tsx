@@ -23,9 +23,9 @@ export const Route = createFileRoute("/_authenticated/lessons/new")({
   }),
   head: () => ({
     meta: [
-      { title: "Opret lektion — CaseLab" },
+      { title: "Ny lektion — Didaktiva" },
       { name: "description", content: "Opret en ny lektion og byg den op af aktiviteter." },
-      { property: "og:title", content: "Opret lektion — CaseLab" },
+      { property: "og:title", content: "Ny lektion — Didaktiva" },
       { property: "og:description", content: "Opret en ny lektion og byg den op af aktiviteter." },
       { name: "robots", content: "noindex" },
     ],

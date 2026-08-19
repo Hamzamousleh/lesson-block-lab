@@ -2,7 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download, FileText, Loader2, Pencil, Trash2, Upload } from "lucide-react";
+import { ChevronDown, Download, FileText, Loader2, Pencil, Trash2, Upload } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { classesQuery, lessonsQuery, unitsQuery } from "@/lib/data";
 import {
   deleteMaterialFile,
@@ -48,12 +54,12 @@ import {
 export const Route = createFileRoute("/_authenticated/materials")({
   head: () => ({
     meta: [
-      { title: "Materialer — CaseLab" },
+      { title: "Materialer — Didaktiva" },
       {
         name: "description",
         content: "Saml dine egne undervisningsfiler og knyt dem til undervisningen.",
       },
-      { property: "og:title", content: "Materialer — CaseLab" },
+      { property: "og:title", content: "Materialer — Didaktiva" },
       { property: "og:description", content: "Dine egne undervisningsfiler samlet ét sted." },
       { name: "robots", content: "noindex" },
     ],
@@ -196,17 +202,16 @@ function MaterialsPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-14">
       <h1 className="font-display text-4xl font-semibold">Materialer</h1>
-      <p className="mt-2 text-muted-foreground">
-        Dine egne filer og kilder. Knyt dem til en klasse, et forløb, en lektion eller en konkret
-        aktivitet i lektionseditoren.
+      <p className="mt-2 text-lg text-muted-foreground">
+        Dine egne filer og kilder, som du kan knytte til en klasse, et forløb eller en lektion.
       </p>
       <p className="mt-2 text-sm text-muted-foreground">
-        Bruger du en fil til planlægning med ChatGPT, vedhæfter du den selv — platformen læser eller
-        sender ikke filen automatisk.
+        Her kan du uploade artikler, noter eller kildetekster, som du efterfølgende kan bruge som
+        grundlag for planlægning med ChatGPT. Didaktiva læser eller sender ikke filen automatisk.
       </p>
 
-      <section className="surface-card mt-8 space-y-6 p-4 sm:p-8">
-        <h2 className="text-xl font-semibold">Upload materiale</h2>
+      <section className="mt-10 rounded-3xl border border-border/70 bg-surface/70 p-4 sm:p-6">
+        <h2 className="text-xl font-semibold px-2">Upload materiale</h2>
 
         <div
           onDragOver={(e) => {
@@ -219,7 +224,7 @@ function MaterialsPage() {
             setDragging(false);
             pick(e.dataTransfer.files?.[0]);
           }}
-          className={`rounded-2xl border-2 border-dashed p-5 text-center transition-colors sm:p-8 ${
+          className={`mt-6 rounded-2xl border-2 border-dashed p-5 text-center transition-colors sm:p-8 ${
             dragging ? "border-primary bg-accent" : "border-border"
           }`}
         >
@@ -361,7 +366,7 @@ function MaterialsPage() {
         </Button>
       </section>
 
-      <section className="mt-12">
+      <section className="mt-16">
         <h2 className="text-xl font-semibold">Dine filer</h2>
         {files.isLoading && (
           <div role="status" className="mt-6 flex items-center gap-2 text-muted-foreground">
@@ -382,7 +387,7 @@ function MaterialsPage() {
           </div>
         )}
         {files.data?.length === 0 && (
-          <div className="surface-card mt-4 border-dashed p-8 text-center">
+          <div className="surface-quiet mt-6 border-dashed p-12 text-center">
             <p className="text-lg font-medium">Ingen materialer endnu</p>
             <p className="mt-1 text-muted-foreground">
               Upload din første fil, så du kan knytte den til undervisningen.
@@ -400,9 +405,11 @@ function MaterialsPage() {
           {(files.data ?? []).map((f) => (
             <li
               key={f.id}
-              className="surface-card flex flex-wrap items-center gap-3 px-4 py-4 sm:gap-4 sm:px-6 sm:py-5"
+              className="group relative flex flex-col gap-4 rounded-3xl border border-border/80 bg-card px-5 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift hover:border-primary/30 sm:flex-row sm:items-center sm:px-6"
             >
-              <FileText className="size-5 shrink-0 text-muted-foreground" />
+              <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-secondary text-secondary-foreground group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+                <FileText aria-hidden="true" className="size-5" />
+              </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{f.title}</p>
                 <p className="truncate text-sm text-muted-foreground">
@@ -421,32 +428,34 @@ function MaterialsPage() {
                     : ""}
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="min-h-11 rounded-full sm:min-h-8"
-                onClick={() => void open(f)}
-              >
-                <Download className="size-4" /> Åbn
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-11 rounded-full sm:size-9"
-                aria-label={`Redigér ${f.title}`}
-                onClick={() => edit(f)}
-              >
-                <Pencil className="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-11 rounded-full sm:size-9"
-                aria-label={`Slet ${f.title}`}
-                onClick={() => setPendingDelete(f)}
-              >
-                <Trash2 className="size-4" />
-              </Button>
+              <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => void open(f)}
+                >
+                  <Download className="size-4" /> Åbn
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="size-9 rounded-full">
+                      <ChevronDown className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => edit(f)}>
+                      <Pencil className="mr-2 size-4" /> Redigér
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => setPendingDelete(f)}
+                    >
+                      <Trash2 className="mr-2 size-4" /> Slet
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </li>
           ))}
         </ul>

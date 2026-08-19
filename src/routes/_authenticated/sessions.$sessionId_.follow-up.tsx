@@ -29,12 +29,12 @@ import {
 export const Route = createFileRoute("/_authenticated/sessions/$sessionId_/follow-up")({
   head: () => ({
     meta: [
-      { title: "Arbejd videre med svarene — CaseLab" },
+      { title: "Arbejd videre med svarene — Didaktiva" },
       {
         name: "description",
         content: "Lav opfølgende aktiviteter ud fra elevernes faktiske svar i sessionen.",
       },
-      { property: "og:title", content: "Arbejd videre med svarene — CaseLab" },
+      { property: "og:title", content: "Arbejd videre med svarene — Didaktiva" },
       { property: "og:description", content: "Fra elevsvar til næste aktivitet." },
       { name: "robots", content: "noindex" },
     ],
@@ -141,7 +141,7 @@ function FollowUpPage() {
           <p className="text-sm text-muted-foreground">{lesson.data?.title ?? "Lektion"}</p>
           <h1 className="mt-1 font-display text-3xl font-semibold">Arbejd videre med svarene</h1>
           <p className="mt-2 max-w-xl text-muted-foreground">
-            CaseLab opgør svarene. Du vælger, hvad der skal ske nu — og ser præcis hvilke data der
+            Didaktiva opgør svarene. Du vælger, hvad der skal ske nu — og ser præcis hvilke data der
             sendes videre til ChatGPT.
           </p>
         </div>

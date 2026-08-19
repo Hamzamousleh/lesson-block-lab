@@ -53,7 +53,7 @@ export const CASELAB_V2_BLOCK_OUTPUT_CONTRACT = `{
   "blocks": [ ... ]
 }`;
 
-export const CASELAB_V2_COMMON_RULES = `Du genererer struktureret undervisningsindhold til CaseLab.
+export const CASELAB_V2_COMMON_RULES = `Du genererer struktureret undervisningsindhold til Didaktiva.
 
 Returnér KUN ét gyldigt JSON-objekt. Ingen markdown-fences, ingen forklaring før eller efter.
 
@@ -338,7 +338,7 @@ Vedhæft disse filer i ChatGPT sammen med denne prompt:
 ${fileNames.map((n) => `- ${n}`).join("\n")}
 
 Filerne er den primære faglige kilde.
-CaseLab har ikke læst filernes indhold — det gør du (ChatGPT) ud fra de vedhæftede filer.
+Didaktiva har ikke læst filernes indhold — det gør du (ChatGPT) ud fra de vedhæftede filer.
 Opfind ikke indhold, der ikke findes i de vedhæftede filer.
 Hvis en fil mangler eller ikke kan læses, så sig det tydeligt i stedet for at gætte.
 
@@ -446,7 +446,7 @@ Opgave: Lav opfølgende aktiviteter ud fra elevernes faktiske svar. Fokus: ${int
 
 ${head.join("\n")}
 
-Elevsvar (${i.anonymized ? "anonymiseret" : "med navne"}), opgjort af CaseLab:
+Elevsvar (${i.anonymized ? "anonymiseret" : "med navne"}), opgjort af Didaktiva:
 """
 ${i.responseSummary}
 """
@@ -531,7 +531,7 @@ Klasse: ${i.className}
 ${i.subject ? `Fag: ${i.subject}\n` : ""}Varighed: ${i.duration} minutter
 Lærerens fokus næste gang: ${i.focus || "ikke angivet"}
 
-Fagligt overblik opgjort af CaseLab:
+Fagligt overblik opgjort af Didaktiva:
 """
 ${i.overview.trim()}
 """
@@ -546,7 +546,7 @@ ${CASELAB_V2_LESSON_OUTPUT_CONTRACT({ duration: i.duration })}`;
 
 /* ================= Phase 6 — Worlds ================= */
 
-const WORLD_COMMON = `Du hjælper med at bygge et CaseLab World — et vedvarende fiktivt læringsunivers til dansk gymnasieundervisning.
+const WORLD_COMMON = `Du hjælper med at bygge et Didaktiva World — et vedvarende fiktivt læringsunivers til dansk gymnasieundervisning.
 
 Et World er IKKE et spil. Det er en ramme, hvor eleverne gentagne gange anvender fagteori på de samme personer, institutioner eller organisationer, træffer beslutninger og møder konsekvenser.
 

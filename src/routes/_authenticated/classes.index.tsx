@@ -20,9 +20,9 @@ import {
 export const Route = createFileRoute("/_authenticated/classes/")({
   head: () => ({
     meta: [
-      { title: "Mine klasser — CaseLab" },
+      { title: "Mine klasser — Didaktiva" },
       { name: "description", content: "Overblik over dine klasser, forløb og lektioner." },
-      { property: "og:title", content: "Mine klasser — CaseLab" },
+      { property: "og:title", content: "Mine klasser — Didaktiva" },
       { property: "og:description", content: "Overblik over dine klasser, forløb og lektioner." },
       { name: "robots", content: "noindex" },
     ],
@@ -80,7 +80,7 @@ function ClassesPage() {
               key={c.id}
               to="/classes/$classId"
               params={{ classId: c.id }}
-              className="surface-card flex flex-col gap-2 p-7 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]"
+              className="surface-card flex flex-col gap-2 p-7 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift hover:border-primary/30"
             >
               <span className="font-display text-2xl font-semibold">{c.name}</span>
               <span className="text-primary">{c.subject}</span>

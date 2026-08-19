@@ -20,13 +20,13 @@ import {
 export const Route = createFileRoute("/_authenticated/create-with-chatgpt")({
   head: () => ({
     meta: [
-      { title: "Planlæg med ChatGPT — CaseLab" },
+      { title: "Planlæg med ChatGPT — Didaktiva" },
       {
         name: "description",
         content:
-          "CaseLab samler det vigtigste, så ChatGPT kan lave undervisningen i det rigtige format.",
+          "Didaktiva samler det vigtigste, så ChatGPT kan lave undervisningen i det rigtige format.",
       },
-      { property: "og:title", content: "Planlæg med ChatGPT — CaseLab" },
+      { property: "og:title", content: "Planlæg med ChatGPT — Didaktiva" },
       { property: "og:description", content: "Byg en færdig ChatGPT-prompt til din undervisning." },
       { name: "robots", content: "noindex" },
     ],
@@ -140,12 +140,13 @@ function PromptGenerator() {
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-14">
       <h1 className="font-display text-4xl font-semibold">Planlæg med ChatGPT</h1>
       <p className="mt-3 text-lg text-muted-foreground">
-        Fortæl hvad du skal undervise i. CaseLab klargør instruktionen, som du selv tager med til
+        Fortæl hvad du skal undervise i. Didaktiva klargør instruktionen, som du selv tager med til
         ChatGPT.
       </p>
 
-      <section className="surface-card mt-8 space-y-5 p-4 sm:mt-10 sm:p-8">
-        <h2 className="text-xl font-semibold">Hvad skal du lave?</h2>
+      <section className="mt-8 rounded-3xl border border-border/70 bg-surface/70 p-4 sm:mt-10 sm:p-6">
+        <h2 className="text-xl font-semibold px-2">Hvad skal du lave?</h2>
+        <div className="mt-4 space-y-6 rounded-2xl border bg-card p-6 sm:p-8">
         <div className="flex flex-wrap gap-3">
           <Chip
             label="En hel lektion"
@@ -158,10 +159,12 @@ function PromptGenerator() {
             onClick={() => setKind("blocks")}
           />
         </div>
+        </div>
       </section>
 
       {kind === "lesson" && (
-        <section className="surface-card mt-6 space-y-6 p-4 sm:p-8">
+        <section className="mt-6 rounded-3xl border border-border/70 bg-surface/70 p-4 sm:p-6">
+          <div className="space-y-6 rounded-2xl border bg-card p-6 sm:p-8">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label id="planning-class-label">Klasse</Label>
@@ -232,7 +235,7 @@ function PromptGenerator() {
             </div>
           </div>
 
-          <details className="rounded-xl border border-border p-4">
+          <details className="rounded-xl border border-border p-4 transition-colors hover:border-primary/30">
             <summary className="cursor-pointer font-medium">Tilpas lektionen (valgfrit)</summary>
             <div className="mt-5 space-y-5">
               <div className="space-y-2">
@@ -268,11 +271,13 @@ function PromptGenerator() {
               </div>
             </div>
           </details>
+          </div>
         </section>
       )}
 
       {kind === "blocks" && (
-        <section className="surface-card mt-6 space-y-6 p-4 sm:p-8">
+        <section className="mt-6 rounded-3xl border border-border/70 bg-surface/70 p-4 sm:p-6">
+          <div className="space-y-6 rounded-2xl border bg-card p-6 sm:p-8">
           <div className="space-y-2">
             <Label id="planning-lesson-label">Eksisterende lektion (valgfrit)</Label>
             <Select value={lessonId} onValueChange={setLessonId}>
@@ -333,13 +338,15 @@ function PromptGenerator() {
               ))}
             </div>
           </div>
+          </div>
         </section>
       )}
 
       {kind && (
         <>
-          <section className="surface-card mt-6 space-y-3 p-8">
-            <h2 className="text-xl font-semibold">Fagligt materiale</h2>
+          <section className="mt-6 rounded-3xl border border-border/70 bg-surface/70 p-4 sm:p-6">
+            <div className="space-y-6 rounded-2xl border bg-card p-6 sm:p-8">
+              <h2 className="text-xl font-semibold">Fagligt materiale</h2>
             <p className="text-muted-foreground">
               Indsæt tekst eller egne noter. Indholdet bruges kun i den instruktion, du kopierer.
             </p>
@@ -348,6 +355,7 @@ function PromptGenerator() {
               onChange={(e) => setMaterial(e.target.value)}
               className="min-h-40 rounded-xl"
             />
+            </div>
           </section>
 
           <Button className="mt-6 rounded-full" onClick={generate}>

@@ -21,12 +21,12 @@ import {
 export const Route = createFileRoute("/_authenticated/material-to-lesson")({
   head: () => ({
     meta: [
-      { title: "Brug mit materiale — CaseLab" },
+      { title: "Brug mit materiale — Didaktiva" },
       {
         name: "description",
         content: "Omsæt dine egne noter, artikler eller uddrag til færdig undervisning.",
       },
-      { property: "og:title", content: "Brug mit materiale — CaseLab" },
+      { property: "og:title", content: "Brug mit materiale — Didaktiva" },
       { property: "og:description", content: "Fra tekst og noter til undervisning." },
       { name: "robots", content: "noindex" },
     ],
@@ -68,11 +68,12 @@ function MaterialToLesson() {
     <div className="mx-auto max-w-3xl px-6 py-14">
       <h1 className="font-display text-4xl font-semibold">Brug mit materiale</h1>
       <p className="mt-2 text-muted-foreground">
-        Brug tekst eller egne filer som grundlag. CaseLab klargør instruktionen; du sender selv det
+        Brug tekst eller egne filer som grundlag. Didaktiva klargør instruktionen; du sender selv det
         valgte videre til ChatGPT.
       </p>
 
-      <section className="surface-card mt-8 space-y-6 p-8">
+      <section className="mt-8 rounded-3xl border border-border/70 bg-surface/70 p-4 sm:p-6">
+        <div className="space-y-6 rounded-2xl border bg-card p-6 sm:p-8">
         <div className="space-y-2">
           <Label htmlFor="material">Dit materiale</Label>
           <Textarea
@@ -172,7 +173,7 @@ function MaterialToLesson() {
           </div>
         </div>
 
-        <details className="rounded-xl border border-border p-4">
+        <details className="rounded-xl border border-border p-4 transition-colors hover:border-primary/30">
           <summary className="cursor-pointer font-medium">Tilpas resultatet (valgfrit)</summary>
           <div className="mt-4 space-y-2">
             <Label>Hvordan skal undervisningen føles?</Label>
@@ -223,6 +224,7 @@ function MaterialToLesson() {
             Indsæt lidt mere tekst — eller vælg en uploadet fil — for at komme i gang.
           </p>
         )}
+        </div>
       </section>
 
       {prompt && <PromptResult prompt={prompt} attachedFiles={promptFiles} />}

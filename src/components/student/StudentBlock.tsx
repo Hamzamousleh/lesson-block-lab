@@ -88,25 +88,51 @@ function OptionButton({
   );
 }
 
-export function ResultBars({ summary }: { summary: ResultSummary }) {
+export function ResultBars({
+  summary,
+  variant = "classic",
+}: {
+  summary: ResultSummary;
+  /** "v2" renders the calmer, more scannable Didaktiva presentation. */
+  variant?: "classic" | "v2";
+}) {
+  const v2 = variant === "v2";
   if (summary.kind === "options") {
+    const top = Math.max(0, ...summary.counts);
     return (
-      <div className="space-y-2">
+      <div className={v2 ? "space-y-3" : "space-y-2"}>
         {summary.labels.map((label, i) => {
           const count = summary.counts[i] ?? 0;
           const pct = summary.total ? Math.round((count / summary.total) * 100) : 0;
+          const leading = v2 && count > 0 && count === top;
           return (
-            <div key={i} className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="min-w-0 truncate pr-3">
-                  {String.fromCharCode(65 + i)}. {label}
+            <div key={i} className={v2 ? "space-y-1.5" : "space-y-1"}>
+              <div
+                className={`flex justify-between gap-3 ${v2 ? "text-[15px]" : "text-sm"}`}
+              >
+                <span
+                  className={`min-w-0 pr-1 ${v2 ? (leading ? "font-semibold" : "") : "truncate"}`}
+                >
+                  <span className="text-muted-foreground">{String.fromCharCode(65 + i)}.</span>{" "}
+                  {label}
                 </span>
-                <span className="tabular-nums text-muted-foreground">
+                <span
+                  className={`shrink-0 tabular-nums ${
+                    v2 ? (leading ? "font-semibold" : "text-muted-foreground") : "text-muted-foreground"
+                  }`}
+                >
                   {count} · {pct}%
                 </span>
               </div>
-              <div className="h-2.5 w-full rounded-full bg-secondary">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+              <div
+                className={`w-full overflow-hidden rounded-full bg-secondary ${v2 ? "h-3" : "h-2.5"}`}
+              >
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    v2 && !leading ? "bg-primary/45" : "bg-primary"
+                  }`}
+                  style={{ width: `${pct}%` }}
+                />
               </div>
             </div>
           );
@@ -128,7 +154,7 @@ export function ResultBars({ summary }: { summary: ResultSummary }) {
               <span className="w-6 shrink-0 tabular-nums text-muted-foreground">
                 {summary.min + i}
               </span>
-              <div className="h-2.5 flex-1 rounded-full bg-secondary">
+              <div className={`flex-1 rounded-full bg-secondary ${v2 ? "h-3" : "h-2.5"}`}>
                 <div
                   className="h-full rounded-full bg-primary"
                   style={{ width: `${(count / maxCount) * 100}%` }}
@@ -142,6 +168,22 @@ export function ResultBars({ summary }: { summary: ResultSummary }) {
     );
   }
   if (summary.kind === "text") {
+    if (v2) {
+      return (
+        <ul className="divide-y divide-border/60 overflow-hidden rounded-2xl border border-border/60">
+          {summary.items.map((it, i) => (
+            <li key={i} className="px-4 py-3">
+              {it.name && (
+                <p className="text-[11px] font-medium tracking-[0.12em] text-muted-foreground uppercase">
+                  {it.name}
+                </p>
+              )}
+              <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{it.text}</p>
+            </li>
+          ))}
+        </ul>
+      );
+    }
     return (
       <div className="space-y-3">
         {summary.items.map((it, i) => (
@@ -155,6 +197,7 @@ export function ResultBars({ summary }: { summary: ResultSummary }) {
   }
   return <p className="text-sm text-muted-foreground">{summary.total} svar registreret.</p>;
 }
+
 
 export type SaveState = "idle" | "saving" | "saved" | "error";
 

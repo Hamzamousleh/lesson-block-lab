@@ -17,17 +17,19 @@ import {
   Zap,
 } from "lucide-react";
 import { blocksQuery, classesQuery, lessonsQuery } from "@/lib/data";
+import { useDesignMode } from "@/lib/design-mode";
+import { HomeV2 } from "@/components/home/HomeV2";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
-      { title: "Hjem — CaseLab" },
+      { title: "Hjem — Didaktiva" },
       {
         name: "description",
         content: "Dit overblik: planlæg undervisning og fortsæt hvor du slap.",
       },
-      { property: "og:title", content: "Hjem — CaseLab" },
+      { property: "og:title", content: "Hjem — Didaktiva" },
       { property: "og:description", content: "Planlæg undervisning og fortsæt hvor du slap." },
       { name: "robots", content: "noindex" },
     ],
@@ -98,6 +100,12 @@ const updatedDateFormatter = new Intl.DateTimeFormat("da-DK", {
 });
 
 function Home() {
+  const mode = useDesignMode();
+  if (mode === "v2") return <HomeV2 />;
+  return <HomeClassic />;
+}
+
+function HomeClassic() {
   const classes = useQuery(classesQuery());
   const lessons = useQuery(lessonsQuery({ limit: 4 }));
   const lessonBlocks = useQueries({
