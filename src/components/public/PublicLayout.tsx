@@ -169,17 +169,42 @@ export function PublicFooter() {
             Fra fagligt stof til aktiv undervisning
           </p>
         </div>
-        <nav className="flex flex-wrap gap-x-5 gap-y-3 text-sm" aria-label="Information og vilkår">
-          {publicLinks.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <div className="grid gap-8 sm:grid-cols-2">
+          <nav aria-label="Produkt">
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Produkt
+            </p>
+            <ul className="mt-3 space-y-2 text-sm">
+              {publicLinks.slice(0, 2).map((item) => (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <nav aria-label="Juridisk">
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Juridisk
+            </p>
+            <ul className="mt-3 space-y-2 text-sm">
+              {publicLinks.slice(2).map((item) => (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
       </div>
     </footer>
   );
