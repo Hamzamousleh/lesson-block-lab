@@ -120,7 +120,7 @@ test("about contains no screenshot placeholders", () => {
   const about = read("src/routes/about.tsx");
   const placeholderComponent = ["Screenshot", "Placeholder"].join("");
   const placeholderCopy = ["Screenshot", "tilføjes", "før", "publicering"].join(" ");
-  assert.equal(about.match(/<Row\b/g)?.length, 7);
+  assert.equal(about.match(/<Row\b/g)?.length, 8);
   assert.doesNotMatch(about, new RegExp(`${placeholderComponent}|${placeholderCopy}`, "i"));
 });
 
