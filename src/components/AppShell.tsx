@@ -109,7 +109,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               </nav>
             </SheetContent>
           </Sheet>
-          <Link to="/home" className="font-display text-[26px] font-semibold tracking-tight sm:text-[28px] lg:text-[30px]">
+          <Link
+            to="/home"
+            className="font-display text-[26px] font-semibold tracking-tight sm:text-[28px] lg:text-[30px]"
+          >
             {mode === "v2" ? (
               <div className="flex items-center gap-2">
                 <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">

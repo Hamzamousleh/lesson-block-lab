@@ -176,7 +176,10 @@ function Landing() {
           </ol>
         </section>
 
-        <section className="mx-auto max-w-5xl px-5 py-12 pb-20 sm:px-6" aria-labelledby="landing-privatliv">
+        <section
+          className="mx-auto max-w-5xl px-5 py-12 pb-20 sm:px-6"
+          aria-labelledby="landing-privatliv"
+        >
           <div className="surface-quiet rounded-[32px] p-8 sm:p-10">
             <ShieldCheck aria-hidden="true" className="size-6 text-primary" />
             <h2 id="landing-privatliv" className="mt-4 font-display text-3xl font-semibold">
