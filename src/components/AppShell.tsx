@@ -192,6 +192,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Settings className="size-4" /> Konto og data
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  Om og hjælp
+                </DropdownMenuLabel>
+                {PUBLIC_HELP_LINKS.map((item) => (
+                  <DropdownMenuItem key={item.to} asChild>
+                    <Link to={item.to}>{item.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
                 <DesignSwitch />
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => void signOut()}>
