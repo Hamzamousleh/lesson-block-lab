@@ -159,3 +159,51 @@ test("legal pages contain required dates and contact details", () => {
     assert.match(read(file), /kontakt@didaktiva\.dk/);
   }
 });
+
+test("public navigation exposes product and legal links plus auth CTA", () => {
+  const layout = read("src/components/public/PublicLayout.tsx");
+  for (const route of ["/about", "/contact", "/privacy", "/cookies", "/terms"])
+    assert.match(layout, new RegExp(`to="${route}"|to: "${route}"`));
+  assert.match(layout, /Log ind \/ Opret konto/);
+  assert.match(layout, /aria-label="Mobil offentlig navigation"/);
+  assert.match(layout, /aria-label="Åbn menu"/);
+  assert.match(layout, /aria-label="Produkt"/);
+  assert.match(layout, /aria-label="Juridisk"/);
+});
+
+test("landing page introduces the product before signup", () => {
+  const landing = read("src/routes/index.tsx");
+  assert.match(landing, /<PublicHeader \/>/);
+  assert.match(landing, /<PublicFooter \/>/);
+  assert.match(landing, /Fra fagligt stof til aktiv undervisning/);
+  assert.match(landing, /Læs mere om Didaktiva/);
+  assert.match(landing, /to="\/about"/);
+  assert.match(landing, /to="\/auth"/);
+  assert.match(landing, /Planlæg undervisning/);
+  assert.match(landing, /Brug mit materiale/);
+  assert.match(landing, /Kør undervisning/);
+  assert.match(landing, /Arbejd videre med elevsvar/);
+  assert.match(landing, /Enkel elevdeltagelse/);
+  assert.match(landing, /to="\/privacy"/);
+  assert.match(landing, /to="\/cookies"/);
+  assert.doesNotMatch(landing, /100 % anonym|GDPR compliant/);
+});
+
+test("authenticated shell keeps app nav and adds public help links", () => {
+  const shell = read("src/components/AppShell.tsx");
+  assert.match(shell, /TEACHER_NAVIGATION/);
+  assert.match(shell, /PUBLIC_HELP_LINKS/);
+  const links = read("src/lib/public-links.ts");
+  for (const route of ["/about", "/contact", "/privacy", "/cookies", "/terms"])
+    assert.match(links, new RegExp(`to: "${route}"`));
+  const nav = read("src/lib/teacher-navigation.ts");
+  for (const label of ["Hjem", "Undervisning", "Ressourcer", "Live", "Worlds"])
+    assert.match(nav, new RegExp(label));
+});
+
+test("public routes are not under the authenticated layout", () => {
+  for (const file of ["src/routes/index.tsx", ...Object.values(routeFiles), "src/routes/auth.tsx", "src/routes/join.index.tsx"]) {
+    assert.equal(fs.existsSync(new URL(`../${file}`, import.meta.url)), true, file);
+    assert.doesNotMatch(read(file), /createFileRoute\("\/_authenticated/);
+  }
+});
