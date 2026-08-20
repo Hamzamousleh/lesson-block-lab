@@ -111,6 +111,10 @@ const aboutScreenshots = [
     "Elevens join-visning i Didaktiva med automatisk alias Gul Delfin og knappen Deltag",
   ],
   [
+    "follow-up.jpg",
+    "Didaktiva Arbejd videre med svarene med valg af aktivitet, opfølgningsmål, tid og anonymisering af elevnavne",
+  ],
+  [
     "worlds.jpg",
     "Didaktiva Worlds med world-tilstand og variable som gruppepres, identitetskonflikt, belastning, konfliktniveau og psykologisk tryghed",
   ],
