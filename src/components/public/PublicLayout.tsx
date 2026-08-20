@@ -56,37 +56,103 @@ export function DidaktivaBrand({ compact = false }: { compact?: boolean }) {
   );
 }
 
+const navLinkClass =
+  "flex min-h-11 items-center rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
 export function PublicHeader() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <header className="border-b border-border/70 bg-background/95">
-      <div className="mx-auto flex min-h-20 max-w-6xl items-center gap-4 px-5 sm:px-6">
+      <div className="mx-auto flex min-h-20 max-w-6xl items-center gap-3 px-5 sm:px-6">
         <DidaktivaBrand compact />
         <nav
           className="ml-auto hidden items-center gap-1 md:flex"
           aria-label="Offentlig navigation"
         >
+          {PUBLIC_PRODUCT_LINKS.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={navLinkClass}
+              activeProps={{ className: "bg-secondary text-foreground" }}
+            >
+              {item.label}
+            </Link>
+          ))}
           <Link
-            to="/about"
-            className="rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            to="/privacy"
+            className={navLinkClass}
             activeProps={{ className: "bg-secondary text-foreground" }}
           >
-            Om Didaktiva
+            Privatliv
           </Link>
-          <Link
-            to="/contact"
-            className="rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            activeProps={{ className: "bg-secondary text-foreground" }}
-          >
-            Kontakt
-          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="min-h-11 gap-1 rounded-full px-4 text-sm">
+                Mere <ChevronDown aria-hidden="true" className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-44">
+              <DropdownMenuItem asChild>
+                <Link to="/cookies">Cookies</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/terms">Vilkår</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
         <div className="ml-auto flex items-center gap-2 md:ml-3">
-          <Button asChild variant="ghost" className="rounded-full">
-            <Link to="/auth">Log ind</Link>
-          </Button>
-          <Button asChild className="hidden rounded-full sm:inline-flex">
+          <Button asChild variant="ghost" className="hidden rounded-full sm:inline-flex">
             <Link to="/join">Deltag med kode</Link>
           </Button>
+          <Button asChild className="rounded-full">
+            <Link to="/auth">Log ind / Opret konto</Link>
+          </Button>
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-11 rounded-full md:hidden"
+                aria-label="Åbn menu"
+                aria-expanded={menuOpen}
+              >
+                <Menu className="size-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[min(86vw,20rem)] p-5">
+              <SheetHeader className="text-left">
+                <SheetTitle>Menu</SheetTitle>
+                <SheetDescription>Læs om Didaktiva, privatliv og vilkår.</SheetDescription>
+              </SheetHeader>
+              <nav className="mt-6 flex flex-col gap-1" aria-label="Mobil offentlig navigation">
+                {publicLinks.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setMenuOpen(false)}
+                    className="flex min-h-11 items-center rounded-xl px-4 py-2.5 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+                <Link
+                  to="/join"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex min-h-11 items-center rounded-xl px-4 py-2.5 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Deltag med kode
+                </Link>
+                <Button asChild className="mt-4 rounded-full">
+                  <Link to="/auth" onClick={() => setMenuOpen(false)}>
+                    Log ind / Opret konto
+                  </Link>
+                </Button>
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
