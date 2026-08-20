@@ -366,11 +366,11 @@ function AboutPage() {
             reverse
             shot={
               <Shot
-                src="/images/about/worlds.jpg"
-                alt="Didaktiva Worlds med world-tilstand og variable som gruppepres, identitetskonflikt, belastning, konfliktniveau og psykologisk tryghed"
-                width={1889}
-                height={1009}
-                caption="Elevernes valg kan ændre det videre forløb."
+                src="/images/about/follow-up.jpg"
+                alt="Didaktiva Arbejd videre med svarene med valg af aktivitet, opfølgningsmål, tid og anonymisering af elevnavne"
+                width={1819}
+                height={939}
+                caption="Vælg aktivitet, opfølgning, tid – og anonymisér elevernes navne før eksport."
               />
             }
           >
