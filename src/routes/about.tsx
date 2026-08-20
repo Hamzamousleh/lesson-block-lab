@@ -434,6 +434,14 @@ function AboutPage() {
               </li>
             ))}
           </ol>
+          <Shot
+            className="mt-6"
+            src="/images/about/worlds.jpg"
+            alt="Didaktiva Worlds med world-tilstand og variable som gruppepres, identitetskonflikt, belastning, konfliktniveau og psykologisk tryghed"
+            width={1889}
+            height={1009}
+            caption="World-tilstanden viser, hvordan elevernes valg påvirker det videre forløb."
+          />
         </div>
       </section>
 
