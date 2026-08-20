@@ -79,39 +79,52 @@ test("internal CaseLab transport compatibility remains intact", () => {
 
 const aboutScreenshots = [
   [
-    "home.jpg",
+    "home-actions.jpg",
     "Didaktiva Hjem med genveje til Planlæg undervisning, Brug mit materiale, Red mig og Kør undervisning",
   ],
   [
-    "lesson-editor.jpg",
-    "Didaktiva Lesson Editor med aktivitetstimeline, læringsmål og lektionshandlinger",
+    "home-continue.jpg",
+    "Didaktiva Hjem med Fortsæt undervisningen, lektioner med Kør lektion og Redigér samt værktøjer",
+  ],
+  [
+    "plan-chatgpt.jpg",
+    "Planlæg med ChatGPT i Didaktiva med valg af hel lektion eller aktiviteter, klasse, forløb, emne og varighed",
   ],
   [
     "materialer.jpg",
-    "Didaktiva Brug mit materiale med uploadede undervisningsfiler og lektionsopsætning",
+    "Brug mit materiale i Didaktiva med materialeinput, klasse, materialetype, formål, varighed og uploadede filer",
+  ],
+  [
+    "lesson-editor.jpg",
+    "Didaktiva Lesson Editor med lektionstitel, læringsmål, varighed, Start elevsession og undervisningssekvens med blocks",
+  ],
+  [
+    "live-session.jpg",
+    "Didaktiva sessionstart med Start session, Åbn lærercockpit, join-kode, elevlink og antal deltagere",
   ],
   [
     "teacher-cockpit.jpg",
-    "Teacher Cockpit med elevvisning, timer, progression og lærerens styring af aktiviteten",
+    "Teacher Cockpit med nuværende aktivitet, timer, det eleverne ser, progression, lærernote og næste aktivitet",
   ],
-  ["elev-alias.jpg", "Elevens join-visning med automatisk genereret Didaktiva-alias"],
-  ["student-view.jpg", "Elevvisning i Didaktiva med aktiv undervisningsopgave og svarmuligheder"],
   [
-    "elevresultater.jpg",
-    "Didaktiva-visning af klassens elevsvar og mulighed for at arbejde videre med resultaterne",
+    "elev-alias.jpg",
+    "Elevens join-visning i Didaktiva med automatisk alias Gul Delfin og knappen Deltag",
   ],
-  ["worlds.jpg", "Didaktiva Worlds med episoder, progression og world state"],
+  [
+    "worlds.jpg",
+    "Didaktiva Worlds med world-tilstand og variable som gruppepres, identitetskonflikt, belastning, konfliktniveau og psykologisk tryghed",
+  ],
 ];
 
 test("about contains no screenshot placeholders", () => {
   const about = read("src/routes/about.tsx");
   const placeholderComponent = ["Screenshot", "Placeholder"].join("");
   const placeholderCopy = ["Screenshot", "tilføjes", "før", "publicering"].join(" ");
-  assert.equal(about.match(/<ProductRow\b/g)?.length, 6);
+  assert.equal(about.match(/<Row\b/g)?.length, 7);
   assert.doesNotMatch(about, new RegExp(`${placeholderComponent}|${placeholderCopy}`, "i"));
 });
 
-test("all eight local about screenshot assets exist and are referenced", () => {
+test("all local about screenshot assets exist and are referenced", () => {
   const about = read("src/routes/about.tsx");
   for (const [file] of aboutScreenshots) {
     const asset = new URL(`../public/images/about/${file}`, import.meta.url);
@@ -124,11 +137,11 @@ test("all eight local about screenshot assets exist and are referenced", () => {
 test("all about screenshots have concrete alt text and local sources", () => {
   const about = read("src/routes/about.tsx");
   for (const [, alt] of aboutScreenshots)
-    assert.match(about, new RegExp(`(?:screenshotAlt|alt)=\"${alt}\"`));
-  assert.doesNotMatch(about, /(?:screenshotSrc|src)=\"https?:\/\//);
+    assert.match(about, new RegExp(`alt=\"${alt}\"`));
+  assert.doesNotMatch(about, /src=\"https?:\/\//);
   assert.match(about, /loading=\{priority \? \"eager\" : \"lazy\"\}/);
-  assert.match(about, /className=\"block h-auto w-full\"/);
 });
+
 
 test("legal pages contain required dates and contact details", () => {
   const layout = read("src/components/public/PublicLayout.tsx");
