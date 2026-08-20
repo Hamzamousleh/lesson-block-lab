@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { PublicFooter } from "@/components/public/PublicLayout";
+import { PublicFooter, PublicHeader } from "@/components/public/PublicLayout";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -80,19 +80,9 @@ function AuthPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <main className="flex flex-1 items-center justify-center px-6 py-16">
+      <PublicHeader />
+      <main className="flex flex-1 items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          <Link
-            to="/"
-            className="mb-10 flex items-center justify-center gap-3 font-display text-2xl font-semibold sm:text-3xl"
-          >
-            <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm sm:size-10">
-              <span className="font-display text-xl font-bold sm:text-2xl">D</span>
-            </div>
-            <span>
-              Didakt<span className="text-primary">iva</span>
-            </span>
-          </Link>
           <div className="surface-quiet p-8 shadow-lift border-primary/10 rounded-[32px]">
             <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Underviser

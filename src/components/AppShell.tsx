@@ -27,6 +27,7 @@ import {
   isNavigationItemActive,
   TEACHER_NAVIGATION,
 } from "@/lib/teacher-navigation";
+import { PUBLIC_HELP_LINKS } from "@/lib/public-links";
 import { AccountPrivacyDialog } from "@/components/AccountPrivacyDialog";
 import { clearPrivateLocalStorage } from "@/lib/participant";
 import { useDesignMode } from "@/lib/design-mode";
@@ -108,7 +109,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               </nav>
             </SheetContent>
           </Sheet>
-          <Link to="/home" className="font-display text-[26px] font-semibold tracking-tight sm:text-[28px] lg:text-[30px]">
+          <Link
+            to="/home"
+            className="font-display text-[26px] font-semibold tracking-tight sm:text-[28px] lg:text-[30px]"
+          >
             {mode === "v2" ? (
               <div className="flex items-center gap-2">
                 <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
@@ -191,6 +195,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem onSelect={() => setAccountOpen(true)}>
                   <Settings className="size-4" /> Konto og data
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  Om og hjælp
+                </DropdownMenuLabel>
+                {PUBLIC_HELP_LINKS.map((item) => (
+                  <DropdownMenuItem key={item.to} asChild>
+                    <Link to={item.to}>{item.label}</Link>
+                  </DropdownMenuItem>
+                ))}
                 <DropdownMenuSeparator />
                 <DesignSwitch />
                 <DropdownMenuSeparator />
