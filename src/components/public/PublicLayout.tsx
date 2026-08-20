@@ -1,10 +1,36 @@
 import { Link } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { ChevronDown, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const publicLinks = [
   { to: "/about", label: "Om Didaktiva" },
   { to: "/contact", label: "Kontakt" },
+  { to: "/privacy", label: "Privatliv" },
+  { to: "/cookies", label: "Cookies" },
+  { to: "/terms", label: "Vilkår" },
+] as const;
+
+export const PUBLIC_PRODUCT_LINKS = [
+  { to: "/about", label: "Om Didaktiva" },
+  { to: "/contact", label: "Kontakt" },
+] as const;
+
+export const PUBLIC_LEGAL_LINKS = [
   { to: "/privacy", label: "Privatliv" },
   { to: "/cookies", label: "Cookies" },
   { to: "/terms", label: "Vilkår" },
