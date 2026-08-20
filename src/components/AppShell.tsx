@@ -27,6 +27,7 @@ import {
   isNavigationItemActive,
   TEACHER_NAVIGATION,
 } from "@/lib/teacher-navigation";
+import { PUBLIC_HELP_LINKS } from "@/lib/public-links";
 import { AccountPrivacyDialog } from "@/components/AccountPrivacyDialog";
 import { clearPrivateLocalStorage } from "@/lib/participant";
 import { useDesignMode } from "@/lib/design-mode";
